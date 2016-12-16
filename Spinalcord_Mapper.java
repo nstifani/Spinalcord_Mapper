@@ -16,17 +16,30 @@ public class Spinalcord_Mapper implements PlugIn {
 
   public void run(String arg) {
     String msg = "";
-    if (arg.equals("Register"))
-    {Register(); return;}
+    if (arg.equals("SC Registration")){
+      SC_Registration();
+      return;
+    }
 
-    if (arg.equals("Toggle Autostart"))
-    {Toggle_Autostart(); return;}
+    if (arg.equals("Cell Detection")){
+      Cell_Detection();
+      return;
+    }
+
+    if (arg.equals("Toggle Autostart")){
+      Toggle_Autostart();
+      return;
+    }
+
 
   }
 
 
-  void Register() {
-    IJ.runMacro(getText(path+"Register_.txt"), "");
+  void SC_Registration() {
+    IJ.runMacro(getText(path+"SC_Registration.txt"), "");
+  }
+  void Cell_Detection() {
+    IJ.runMacro(getText(path+"Cell_Detection.txt"), "");
   }
     void Toggle_Autostart() {
     IJ.runMacro(getText(path+"Toggle_Autostart.txt"), "");
