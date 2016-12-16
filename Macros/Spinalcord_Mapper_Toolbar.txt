@@ -1,0 +1,73 @@
+<startupAction>
+PluginName="Spinalcord Mapper";
+//IJ Size and position
+IJPosX=screenWidth*0.1; // The position of ImageJ in X
+IJPosY=screenHeight*0;
+IJSizeX=575; // The width of ImageJ in pixel
+IJSizeY=100;
+Spacer=20; // A spacer
+DummyVariable=eval("script","IJ.getInstance().setLocation("+IJPosX+","+IJPosY+");"); // Adjust the position of the ImageJ bar
+
+//MultiCh Toolbar Size and position
+ToolbarSizeX=150; // Size of the toolbar
+ToolbarSizeY=150;
+ToolbarPosX=IJPosX+IJSizeX+Spacer;
+ToolbarPosY=IJPosY;
+// Check if the toolbar is present
+ListWindows=getList("window.titles");
+for(n=0; n<ListWindows.length; n++){
+  WindowN=ListWindows[n];
+  if(WindowN==PluginName+" Toolbar"){
+    selectWindow(PluginName+" Toolbar");
+    setLocation(ToolbarPosX,ToolbarPosY);
+  }
+}
+
+// Threshold Window Size and Position
+ThresholdSizeX=290;
+ThresholdSizeY=260;
+ThresholdPosX=ToolbarPosX; // The Position in X of the threshold window
+ThresholdPosY=ToolbarPosY+ToolbarSizeY+Spacer;
+call("ij.Prefs.set", "threshold.loc", ThresholdPosX+" , "+ThresholdPosY);
+
+// ROI Manager Size and Position
+ROIManagerSizeX=290;
+ROIManagerSizeY=260;
+ROIManagerPosX=ThresholdPosX+ThresholdSizeX+Spacer; // The Position in X of the ROI manager window
+ROIManagerPosY=ThresholdPosY;
+call("ij.Prefs.set", "manager.loc", ROIManagerPosX+" , "+ROIManagerPosY);
+
+// Results Size and Position
+ResultsSizeX=ThresholdSizeX+Spacer+ROIManagerSizeX;
+ResultsSizeY=ThresholdSizeY;
+ResultsPosX=ThresholdPosX; // The Position in X of the ROI manager window
+ResultsPosY=ThresholdPosY+ThresholdSizeY+Spacer;
+call("ij.Prefs.set", "results.loc", ResultsPosX+" , "+ResultsPosY);
+</startupAction>
+
+
+<line>
+<button>1 line 1
+label=Register
+icon=noicon
+arg=<macro>
+run("Register");
+</macro>
+</line>
+
+<line>
+<button>1 line 2
+label=Autostart
+icon=noicon
+arg=<macro>
+PluginName="Spinalcord Mapper";
+run(PluginName+" Toggle Autostart");
+</macro>
+</line>
+
+<line>
+<button>1 line 3
+label=Close
+icon=noicon
+arg=<close>
+</line>
