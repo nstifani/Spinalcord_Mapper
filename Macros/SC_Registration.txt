@@ -1,0 +1,424 @@
+// Defines Global Variables
+var PluginName="Spinalcord Mapper";
+var MacroName="SC Registration";
+var FileExt="TIF";
+var MinNbFile=1;
+var FolderSuffix="Registered";
+var SubDirArray=newArray("Images","ROIs");
+
+
+/////////////// Header and Housekeeping
+run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
+run("Input/Output...", "jpeg=100 gif=-1 file=.csv use skip copy_column copy_row save_column");
+run("Misc...", "divide=Infinity hide");
+CellSeparator= ",";
+LineSeparator="\n";
+call("ij.Prefs.set", "tw.font.size",2);
+// Set IJ Size and position
+IJPosX=screenWidth*0.1; // The position of ImageJ in X
+IJPosY=screenHeight*0;
+IJSizeX=575; // The width of ImageJ in pixel
+IJSizeY=100;
+Spacer=20; // A spacer
+DummyVariable=eval("script","IJ.getInstance().setLocation("+IJPosX+","+IJPosY+");"); // Adjust the position of the ImageJ bar
+
+// Set Toolbar Size and position
+ToolbarSizeX=150; // Size of the toolbar
+ToolbarSizeY=150;
+ToolbarPosX=IJPosX+IJSizeX+Spacer;
+ToolbarPosY=IJPosY;
+// Check if the toolbar is present
+ListWindows=getList("window.titles");
+for(n=0; n<ListWindows.length; n++){
+  WindowN=ListWindows[n];
+  if(WindowN==PluginName+" Toolbar"){
+    // If tool bar is present place it next to the IJ bar
+    selectWindow(PluginName+" Toolbar");
+    setLocation(ToolbarPosX,ToolbarPosY);
+  }
+}
+
+
+
+
+//Set Threshold Window Size and Position
+ThresholdSizeX=290;
+ThresholdSizeY=260;
+ThresholdPosX=ToolbarPosX; // The Position in X of the threshold window
+ThresholdPosY=ToolbarPosY+ToolbarSizeY+Spacer;
+call("ij.Prefs.set", "threshold.loc", ThresholdPosX+" , "+ThresholdPosY);
+
+// Set ROI Manager Size and Position
+ROIManagerSizeX=290;
+ROIManagerSizeY=260;
+ROIManagerPosX=ToolbarPosX+ToolbarSizeX+Spacer; // The Position in X of the ROI manager window
+ROIManagerPosY=ThresholdPosY;
+call("ij.Prefs.set", "manager.loc", ROIManagerPosX+" , "+ROIManagerPosY);
+
+// Set Results Size and Position
+ResultsSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer));
+ResultsSizeY=ToolbarSizeY;
+ResultsPosX=ToolbarPosX+ToolbarSizeX+Spacer; // The Position in X of the ROI manager window
+ResultsPosY=ToolbarPosY;
+call("ij.Prefs.set", "results.loc", ResultsPosX+" , "+ResultsPosY);
+call("ij.Prefs.set", "results.width", ResultsSizeX);
+call("ij.Prefs.set", "results.height", ResultsSizeY);
+//////////////// Header and Housekeeping
+
+
+
+
+
+//////////////// Functions
+function Append(ArrayI, Value) {
+  ArrayJ = newArray(ArrayI.length+1);
+  for (ValueI=0; ValueI<ArrayI.length; ValueI++)
+  ArrayJ[ValueI] = ArrayI[ValueI];
+  ArrayJ[ArrayI.length] = Value;
+  return ArrayJ;
+}
+
+var MessageDialogPass;
+function MessageDialog(Message){
+  MessageDialogPass=0;
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(Message);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  MessageDialogPass=1;
+}
+
+var ErrorDialogPass;
+function ErrorDialog(MessageError, MessageFix, MessageQuit){
+  ErrorDialogPass=0;
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(MessageError);
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(MessageFix);
+  Dialog.setInsets(0, 0, 0);
+  TryAgainCancelCloseArray=newArray("Try Again", "Cancel & Close");
+  Dialog.setInsets(0, 100, 0);
+  Dialog.addRadioButtonGroup("", TryAgainCancelCloseArray, 2, 1, "Try Again");
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  UserChoice=Dialog.getRadioButton();
+  if (UserChoice=="Cancel & Close"){
+    exit(MessageQuit);
+  }
+  ErrorDialogPass=1;
+}
+
+var SelectInputDirPass;
+var InputDirPath;
+var ParentDir;
+var InputDirName;
+var NbFile;
+var InputList;
+var InputFileList;
+function SelectInputDir(MinNbFile, FileExt){
+  // MinNbFile This is the minimum Nb of File to be present in the list to be accepted
+  // FileExt This is the File extension as a string example "tif"
+  // NbFile This is the number of File within the InputList
+  // InputList is ALL the File within the input Directory
+  // InputFileList is the list of File with the correct File extension
+
+  InputDirPath=getDirectory("Select a FOLDER containing at least "+MinNbFile+" "+FileExt+" Files to process.");
+  InputList=getFileList(InputDirPath);
+  ParentDir=File.getParent(InputDirPath)+File.separator;
+  InputDirName=File.getName(InputDirPath);
+
+  SelectInputDirPass=0;
+  NbFile=0;
+  BaseNameError=0;
+  // Evaluate the Nb of File
+  for (ItemI=0; ItemI<InputList.length; ItemI++){
+    if(endsWith(toLowerCase(InputList[ItemI]), "."+toLowerCase(FileExt))){ // Select files with correct extension
+      BasenameArray=split(InputList[ItemI],".");// Make an array from the filename
+      if(BasenameArray.length!=2){// if there is more than one . in the file name abort
+        BaseNameError=1;
+        MessageError="Sorry but the "+FileExt+" File:\n\""+InputList[ItemI]+"\"\ncontains more than one \".\" in its filename.";
+        MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputList[ItemI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+      } else {
+        NbFile++;
+      }
+    } // If ends by Extension increment
+  }
+
+  // This is the Value switch if the InputDir is passing the criteria
+  if (NbFile<MinNbFile){
+    MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
+    MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
+  }
+  if(NbFile<MinNbFile || BaseNameError==1){
+    ErrorDialog(MessageError, MessageFix, MessageQuit);
+  }else{
+    SelectInputDirPass=1;
+    InputFileList=newArray(0);
+    for(ItemI=0; ItemI<InputList.length;ItemI++){
+      BasenameArray=split(InputList[ItemI],".");
+      if(endsWith(toLowerCase(InputList[ItemI]), "."+toLowerCase(FileExt))){
+        FileName=BasenameArray[0]+"."+BasenameArray[1];
+        InputFileList=Append(InputFileList,FileName);
+      }// end of IF endswith
+    }// end for each File
+  } // end of else
+} // End of Function Select InputDir
+
+var OutputDirPath;
+var OutputDirName;
+function CreateOutputDir(FolderSuffix){
+  OutputDirPath=ParentDir+InputDirName+"_"+FolderSuffix+File.separator;
+  n=1;
+  while(File.exists(OutputDirPath)!=0){
+    n++;
+    OutputDirPath=ParentDir+InputDirName+"_"+FolderSuffix+"_"+n+File.separator;
+  }
+  File.makeDirectory(OutputDirPath);
+  OutputDirName=File.getName(OutputDirPath);
+}
+
+function CreateOutputSubDir(SubDirArray) {
+  for(i=0;i<SubDirArray.length;i++){
+    SubDirPath=OutputDirPath+SubDirArray[i]+File.separator;
+    File.makeDirectory(SubDirPath);
+  } // End of for
+} // End of CreateOutputSubDir function
+
+var SelectionPromptPass;
+function SelectionPrompt(SelectionName, SelectionInfo){
+  SelectionPromptPass=0;
+  if(SelectionName=="rectangle"){
+    SelectionValue=0;
+  } else if (SelectionName=="oval"){
+    SelectionValue=1;
+  } else if (SelectionName=="polygon"){
+    SelectionValue=2;
+  } else if (SelectionName=="freehand"){
+    SelectionValue=3;
+  } else if (SelectionName=="traced"){
+    SelectionValue=4;
+  } else if (SelectionName=="straight line"){
+    SelectionValue=5;
+  } else if (SelectionName=="segmented line"){
+    SelectionValue=6;
+  } else if (SelectionName=="freehand line"){
+    SelectionValue=7;
+  } else if (SelectionName=="angle"){
+    SelectionValue=8;
+  } else if (SelectionName=="point"){
+    SelectionValue=10;
+  } else if (SelectionName=="multipoint"){
+    SelectionValue=10;
+    run("Point Tool...", "type=Crosshair color=Magenta size=Medium label show counter=0");
+  } else {SelectionValue=-1;}
+
+  CurrentImageName=getTitle();
+  CurrentSelection=selectionType(); // Get the Current selection
+
+  if(CurrentSelection!=SelectionValue && Overlay.size==1 ){ // If Selection is not selected but in the overlay
+    run("Overlay Options...", "stroke=cyan width=2 point=Dot size=Medium fill=none apply show");
+    run("Labels...", "color=cyan font=10 show bold");
+    Overlay.activateSelection(0); // Get the selection from the overlay
+    CurrentSelection=selectionType(); // refresh Current selection
+  }
+
+  if (CurrentSelection==SelectionValue){ // If a correct Selection
+    setBatchMode("show");
+    selectWindow(CurrentImageName);
+    setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+    Dialog.create(PluginName+" Information");
+    Dialog.setInsets(0, 0, 0);
+    Dialog.addMessage("Would you like to adjust the current "+SelectionName+" selection?");
+    Dialog.setInsets(0, 0, 0);
+    Dialog.addMessage(SelectionInfo);
+    UserChoiceArray=newArray("Keep the current "+SelectionName+" selection", "Let me adjust it");
+    Dialog.setInsets(0, 50, 0);
+    Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Keep the current "+SelectionName+" selection");
+    Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+    Dialog.show();
+    UserChoice=Dialog.getRadioButton();
+    if (UserChoice=="Keep the current "+SelectionName+" selection"){
+      setBatchMode("hide");
+      SelectionPromptPass=1;
+    } else {SelectionPromptPass=0;}
+  } else{
+    SelectionPromptPass=0;
+  run("Select None");
+}
+
+  if (SelectionPromptPass==0){
+    setBatchMode("show");
+    selectWindow(CurrentImageName);
+    setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+    run("Hide Overlay");
+    setTool(SelectionName);
+    waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
+    +SelectionInfo+
+    "\nWhen done, press OK.");
+    CurrentSelection=selectionType();
+    if(CurrentSelection<0 || CurrentSelection!=SelectionValue){
+      if(CurrentSelection<0){
+        MessageError="Sorry but no "+SelectionName+" selection was detected.";
+        MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionName+" was detected.";
+      } else if(CurrentSelection!=SelectionValue){
+        MessageError="Sorry but the Selection is not a "+SelectionName+".";
+        MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionName+".";
+      }
+      ErrorDialog(MessageError,MessageFix,MessageQuit);
+      run("Select None");
+    } else {
+      SelectionPromptPass=1;
+      setBatchMode("hide");
+
+    }
+  }
+}
+////////////////////End of Functions
+
+
+
+
+
+InitialMessage=""+MacroName+" will :"
++"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process."
++"\n\nFor each "+FileExt+" File:"
++"\n- Prompt for 7 registration points"
++"\n- Save in a new folder"
++"\n   - Registration Points as a Region of Interest ZIP File"
++"\n   - Image as TIF File with the Registration Points as an overlay"
++"\n- Save the X and Y Registration Coordinates in a single CSV File";
+
+MessageDialog(InitialMessage);
+
+do{
+  SelectInputDir(MinNbFile,FileExt);
+}while(SelectInputDirPass!=1)
+
+CreateOutputDir(FolderSuffix);
+CreateOutputSubDir(SubDirArray);
+OutputImagePath=""+OutputDirPath+"Images"+File.separator;
+OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
+
+//////////////////////////// Create an output CSV File
+CSVFileName=""+InputDirName+"_"+"Registration Coordinates";
+CSVFilePath=OutputDirPath+CSVFileName+".csv";
+CSVFile = File.open(CSVFilePath);
+CellSeparator= ",";
+LineSeparator="\n";
+// Write the header of the CSV
+print(CSVFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator+"DE_R_X"+CellSeparator+"DE_R_Y"+CellSeparator+"LE_R_X"+CellSeparator+"LE_R_Y"+CellSeparator+"VE_R_X"+CellSeparator+"VE_R_Y"+CellSeparator+"VE_L_X"+CellSeparator+"VE_L_Y"+CellSeparator+"LE_L_X"+CellSeparator+"LE_L_Y"+CellSeparator+"DE_L_X"+CellSeparator+"DE_L_Y"+CellSeparator
++"Resolution_Pixels_per_Unit" + CellSeparator + "Resolution_Unit" + LineSeparator);
+//////////////////////////// End of Create an output CSV File
+
+
+
+// Start of the loop going through the list of files in the input folder selected above
+for (FileI = 0; FileI < InputFileList.length; FileI++){
+  setBatchMode(false);
+  InputFileNameI=InputFileList[FileI];
+  InputFilePathI = InputDirPath+InputFileNameI;
+  open(InputFilePathI);
+NbOfPoints=0;
+while(NbOfPoints<7){
+  do {
+    SelectionPrompt("multipoint","A total of 7 points must be present in the following order:"
+    +"\n1: Central Canal"
+    +"\n2: Dorsal Spinal Edge (Right hemicord)"
+    +"\n3: Lateral Spinal Edge (Right hemicord)"
+    +"\n4: Ventral Spinal Edge (Right hemicord)"
+    +"\n5: Ventral Spinal Edge (Left hemicord)"
+    +"\n6: Lateral Spinal Edge (Left hemicord)"
+    +"\n7: Dorsal Spinal Edge (Left hemicord)");
+    } while(SelectionPromptPass!=1)
+    run("Clear Results");
+    run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
+    run("Measure");
+    NbOfPoints=nResults();
+    if(NbOfPoints<7){
+      MessageError="Sorry but at least 7 points should be defined.";
+      MessageFix=MacroName+" function requires at least 7 points.";
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
+    ErrorDialog(MessageError,MessageFix,MessageQuit);
+
+  }
+    }
+
+NbOfResults=0;
+  CC_X=getResult("X",0);
+  CC_Y=getResult("Y",0);
+
+  DE_R_X=getResult("X",1);
+  DE_R_Y=getResult("Y",1);
+
+  LE_R_X=getResult("X",2);
+  LE_R_Y=getResult("Y",2);
+
+  VE_R_X=getResult("X",3);
+  VE_R_Y=getResult("Y",3);
+
+  VE_L_X=getResult("X",4);
+  VE_L_Y=getResult("Y",4);
+
+  LE_L_X=getResult("X",5);
+  LE_L_Y=getResult("Y",5);
+
+  DE_L_X=getResult("X",6);
+  DE_L_Y=getResult("Y",6);
+
+  run("Clear Results");
+
+  // Add selection to overlay and save the File
+  selectWindow(InputFileNameI);
+  roiManager("reset");
+  roiManager("Add");
+  roiManager("Save", OutputROIPath+File.nameWithoutExtension+"_Registration_Points_ROI.zip");
+  run("Select None");
+  roiManager("Select", 0);
+  roiManager("reset");
+  run("Remove Overlay");
+  run("Overlay Options...", "stroke=cyan width=2 point=Dot size=Medium fill=none apply show");
+  run("Labels...", "color=cyan font=10 show bold");
+  run("Add Selection...");
+  selectWindow(InputFileNameI);
+  saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif");
+  getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
+  ImageScale=1/PixelWidth;
+  close();
+  print(CSVFile, File.nameWithoutExtension+CellSeparator+CC_X+CellSeparator+CC_Y+CellSeparator+DE_R_X+CellSeparator+DE_R_Y+CellSeparator+LE_R_X+CellSeparator+LE_R_Y+CellSeparator+VE_R_X+CellSeparator+VE_R_Y+CellSeparator+VE_L_X+CellSeparator+VE_L_Y+CellSeparator+LE_L_X+CellSeparator+LE_L_Y+CellSeparator+DE_L_X+CellSeparator+DE_L_Y+CellSeparator+ImageScale+CellSeparator+Unit+LineSeparator);
+      // Update the progress bar
+      showProgress(FileI, InputFileList.length);
+    }/////////////////////End of for Filei loop
+
+    // Close Threshold windows if it is open
+    if(isOpen("Threshold")){
+      selectWindow("Threshold");
+      run("Close");
+    }//end of if threshold is open
+
+    // Close results windows if it is open
+    if(isOpen("Results")){
+      run("Clear Results");
+      selectWindow("Results");
+      run("Close");
+    }//end of if Results is open
+
+    // Close the CSV File
+    File.close(CSVFile);
+    beep();
+
+    ///////////////////// Closing Dialog Box
+    Dialog.create(PluginName+" Information");
+    Dialog.setInsets(0, 0, 0);
+    Dialog.addMessage(NbFile+" "+ FileExt+ " File in the Folder: \"" +InputDirName+"\" have been processed successfully.");
+    Dialog.setInsets(10, 0, 0);
+    Dialog.addMessage("Registered Images are saved in the Folder: \""+OutputDirName+"\".");
+    Dialog.setInsets(10, 0, 0);
+    Dialog.addMessage("Coordinates of Region Of Interest are saved in : \""+CSVFileName+".csv\"");
+    Dialog.setLocation(IJPosX, IJPosY+IJSizeY+Spacer);
+    Dialog.show();

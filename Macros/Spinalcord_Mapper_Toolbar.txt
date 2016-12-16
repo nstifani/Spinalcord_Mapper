@@ -48,11 +48,19 @@ call("ij.Prefs.set", "results.loc", ResultsPosX+" , "+ResultsPosY);
 
 <line>
 <button>1 line 1
-label=Register
+label=SC Registration
 icon=noicon
 arg=<macro>
-run("Register");
+run("SC Registration");
 </macro>
+
+<button>2 line 1
+label=Cell Detection
+icon=noicon
+arg=<macro>
+run("Cell Detection");
+</macro>
+
 </line>
 
 <line>
@@ -63,10 +71,8 @@ arg=<macro>
 PluginName="Spinalcord Mapper";
 run(PluginName+" Toggle Autostart");
 </macro>
-</line>
 
-<line>
-<button>1 line 3
+<button>2 line 2
 label=Close
 icon=noicon
 arg=<close>
