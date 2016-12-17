@@ -26,8 +26,8 @@ public class Spinalcord_Mapper implements PlugIn {
       return;
     }
 
-    if (arg.equals("Toggle Autostart")){
-      Toggle_Autostart();
+    if (arg.equals("Spinalcord Mapper Toggle Autostart")){
+      Spinalcord_Mapper_Toggle_Autostart();
       return;
     }
 
@@ -41,8 +41,8 @@ public class Spinalcord_Mapper implements PlugIn {
   void Cell_Detection() {
     IJ.runMacro(getText(path+"Cell_Detection.txt"), "");
   }
-    void Toggle_Autostart() {
-    IJ.runMacro(getText(path+"Toggle_Autostart.txt"), "");
+    void Spinalcord_Mapper_Toggle_Autostart() {
+    IJ.runMacro(getText(path+"Spinalcord_Mapper_Toggle_Autostart.txt"), "");
   }
 
 
