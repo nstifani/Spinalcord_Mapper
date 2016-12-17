@@ -127,10 +127,6 @@ if (matches(AutostartChoice,".*(Keep).*")==1){
     } // end of for
     // Save the File startup with the new content
     File.saveString(StartUpMacroContent, MacroFolder+StartUpMarcro);
-}
-
-
-
 
 // Check if the toolbar is present
 ListWindows=getList("window.titles");
@@ -166,23 +162,6 @@ if((matches(AutostartChoice,".*(Keep).*")==1 || matches(AutostartChoice,".*(Acti
     setLocation(ToolbarPosX,ToolbarPosY);
     ToolbarPresent=1;
   }
-} else if(matches(AutostartChoice,".*(Remove).*")==1 && ToolbarPresent==1){
-  Dialog.create(PluginName+" Information");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("The "+PluginName+" Toolbar is currently active.");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("Do you want to close the "+PluginName+" Toolbar?");
-  Dialog.setInsets(0, 0, 0);
-  YesNoArray=newArray("No", "Yes");
-  Dialog.setInsets(0, 100, 0);
-  Dialog.addRadioButtonGroup("", YesNoArray, 2, 1, "Yes");
-  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  Dialog.show();
-  UserChoice=Dialog.getRadioButton();
-  if (UserChoice=="Yes"){
-    selectWindow(PluginName+" Toolbar");
-    run("Close");
-    }
 }
 
 beep();
@@ -200,4 +179,5 @@ Dialog.show();
 RestartChoice=Dialog.getRadioButton();
 if(RestartChoice=="Quit"){
   run("Quit");
+}
 }
