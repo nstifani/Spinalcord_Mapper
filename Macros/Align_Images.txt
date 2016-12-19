@@ -424,7 +424,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 
   // Save the File
   selectWindow(InputFileNameI);
-  saveAs("Tif", OutputDirPath+File.nameWithoutExtension+"_Aligned");
+  saveAs("Tif", OutputDirPath+File.nameWithoutExtension+".tif");
   close();
   showProgress(FileI, InputFileList.length);
 }

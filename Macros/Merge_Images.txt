@@ -637,7 +637,7 @@ for(FileI=0; FileI<UsableBaseNameList.length; FileI++){
       OutputImagePath=OutputImagePath+"_"+ListChName[ChI];
     }
   }
-  OutputImagePath=OutputImagePath+"_Merged.tif";
+  OutputImagePath=OutputImagePath+".tif";
   saveAs("Tiff", OutputImagePath);
   run("Close All");
 
