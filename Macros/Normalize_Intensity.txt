@@ -348,10 +348,43 @@ function LinearNormalization (InputFileList, OutputPath){
     InputFileNameI=InputFileList[FileI];
     InputFilePathI = InputDirPath+InputFileNameI;
     open(InputFilePathI);
-    run("Split Channels");
-    run("Images to Stack", "name=Stack title=[] use");
-    run("Enhance Contrast...", "saturated=0.1 normalize process_all");
-    run("Make Composite", "display=Composite");
+
+    ImageBitDepth=bitDepth();
+    ImageInfoArray=split(getImageInfo(),"\n");
+    for(RowI=0; RowI<ImageInfoArray.length; RowI++){
+    ImageInfoRowI=ImageInfoArray[RowI];
+    if(startsWith(ImageInfoRowI, "Bits per pixel: ")){
+    ImageType=replace(ImageInfoRowI,"Bits per pixel: ","");
+  } else {
+    ImageType=" ";
+  }
+  }
+
+if(ImageType=="8 (color LUT)"){ // Transform 8bit color image into RGB color
+  run("RGB Color");
+  run("Make Composite");
+} else if(ImageBitDepth==24){ // If it is a RGB Image convert it to RGB Stack
+     run("Make Composite");
+    }
+
+
+      getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames);
+      ImageBitDepth=bitDepth();
+
+if(NbChannels==1){ // If Only one color
+    run("Grays");
+    if(NbSlices>1 || NbFrames>1){ // 1 color but more dimensions
+      run("Enhance Contrast...", "saturated=0.1 normalize process_all");
+  } else{
+      run("Enhance Contrast...", "saturated=0.1 normalize");
+  }
+} else { // If more than one color
+for(ChannelI=1; ChannelI<NbChannels+1; ChannelI++){
+Stack.setChannel(ChannelI);
+run("Enhance Contrast...", "saturated=0.1 normalize process_all");
+}
+}
+
     saveAs("Tif", OutputPath+InputFileNameI);
     close();
     showProgress(FileI, InputFileList.length);
