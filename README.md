@@ -2,7 +2,7 @@
 2016-12-17
 Author: Nicolas Stifani nstifani@gmail.com
 
-This is a plugin for ImageJ intented for manual registration of spinal cord transverse images.
+This is a plugin for ImageJ intented for Processing, Manual Registration and cell count of spinal cord images.
 It requires ImageJ 1.50 and above.
 
 To install it:
