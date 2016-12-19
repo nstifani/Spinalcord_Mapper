@@ -27,8 +27,8 @@ DummyVariable=eval("script","IJ.getInstance().setLocation("+IJPosX+","+IJPosY+")
 
 
 // Set Toolbar Size and position
-ToolbarSizeX=250; // Size of the toolbar
-ToolbarSizeY=100; // Size of the toolbar
+ToolbarSizeX=300; // Size of the toolbar
+ToolbarSizeY=180; // Size of the toolbar
 ToolbarPosX=IJPosX+IJSizeX+Spacer; // Position of the Toolbar is to the right of the ImageJ toolbar
 ToolbarPosY=IJPosY; // Position of to the Toolbar in Y
 
@@ -76,31 +76,79 @@ call("ij.Prefs.set", "results.height", ResultsSizeY);
 
 <line>
 <button>1 line 1
+label=Merge Images
+icon=noicon
+arg=<macro>
+run("Merge Images");
+</macro>
+
+<button>2 line 1
+label=Normalize Intensity
+icon=noicon
+arg=<macro>
+run("Normalize Intensity");
+</macro>
+</line>
+
+
+<line>
+<button>1 line 2
+label=Orient Images
+icon=noicon
+arg=<macro>
+run("Orient Images");
+</macro>
+
+<button>2 line 2
+label=Align Images
+icon=noicon
+arg=<macro>
+run("Align Images");
+</macro>
+</line>
+
+<line>
+<button>1 line 3
+label=Resize Images
+icon=noicon
+arg=<macro>
+run("Resize Images");
+</macro>
+
+<button>2 line 3
 label=SC Registration
 icon=noicon
 arg=<macro>
 run("SC Registration");
 </macro>
-
-<button>2 line 1
-label=Cell Detection
-icon=noicon
-arg=<macro>
-run("Cell Detection");
-</macro>
-
 </line>
 
 <line>
-<button>1 line 2
-label=Autostart
+<button>1 line 4
+label=Manual Cell Detection
+icon=noicon
+arg=<macro>
+run("Manual Cell Detection");
+</macro>
+
+<button>2 line 4
+label=Auto Cell Detection
+icon=noicon
+arg=<macro>
+run("Auto Cell Detection");
+</macro>
+</line>
+
+<line>
+<button>1 line 5
+label=Toggle Autostart
 icon=noicon
 arg=<macro>
 PluginName="Spinalcord Mapper";
 run(PluginName+" Toggle Autostart");
 </macro>
 
-<button>2 line 2
+<button>2 line 5
 label=Close
 icon=noicon
 arg=<close>

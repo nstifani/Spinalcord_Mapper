@@ -1,12 +1,13 @@
 // Defines Global Variables
 var PluginName="Spinalcord Mapper";
-var MacroName="SC Registration";
+var MacroName="Resize Image";
 var FileExt="TIF";
 var MinNbFile=1;
-var FolderSuffix="Registered";
-var SubDirArray=newArray("Images","ROIs");
+var FolderSuffix="Resized";
+var SubDirArray=newArray("");
 CellSeparator= ",";
 LineSeparator="\n";
+
 
 /////////////// Header, Set Preferences and Options and Housekeeping
 // Select All measurements, Invert Y, and use 9 decimals
@@ -96,7 +97,7 @@ call("ij.Prefs.set", "results.height", ResultsSizeY);
 
 
 
-//////////////// General Functions
+//////////////// Functions
 // Function to Append to an array
 function Append(ArrayI, Value) {
   ArrayJ = newArray(ArrayI.length+1);
@@ -331,166 +332,143 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     }
   }
 }
-////////////////////End of General Functions
+////////////////////End of Functions
 
 
+///////// Specific Functions
+var GetImageInfoPass;
+var DimensionArray;
+var NbChannelArray;
+var NbSliceArray;
+var NbFrameArray;
+function GetImageInfo (InputFileList){
+  GetImageInfoPass=0;
+  setBatchMode(true);
+  /////////////////////// Open the text Files to store parameters and measurement data
+  DimensionArray=newArray(0);
+  NbChannelArray=newArray(0);
+  NbSliceArray=newArray(0);
+  NbFrameArray=newArray(0);
 
+  for (FileI = 0; FileI < InputFileList.length; FileI++){
+    InputFileNameI=InputFileList[FileI];
+    InputFilePathI = InputDirPath+InputFileNameI;
+    open(InputFilePathI);
+    getDimensions(WidthI, HeightI, ChannelsI, SlicesI, FramesI);
+    DimensionArray=Append(DimensionArray,WidthI);
+    DimensionArray=Append(DimensionArray,HeightI);
+    NbChannelArray=Append(NbChannelArray,ChannelsI);
+    NbSliceArray=Append(NbSliceArray,SlicesI);
+    NbFrameArray=Append(NbFrameArray,FramesI);
+    close();
+    showProgress(FileI, InputFileList.length);
+  }
+  GetImageInfoPass=1;
+}
 
+var PromptOutputDimensionPass;
+var OutputDimension;
+function PromptOutputDimension (MinDimension,MaxDimension,MeanDimension,StDevDimension){
+  SavedOutputDimension=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".OutputDimension", 1000);
 
+  PromptOutputDimensionPass=0;
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("From the "+NbFile+" "+FileExt+" Files the Dimensions are :");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("Minimum: "+MinDimension+"       Average  : "+MeanDimension);
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("Maximum: "+MaxDimension+"       StDev      : "+StDevDimension);
+  Dialog.setInsets(10, 0, 0);
+  Dialog.addMessage("Dimension Previously used: "+SavedOutputDimension+" pixels.");
+  Dialog.setInsets(10, 0, 0);
+  Dialog.addMessage("Please indicate the Desired Final Dimension.");
+  Dialog.setInsets(5, 0, 0);
+  Dialog.addNumber("Final Dimension: ", MeanDimension,0,8," pixels");
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  OutputDimension=Dialog.getNumber();
+  OutputDimension=round(OutputDimension);
+  if(isNaN(OutputDimension)==1 || OutputDimension<1){
+    MessageError="Sorry but the Final Dimension must be a positive number.";
+    MessageFix=MacroName+" function requires a positive Final Dimension.";
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided Final Dimension was not a positive number.";
+    ErrorDialog(MessageError,MessageFix,MessageQuit);
+  } else {
+    PromptOutputDimensionPass=1;
+    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".OutputDimension",OutputDimension);
+  }
+} // End of function PromptNbCh
+////////////////////End of Functions
+/////////End Of Specific Functions
 
 InitialMessage=""+MacroName+" will :"
-+"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
++"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process."
++"\n- Get the largest Dimension from all images"
++"\n- Prompt to adjust the Final Image Dimension"
 +"\n\nFor each "+FileExt+" File:"
-+"\n- Prompt for 7 registration points"
-+"\n- Save in a new folder"
-+"\n   - Registration Points as a Region of Interest ZIP File"
-+"\n   - Image as TIF File with the Registration Points as an overlay"
-+"\n- Save the X and Y Registration Coordinates in a single CSV File";
++"\n- Resize the Image to the defined Final Dimension"
++"\n- Save the Images as TIF Files in a new folder";
 
-MessageDialog(InitialMessage); // Display the Intial Dialog
+MessageDialog(InitialMessage);
 
 do{
-  SelectInputDir(MinNbFile,FileExt); // Select the InputDirectory
+  SelectInputDir(MinNbFile,FileExt);
 }while(SelectInputDirPass!=1)
 
-CreateOutputDir(FolderSuffix); // Create output Directory
-CreateOutputSubDir(SubDirArray); // Create output Sub Directory
-OutputImagePath=""+OutputDirPath+"Images"+File.separator; // Create Subdirectory object path
-OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
+GetImageInfo(InputFileList);
 
-//////////////////////////// Create an output CSV File
-CSVFileName=""+InputDirName+"_"+"Registration Coordinates";
-CSVFilePath=OutputDirPath+CSVFileName+".csv";
-CSVFile = File.open(CSVFilePath);
-// Write the header of the CSV
-print(CSVFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
-+"DE_R_X"+CellSeparator+"DE_R_Y"+CellSeparator
-+"LE_R_X"+CellSeparator+"LE_R_Y"+CellSeparator
-+"VE_R_X"+CellSeparator+"VE_R_Y"+CellSeparator
-+"VE_L_X"+CellSeparator+"VE_L_Y"+CellSeparator
-+"LE_L_X"+CellSeparator+"LE_L_Y"+CellSeparator
-+"DE_L_X"+CellSeparator+"DE_L_Y"+CellSeparator
-+"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
-+"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
-//////////////////////////// End of Create an output CSV File
+Array.getStatistics(DimensionArray, MinDimension, MaxDimension, MeanDimension, StDevDimension);
+MinDimension=round(MinDimension);
+MaxDimension=round(MaxDimension);
+MeanDimension=round(MeanDimension);
+StDevDimension=round(StDevDimension);
 
+do{
+  PromptOutputDimension(MinDimension,MaxDimension,MeanDimension,StDevDimension);
+}while(PromptOutputDimensionPass!=1)
 
+// Create OutputDirectory with the folder suffix
+FolderSuffix="Resized_"+OutputDimension+"pixels";
+CreateOutputDir(FolderSuffix);
 
 // Start of the loop going through the list of files in the input folder selected above
+setBatchMode(true);
 for (FileI = 0; FileI < InputFileList.length; FileI++){
-  setBatchMode(false);
   InputFileNameI=InputFileList[FileI];
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);
-  NbOfPoints=0;
-  while(NbOfPoints<7){
-    do {
-      SelectionPrompt("multipoint","A total of 7 points must be present in the following order:"
-      +"\n1: Central Canal"
-      +"\n2: Dorsal Spinal Edge (Right hemicord)"
-      +"\n3: Lateral Spinal Edge (Right hemicord)"
-      +"\n4: Ventral Spinal Edge (Right hemicord)"
-      +"\n5: Ventral Spinal Edge (Left hemicord)"
-      +"\n6: Lateral Spinal Edge (Left hemicord)"
-      +"\n7: Dorsal Spinal Edge (Left hemicord)");
-    } while(SelectionPromptPass!=1)
-    run("Clear Results");
-    run("Measure");
-    NbOfPoints=nResults();
-    if(NbOfPoints<7){
-      MessageError="Sorry but at least 7 points should be defined.";
-      MessageFix=MacroName+" function requires at least 7 points.";
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
-      ErrorDialog(MessageError,MessageFix,MessageQuit);
-
-    }
-  }
-
-  NbOfResults=0;
-  CC_X=getResult("X",0);
-  CC_Y=getResult("Y",0);
-
-  DE_R_X=getResult("X",1);
-  DE_R_Y=getResult("Y",1);
-
-  LE_R_X=getResult("X",2);
-  LE_R_Y=getResult("Y",2);
-
-  VE_R_X=getResult("X",3);
-  VE_R_Y=getResult("Y",3);
-
-  VE_L_X=getResult("X",4);
-  VE_L_Y=getResult("Y",4);
-
-  LE_L_X=getResult("X",5);
-  LE_L_Y=getResult("Y",5);
-
-  DE_L_X=getResult("X",6);
-  DE_L_Y=getResult("Y",6);
-
-  run("Clear Results");
-
-  // Add selection to overlay and save the File
-  selectWindow(InputFileNameI);
-  roiManager("reset");
-  roiManager("Add"); // Add Points to ROI manager
-  roiManager("Save", OutputROIPath+File.nameWithoutExtension+"_Registration_Points_ROI.zip");
-  run("Select None"); // Select nothing
-  roiManager("Select", 0); // Select the ROI manager
-  roiManager("reset"); // Reset the ROI manager
-  run("Remove Overlay"); // Reset the overlay
-  run("Add Selection..."); // Add the selection to the overlay
-  selectWindow(InputFileNameI);
-  saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif");
-  getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
-  ImageScale=1/PixelWidth;
-  ImageWidth=getWidth();
-  ImageHeight=getHeight();
+  run("Canvas Size...", "width=OutputDimension height=OutputDimension position=Center zero");
+  saveAs("Tif", OutputDirPath+InputFileNameI);
   close();
-  print(CSVFile, File.nameWithoutExtension+CellSeparator
-  +CC_X+CellSeparator+CC_Y+CellSeparator
-  +DE_R_X+CellSeparator+DE_R_Y+CellSeparator
-  +LE_R_X+CellSeparator+LE_R_Y+CellSeparator
-  +VE_R_X+CellSeparator+VE_R_Y+CellSeparator
-  +VE_L_X+CellSeparator+VE_L_Y+CellSeparator
-  +LE_L_X+CellSeparator+LE_L_Y+CellSeparator
-  +DE_L_X+CellSeparator+DE_L_Y+CellSeparator
-  +ImageWidth+CellSeparator+ImageHeight+CellSeparator
-  +ImageScale+CellSeparator+Unit+LineSeparator);
-  // Update the progress bar
   showProgress(FileI, InputFileList.length);
-  // Close results windows if it is open
-  if(isOpen("Results")){
-    run("Clear Results");
-    selectWindow("Results");
-    run("Close");
-  }//end of if Results is open
-}/////////////////////End of for Filei loop
+}
 
-// Close Threshold windows if it is open
+///////////////////////// Close Utility windows
 if(isOpen("Threshold")){
   selectWindow("Threshold");
   run("Close");
-}//end of if threshold is open
+}
 
-// Close results windows if it is open
 if(isOpen("Results")){
   run("Clear Results");
   selectWindow("Results");
   run("Close");
-}//end of if Results is open
+}
 
-// Close the CSV File
-File.close(CSVFile);
-beep();
+if(isOpen("ROI Manager")){
+  roiManager("reset");
+  selectWindow("ROI Manager");
+  run("Close");
+}
+///////////////////////// Close Utility windows
 
-///////////////////// Closing Dialog Box
+/////////////////////// Initial Dialog Box
 Dialog.create(PluginName+" Information");
 Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(NbFile+" "+ FileExt+ " File in the Folder: \"" +InputDirName+"\" have been processed successfully.");
-Dialog.setInsets(10, 0, 0);
-Dialog.addMessage("Registered Images are saved in the Folder: \""+OutputDirName+"\".");
-Dialog.setInsets(10, 0, 0);
-Dialog.addMessage("Coordinates of Region Of Interest are saved in : \""+CSVFileName+".csv\"");
-Dialog.setLocation(IJPosX, IJPosY+IJSizeY+Spacer);
+Dialog.addMessage(NbFile+" "+ FileExt+ " Files in the folder:\n"+InputDirName+"\nhave been processed successfully.");
+Dialog.setInsets(0, 0, 0);
+Dialog.addMessage("Files are saved in the following folder:\n"+OutputDirName+".");
+Dialog.setInsets(0, 0, 0);
+Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
 Dialog.show();

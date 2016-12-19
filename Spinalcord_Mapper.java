@@ -16,16 +16,40 @@ public class Spinalcord_Mapper implements PlugIn {
 
   public void run(String arg) {
     String msg = "";
+    if (arg.equals("Merge Images")){
+      Merge_Images();
+      return;
+    }
+    if (arg.equals("Normalize Intensity")){
+      Normalize_Intensity();
+      return;
+    }
+    if (arg.equals("Orient Images")){
+      Orient_Images();
+      return;
+    }
+    if (arg.equals("Align Images")){
+      Align_Images();
+      return;
+    }
+    if (arg.equals("Resize Images")){
+      Resize_Images();
+      return;
+    }
+
     if (arg.equals("SC Registration")){
       SC_Registration();
       return;
     }
 
-    if (arg.equals("Cell Detection")){
-      Cell_Detection();
+    if (arg.equals("Manual Cell Detection")){
+      Manual_Cell_Detection();
       return;
     }
-
+    if (arg.equals("Auto Cell Detection")){
+      Auto_Cell_Detection();
+      return;
+    }
     if (arg.equals("Spinalcord Mapper Toggle Autostart")){
       Spinalcord_Mapper_Toggle_Autostart();
       return;
@@ -34,12 +58,29 @@ public class Spinalcord_Mapper implements PlugIn {
 
   }
 
-
+  void Merge_Images() {
+    IJ.runMacro(getText(path+"Merge_Images.txt"), "");
+  }
+  void Normalize_Intensity() {
+    IJ.runMacro(getText(path+"Normalize_Intensity.txt"), "");
+  }
+  void Orient_Images() {
+    IJ.runMacro(getText(path+"Orient_Images.txt"), "");
+  }
+  void Align_Images() {
+    IJ.runMacro(getText(path+"Align_Images.txt"), "");
+  }
+  void Resize_Images() {
+    IJ.runMacro(getText(path+"Resize_Images.txt"), "");
+  }
   void SC_Registration() {
     IJ.runMacro(getText(path+"SC_Registration.txt"), "");
   }
-  void Cell_Detection() {
-    IJ.runMacro(getText(path+"Cell_Detection.txt"), "");
+  void Manual_Cell_Detection() {
+    IJ.runMacro(getText(path+"Manual_Cell_Detection.txt"), "");
+  }
+  void Auto_Cell_Detection() {
+    IJ.runMacro(getText(path+"Auto_Cell_Detection.txt"), "");
   }
     void Spinalcord_Mapper_Toggle_Autostart() {
     IJ.runMacro(getText(path+"Spinalcord_Mapper_Toggle_Autostart.txt"), "");

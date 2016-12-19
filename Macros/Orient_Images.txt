@@ -1,12 +1,13 @@
 // Defines Global Variables
 var PluginName="Spinalcord Mapper";
-var MacroName="SC Registration";
+var MacroName="Orient Images";
 var FileExt="TIF";
 var MinNbFile=1;
-var FolderSuffix="Registered";
-var SubDirArray=newArray("Images","ROIs");
+var FolderSuffix="Oriented";
+var SubDirArray=newArray("");
 CellSeparator= ",";
 LineSeparator="\n";
+
 
 /////////////// Header, Set Preferences and Options and Housekeeping
 // Select All measurements, Invert Y, and use 9 decimals
@@ -96,7 +97,7 @@ call("ij.Prefs.set", "results.height", ResultsSizeY);
 
 
 
-//////////////// General Functions
+//////////////// Functions
 // Function to Append to an array
 function Append(ArrayI, Value) {
   ArrayJ = newArray(ArrayI.length+1);
@@ -331,7 +332,51 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     }
   }
 }
-////////////////////End of General Functions
+////////////////////End of Functions
+
+
+/////////Specific Functions
+var ProcessMethod;
+function ProcessMethodPrompt (){
+  ProcessMethodPromptPass=0;
+  ProcessMethod=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethod", "Global");
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("Select your Processing Method:");
+  Dialog.addRadioButtonGroup("", newArray("Global","Individual"), 2, 1, ProcessMethod)
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  ProcessMethod = Dialog.getRadioButton;
+  ProcessMethodPromptPass=1;
+  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ProcessingMethod", ProcessMethod);
+  /////////////////////// Initial Dialog Box
+} // End of function
+
+var Transformation;
+function TransformationPrompt (){
+  TransformationPromptPass=0;
+  Transformation=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".Transformation", "None");
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("Select the Transformation:");
+  TransformationArray = newArray("None","Rotate 90 Left", "Rotate 90 Right", "Rotate 180","Flip Horizontally", "Flip Vertically");
+  Dialog.addRadioButtonGroup("Transformation :", TransformationArray, 3, 2, Transformation)
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  Transformation = Dialog.getRadioButton;
+  TransformationPromptPass=1;
+  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".Transformation", Transformation);
+  /////////////////////// Initial Dialog Box
+} // End of function
+
+function rotate90R(){run("Rotate 90 Degrees Right");}
+function rotate90L(){run("Rotate 90 Degrees Left");}
+function rotate180(){run("Rotate 90 Degrees Right");run("Rotate 90 Degrees Right");}
+function FlipH(){run("Flip Horizontally");}
+function FlipV(){run("Flip Vertically");}
+////////////////////End of Functions
+/////////End Of Specific Functions
+
 
 
 
@@ -339,158 +384,105 @@ function SelectionPrompt(SelectionName, SelectionInfo){
 
 
 InitialMessage=""+MacroName+" will :"
-+"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
++"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process."
 +"\n\nFor each "+FileExt+" File:"
-+"\n- Prompt for 7 registration points"
-+"\n- Save in a new folder"
-+"\n   - Registration Points as a Region of Interest ZIP File"
-+"\n   - Image as TIF File with the Registration Points as an overlay"
-+"\n- Save the X and Y Registration Coordinates in a single CSV File";
++"\n- Apply the selected Transformation"
++"\n- Save the Images as TIF Files in a new folder";
 
-MessageDialog(InitialMessage); // Display the Intial Dialog
+MessageDialog(InitialMessage);
 
 do{
-  SelectInputDir(MinNbFile,FileExt); // Select the InputDirectory
+  SelectInputDir(MinNbFile,FileExt);
 }while(SelectInputDirPass!=1)
 
-CreateOutputDir(FolderSuffix); // Create output Directory
-CreateOutputSubDir(SubDirArray); // Create output Sub Directory
-OutputImagePath=""+OutputDirPath+"Images"+File.separator; // Create Subdirectory object path
-OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
+ProcessMethodPrompt();
 
-//////////////////////////// Create an output CSV File
-CSVFileName=""+InputDirName+"_"+"Registration Coordinates";
-CSVFilePath=OutputDirPath+CSVFileName+".csv";
-CSVFile = File.open(CSVFilePath);
-// Write the header of the CSV
-print(CSVFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
-+"DE_R_X"+CellSeparator+"DE_R_Y"+CellSeparator
-+"LE_R_X"+CellSeparator+"LE_R_Y"+CellSeparator
-+"VE_R_X"+CellSeparator+"VE_R_Y"+CellSeparator
-+"VE_L_X"+CellSeparator+"VE_L_Y"+CellSeparator
-+"LE_L_X"+CellSeparator+"LE_L_Y"+CellSeparator
-+"DE_L_X"+CellSeparator+"DE_L_Y"+CellSeparator
-+"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
-+"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
-//////////////////////////// End of Create an output CSV File
+if(ProcessMethod=="Global"){
 
+  TransformationPrompt();
+  FolderSuffix=FolderSuffix+"_"+Transformation;
+  CreateOutputDir(FolderSuffix);
+  setBatchMode(true); // Turn ON the batch mode;
 
-
-// Start of the loop going through the list of files in the input folder selected above
-for (FileI = 0; FileI < InputFileList.length; FileI++){
-  setBatchMode(false);
-  InputFileNameI=InputFileList[FileI];
-  InputFilePathI = InputDirPath+InputFileNameI;
-  open(InputFilePathI);
-  NbOfPoints=0;
-  while(NbOfPoints<7){
-    do {
-      SelectionPrompt("multipoint","A total of 7 points must be present in the following order:"
-      +"\n1: Central Canal"
-      +"\n2: Dorsal Spinal Edge (Right hemicord)"
-      +"\n3: Lateral Spinal Edge (Right hemicord)"
-      +"\n4: Ventral Spinal Edge (Right hemicord)"
-      +"\n5: Ventral Spinal Edge (Left hemicord)"
-      +"\n6: Lateral Spinal Edge (Left hemicord)"
-      +"\n7: Dorsal Spinal Edge (Left hemicord)");
-    } while(SelectionPromptPass!=1)
-    run("Clear Results");
-    run("Measure");
-    NbOfPoints=nResults();
-    if(NbOfPoints<7){
-      MessageError="Sorry but at least 7 points should be defined.";
-      MessageFix=MacroName+" function requires at least 7 points.";
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
-      ErrorDialog(MessageError,MessageFix,MessageQuit);
-
+  // Start of the loop going through the list of files in the input folder selected above
+  for (FileI = 0; FileI < InputFileList.length; FileI++){
+    InputFileNameI=InputFileList[FileI];
+    InputFilePathI = InputDirPath+InputFileNameI;
+    open(InputFilePathI);
+    if (Transformation=="Rotate 90 Left"){
+      rotate90L();
+    } else if (Transformation=="Rotate 90 Right"){
+      rotate90R();
+    } else if (Transformation =="Rotate 180"){
+      rotate180();
+    } else if (Transformation =="Flip Horizontally"){
+      FlipH();
+    } else if (Transformation =="Flip Vertically"){
+      FlipV();
     }
-  }
+    saveAs("Tif", OutputDirPath+File.nameWithoutExtension);
+    close();
+    showProgress(FileI, InputFileList.length);
+  }// End of ForFileI
 
-  NbOfResults=0;
-  CC_X=getResult("X",0);
-  CC_Y=getResult("Y",0);
+} else { //////////////////////////////// ProcessMethod is Individual
+  CreateOutputDir(FolderSuffix);
+  setBatchMode(true); // Turn ON the batch mode;
+  // Start of the loop going through the list of files in the input folder selected above
+  for (FileI = 0; FileI < InputFileList.length; FileI++){
+    InputFileNameI=InputFileList[FileI];
+    InputFilePathI = InputDirPath+InputFileNameI;
 
-  DE_R_X=getResult("X",1);
-  DE_R_Y=getResult("Y",1);
+    open(InputFilePathI);
+    setBatchMode("show");
+    setLocation(IJPosX,IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.5);
+    TransformationPrompt();
+    setBatchMode("hide");
 
-  LE_R_X=getResult("X",2);
-  LE_R_Y=getResult("Y",2);
+    if (Transformation=="Rotate 90 Left"){
+      rotate90L();
+    } else if (Transformation=="Rotate 90 Right"){
+      rotate90R();
+    } else if (Transformation =="Rotate 180"){
+      rotate180();
+    } else if (Transformation =="Flip Horizontally"){
+      FlipH();
+    } else if (Transformation =="Flip Vertically"){
+      FlipV();
+    }
+    saveAs("Tif", OutputDirPath+File.nameWithoutExtension+"_"+Transformation);
+    close();
+    showProgress(FileI, InputFileList.length);
+  }// End of ForFileI
+}
 
-  VE_R_X=getResult("X",3);
-  VE_R_Y=getResult("Y",3);
-
-  VE_L_X=getResult("X",4);
-  VE_L_Y=getResult("Y",4);
-
-  LE_L_X=getResult("X",5);
-  LE_L_Y=getResult("Y",5);
-
-  DE_L_X=getResult("X",6);
-  DE_L_Y=getResult("Y",6);
-
-  run("Clear Results");
-
-  // Add selection to overlay and save the File
-  selectWindow(InputFileNameI);
-  roiManager("reset");
-  roiManager("Add"); // Add Points to ROI manager
-  roiManager("Save", OutputROIPath+File.nameWithoutExtension+"_Registration_Points_ROI.zip");
-  run("Select None"); // Select nothing
-  roiManager("Select", 0); // Select the ROI manager
-  roiManager("reset"); // Reset the ROI manager
-  run("Remove Overlay"); // Reset the overlay
-  run("Add Selection..."); // Add the selection to the overlay
-  selectWindow(InputFileNameI);
-  saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif");
-  getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
-  ImageScale=1/PixelWidth;
-  ImageWidth=getWidth();
-  ImageHeight=getHeight();
-  close();
-  print(CSVFile, File.nameWithoutExtension+CellSeparator
-  +CC_X+CellSeparator+CC_Y+CellSeparator
-  +DE_R_X+CellSeparator+DE_R_Y+CellSeparator
-  +LE_R_X+CellSeparator+LE_R_Y+CellSeparator
-  +VE_R_X+CellSeparator+VE_R_Y+CellSeparator
-  +VE_L_X+CellSeparator+VE_L_Y+CellSeparator
-  +LE_L_X+CellSeparator+LE_L_Y+CellSeparator
-  +DE_L_X+CellSeparator+DE_L_Y+CellSeparator
-  +ImageWidth+CellSeparator+ImageHeight+CellSeparator
-  +ImageScale+CellSeparator+Unit+LineSeparator);
-  // Update the progress bar
-  showProgress(FileI, InputFileList.length);
-  // Close results windows if it is open
-  if(isOpen("Results")){
-    run("Clear Results");
-    selectWindow("Results");
-    run("Close");
-  }//end of if Results is open
-}/////////////////////End of for Filei loop
-
-// Close Threshold windows if it is open
+///////////////////////// Close Utility windows
 if(isOpen("Threshold")){
   selectWindow("Threshold");
   run("Close");
-}//end of if threshold is open
+}
 
-// Close results windows if it is open
 if(isOpen("Results")){
   run("Clear Results");
   selectWindow("Results");
   run("Close");
-}//end of if Results is open
+}
 
-// Close the CSV File
-File.close(CSVFile);
-beep();
+if(isOpen("ROI Manager")){
+  roiManager("reset");
+  selectWindow("ROI Manager");
+  run("Close");
+}
+///////////////////////// Close Utility windows
 
-///////////////////// Closing Dialog Box
+
+
+////////////////////// Closing Dialog Box
 Dialog.create(PluginName+" Information");
 Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(NbFile+" "+ FileExt+ " File in the Folder: \"" +InputDirName+"\" have been processed successfully.");
-Dialog.setInsets(10, 0, 0);
-Dialog.addMessage("Registered Images are saved in the Folder: \""+OutputDirName+"\".");
-Dialog.setInsets(10, 0, 0);
-Dialog.addMessage("Coordinates of Region Of Interest are saved in : \""+CSVFileName+".csv\"");
-Dialog.setLocation(IJPosX, IJPosY+IJSizeY+Spacer);
+Dialog.addMessage(NbFile+" "+ FileExt+ " Files in the folder:\n"+InputDirName+"\nhave been processed successfully.");
+Dialog.setInsets(0, 0, 0);
+Dialog.addMessage("Files are saved in the following folder:\n"+OutputDirName+".");
+Dialog.setInsets(0, 0, 0);
+Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
 Dialog.show();

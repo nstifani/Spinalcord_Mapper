@@ -26,8 +26,8 @@ Spacer=20; // A spacer
 DummyVariable=eval("script","IJ.getInstance().setLocation("+IJPosX+","+IJPosY+");"); // Adjust the position of the ImageJ toolbar
 
 // Set Toolbar Size and position
-ToolbarSizeX=250; // Size of the toolbar
-ToolbarSizeY=100; // Size of the toolbar
+ToolbarSizeX=300; // Size of the toolbar
+ToolbarSizeY=180; // Size of the toolbar
 ToolbarPosX=IJPosX+IJSizeX+Spacer; // Position of the Toolbar is to the right of the ImageJ toolbar
 ToolbarPosY=IJPosY; // Position of to the Toolbar in Y
 
