@@ -7,7 +7,7 @@ var FolderSuffix="Manual_Cell_Detection";
 var SubDirArray=newArray("Images","ROIs","Results");
 CellSeparator= ",";
 LineSeparator="\n";
-
+var CounterArray=newArray(0); // This is an array containing the Counter Nb
 /////////////// Header, Set Preferences and Options and Housekeeping
 // Select All measurements, Invert Y, and use 9 decimals
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
@@ -307,6 +307,9 @@ function SelectionPrompt(SelectionName, SelectionInfo){
       setTool("multipoint");
       run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=0"); // Set the Point tool as yellow Medium Circle
       doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
+      run("Channels Tool...");
+      Stack.setDisplayMode("color");
+
     }
     waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
     +SelectionInfo+
@@ -334,7 +337,81 @@ function SelectionPrompt(SelectionName, SelectionInfo){
 ////////////////////End of General Functions
 
 
+//////////////////////Specific Functions
+var IdentifyCounterPass;
+var ListCounterName;
+function IdentifyCounter (NbOfCounter){
+  IdentifyCounterPass=0;
+  // Get or Set the Default values for the Counter Identifier Position and Names
+  ListCounterNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListCounterName", "DAPI,Hoescht,Nissl,ProteinA,PorteinB,ProteinC,ProteinD");
+  ListCounterName=split(ListCounterNameString,",");
+// Elongate the ListCounterName if there is more than the Default Channels
 
+if(ListCounterName.length<NbOfCounter){
+  NbCounterName=ListCounterName.length;
+  for(MissingCounterI=1; MissingCounterI<(NbOfCounter-NbCounterName+1); MissingCounterI++){
+    ListCounterName=Append(ListCounterName,"Counter_"+NbCounterName+MissingCounterI-1);
+  }
+}
+
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("You used "+NbOfCounter+" Counter(s).");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("Please give a unique name to each of them.");
+  Dialog.setInsets(0, 0, 0);
+  for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
+    Dialog.setInsets(0, 20, 0);
+    Dialog.addString("Counter "+CounterI+":", ListCounterName[CounterI], 20);
+  }
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
+    ListCounterName[CounterI]=Dialog.getString();
+  }
+
+  // Make sure CounterNames do not contain , nor .
+  for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
+    if(matches(ListCounterName[CounterI],".*[,.].*")==1){
+      IdentifyCounterPass= -1;
+    }
+  }
+
+  // Make sure CounterNames are unique
+  for (CounterIA = 0; CounterIA < NbOfCounter-1; CounterIA++){
+    for (CounterIB = CounterIA+1; CounterIB < NbOfCounter; CounterIB++){
+
+      CounterNameA=ListCounterName[CounterIA];
+      CounterNameB=ListCounterName[CounterIB];
+      if (CounterNameA==CounterNameB){
+        IdentifyCounterPass=-1;
+      }
+    }
+  }
+
+  if(IdentifyCounterPass<0){
+    MessageError="Sorry but the Counter Names must be unique and canno't contain any comma \",\" nor dot \".\".";
+    MessageFix=MacroName+" function does NOT allow commas \",\" nor dots \".\" in the Counter Names which must unique.";
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Counter Names weren't unique and/or contained commas \",\" or dots \".\"";
+    ErrorDialog(MessageError,MessageFix,MessageQuit);
+  } else {// end of if Identify ChPass=Fail
+    IdentifyCounterPass=1;
+
+    //Recreate the Strings from the Arrays
+    for (CounterI=0; CounterI < ListCounterName.length ;CounterI++){
+      if(CounterI==0){
+        ListCounterNameString=""+ListCounterName[CounterI];
+      }else{
+        ListCounterNameString=ListCounterNameString+","+ListCounterName[CounterI];
+      }
+    }
+    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListCounterName",ListCounterNameString);
+  }
+} // end of function Identify Counter
+
+
+
+/////////////////////End of Specific Functions
 
 
 InitialMessage=""+MacroName+" will :"
@@ -387,6 +464,12 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 
   run("Clear Results"); // Clear the results
   run("Measure"); // get the Measurements
+
+// Add the CounterIDs to an array to be used to define the Name of each Counter
+for(ResultI=0; ResultI<nResults;ResultI++){
+CounterI=getResult("Counter", ResultI);
+CounterArray=Append(CounterArray,CounterI);
+}
   selectWindow("Results");
   saveAs("Results", OutputResultPath+File.nameWithoutExtension+".csv"); // Save the measurements
   run("Clear Results"); // Clear the results
@@ -406,12 +489,32 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   selectWindow(InputFileNameI);
   saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif"); // Save the file with overlay
   close();
-
-  //print(CSVFile, File.nameWithoutExtension+CellSeparator++LineSeparator);
-
   // Update the progress bar
   showProgress(FileI, InputFileList.length);
 }/////////////////////End of for Filei loop
+
+// Get the Maximum Nb of Counter from the Counter Array
+Array.getStatistics(CounterArray, MinCounter_ID, MaxCounter_ID, MeanCounter_ID, StdDevCounter_ID);
+NbCounter=MaxCounter_ID+1;
+// Prompt for a name to each Counter
+do{
+  IdentifyCounter(NbCounter);
+}while(IdentifyCounterPass!=1)
+
+// Write The Counter in a CSV
+CSVFileName=""+InputDirName+"_"+"Counter_Information";
+CSVFilePath=OutputDirPath+CSVFileName+".csv";
+CSVFile = File.open(CSVFilePath);
+print(CSVFile, "Counter_ID"+CellSeparator+ "Counter_Name"+LineSeparator);
+//////////////////////////// End of Create an output CSV File
+for(Counter_IDI=0;Counter_IDI<NbCounter;Counter_IDI++){
+  print(CSVFile, Counter_IDI+CellSeparator+ ListCounterName[Counter_IDI]+LineSeparator);
+}
+// Close the CSV File
+File.close(CSVFile);
+// End of Create an output CSV File
+
+
 
 // Close Threshold windows if it is open
 if(isOpen("Threshold")){
@@ -426,8 +529,6 @@ if(isOpen("Results")){
   run("Close");
 }//end of if Results is open
 
-// Close the CSV File
-//File.close(CSVFile);
 beep();
 
 ///////////////////// Closing Dialog Box
