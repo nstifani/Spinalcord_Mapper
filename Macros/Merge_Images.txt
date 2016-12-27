@@ -632,9 +632,9 @@ for(FileI=0; FileI<UsableBaseNameList.length; FileI++){
   for(ChI=0;ChI<NbCh; ChI++){
     ChIDChI=ListChID[ChI];
     if(ChI==0){
-      OutputImagePath=OutputDirPath+BaseNameI+"_"+ListChName[ChI];
+      OutputImagePath=OutputDirPath+BaseNameI+""-""+ListChName[ChI];
     }else{
-      OutputImagePath=OutputImagePath+"_"+ListChName[ChI];
+      OutputImagePath=OutputImagePath+"-"+ListChName[ChI];
     }
   }
   OutputImagePath=OutputImagePath+".tif";
