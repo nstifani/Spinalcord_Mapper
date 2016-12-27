@@ -632,7 +632,7 @@ for(FileI=0; FileI<UsableBaseNameList.length; FileI++){
   for(ChI=0;ChI<NbCh; ChI++){
     ChIDChI=ListChID[ChI];
     if(ChI==0){
-      OutputImagePath=OutputDirPath+BaseNameI+""-""+ListChName[ChI];
+      OutputImagePath=OutputDirPath+BaseNameI+"-"+ListChName[ChI];
     }else{
       OutputImagePath=OutputImagePath+"-"+ListChName[ChI];
     }
