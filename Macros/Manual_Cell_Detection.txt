@@ -308,8 +308,12 @@ function SelectionPrompt(SelectionName, SelectionInfo){
       run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=0"); // Set the Point tool as yellow Medium Circle
       doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
       run("Channels Tool...");
-      Stack.setDisplayMode("color");
-
+      // if (ImageisRGB){
+      //Create Composite
+    //}
+    // if(ImageisStack){
+      //Stack.setDisplayMode("color");
+//}
     }
     waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
     +SelectionInfo+
