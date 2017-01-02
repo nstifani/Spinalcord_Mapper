@@ -509,10 +509,11 @@ do{
 CSVFileName=""+InputDirName+"_"+"Counter_Information";
 CSVFilePath=OutputDirPath+CSVFileName+".csv";
 CSVFile = File.open(CSVFilePath);
-print(CSVFile, "Counter_ID"+CellSeparator+ "Counter_Name"+LineSeparator);
+print(CSVFile, "Marker_ID"+CellSeparator+ "Marker_Name"+LineSeparator);
 //////////////////////////// End of Create an output CSV File
 for(Counter_IDI=0;Counter_IDI<NbCounter;Counter_IDI++){
-  print(CSVFile, Counter_IDI+CellSeparator+ ListCounterName[Counter_IDI]+LineSeparator);
+  Counter_IDIPadded=IJ.pad(Counter_IDI, 3);
+  print(CSVFile, Counter_IDIPadded+CellSeparator+ ListCounterName[Counter_IDI]+LineSeparator);
 }
 // Close the CSV File
 File.close(CSVFile);
