@@ -506,7 +506,7 @@ do{
 }while(IdentifyCounterPass!=1)
 
 // Write The Counter in a CSV
-CSVFileName=""+InputDirName+"_"+"Counter_Information";
+CSVFileName=""+InputDirName+"_"+"Marker_Information";
 CSVFilePath=OutputDirPath+CSVFileName+".csv";
 CSVFile = File.open(CSVFilePath);
 print(CSVFile, "Marker_ID"+CellSeparator+ "Marker_Name"+LineSeparator);
