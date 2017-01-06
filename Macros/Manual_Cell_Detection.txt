@@ -467,6 +467,11 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   } while(SelectionPromptPass!=1)
 
   run("Clear Results"); // Clear the results
+
+  // Create a dummy point and delete it to make sure the Results will display Counter and Counter
+
+  run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=99");
+
   run("Measure"); // get the Measurements
 
 // Add the CounterIDs to an array to be used to define the Name of each Counter
