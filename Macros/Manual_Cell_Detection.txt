@@ -503,6 +503,8 @@ CounterArray=Append(CounterArray,CounterI);
 }/////////////////////End of for Filei loop
 
 // Get the Maximum Nb of Counter from the Counter Array
+// Add a 0 to the Array to avoid having aberrant MaxCounter_ID when only 1 counter (counter 0) is used
+CounterArray=Append(CounterArray, 0);
 Array.getStatistics(CounterArray, MinCounter_ID, MaxCounter_ID, MeanCounter_ID, StdDevCounter_ID);
 NbCounter=MaxCounter_ID+1;
 // Prompt for a name to each Counter
