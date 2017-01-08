@@ -307,14 +307,25 @@ function SelectionPrompt(SelectionName, SelectionInfo){
       setTool("multipoint");
       run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=0"); // Set the Point tool as yellow Medium Circle
       doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
-      run("Channels Tool...");
-      // if (ImageisRGB){
-      //Create Composite
-    //}
-    // if(ImageisStack){
-      //Stack.setDisplayMode("color");
-//}
+getDimensions(ImageWidht, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
+ImageBit=bitDepth();
+// If Image is RGB Make composite and Gray
+if(ImageSlices==1 && ImageChannels==1 && ImageBit<24){
+  run("Grays");
+}
+  if(ImageSlices==1 && ImageChannels==1 && ImageBit==24){
+    run("Make Composite");
+    run("Channels Tool...");
+    Stack.setDisplayMode("grayscale");
+    Stack.setChannel(1);
+  }
+
+if(ImageSlices>1 || ImageChannels>1){
+      Stack.setDisplayMode("grayscale");
+      Stack.setChannel(1);
     }
+  }// end of id selection is Multipoiint
+
     waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
     +SelectionInfo+
     "\nWhen done, press OK.");
