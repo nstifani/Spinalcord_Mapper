@@ -1,8 +1,8 @@
 # Spinalcord_Mapper v1.0
-2016-12-17
+2017-01-16
 Author: Nicolas Stifani nstifani@gmail.com
 
-This is a plugin for ImageJ intented for Processing, Manual Registration and cell count of spinal cord images.
+This is a plugin for ImageJ intended for Processing, Manual Registration and Cell Count of spinal cord images.
 It requires ImageJ 1.50 and above.
 
 To install it:
@@ -10,9 +10,6 @@ To install it:
 - Save it into your Folder ImageJ\plugins\
 - Restart ImageJ
 You will find the function into ImageJ Menu > Plugins > Spinalcord Mapper
-
-To do List
-Display the Channel tool in the Manual Cell detection
 
 General Requirements
 −	Image Files should be TIF, named with the following nomenclature
@@ -32,12 +29,11 @@ DATE_ANIMAL_GROUP_OTHER_VARIABLES_SEPARATED_BY_UNDERSCORE.TIF
 1.1.1.2	Registration
 −	Open ImageJ
 −	Select Plugins/Spinalcord Mapper/SC Registration
-−
 
 Select the folder containing the TIF files
 −	Click sequentially on the Central Canal, the Dorsal Edge of the Right side, the
 Lateral Edge of the Right side, the Ventral Edge of the Right side, the Ventral Edge of the
-Left Side, the Lateral Edge of the Left side, the Dorsal Edge of the Left side
+Left Side, the Lateral Edge of the Left side, the Dorsal Edge of the Left side of the grey matter
 −	Spinal cord Mapper will save for each image:
 o	a TIF file with the Registration Points as an overlay
 o	the Registration Points as a Region of Interest ZIP file

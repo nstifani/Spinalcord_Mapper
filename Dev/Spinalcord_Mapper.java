@@ -9,7 +9,6 @@ import java.io.*;
 import java.net.*;
 import java.awt.image.IndexColorModel;
 
-
 public class Spinalcord_Mapper implements PlugIn {
   String path = "/Macros/";
   static boolean showArgs = true;
@@ -36,12 +35,10 @@ public class Spinalcord_Mapper implements PlugIn {
       Resize_Images();
       return;
     }
-
     if (arg.equals("SC Registration")){
       SC_Registration();
       return;
     }
-
     if (arg.equals("Manual Cell Detection")){
       Manual_Cell_Detection();
       return;
@@ -82,7 +79,7 @@ public class Spinalcord_Mapper implements PlugIn {
   void Auto_Cell_Detection() {
     IJ.runMacro(getText(path+"Auto_Cell_Detection.txt"), "");
   }
-    void Spinalcord_Mapper_Toggle_Autostart() {
+  void Spinalcord_Mapper_Toggle_Autostart() {
     IJ.runMacro(getText(path+"Spinalcord_Mapper_Toggle_Autostart.txt"), "");
   }
 
