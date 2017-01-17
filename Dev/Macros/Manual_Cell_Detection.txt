@@ -227,9 +227,31 @@ function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the des
 // Output[SubDirArrayElementN]Path=""+OutputDirPath+"[SubDirArrayElementN]"+File.separator;
 // Then you can use directly the string to save within a subdirectory
 
+////////////////////End of General Functions
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////Specific Functions
 // This function Prompt for a specific type of selection and ensure a selection is made before moving next
+// It allows the No selection as a bypass
 var SelectionPromptPass; // This is the switch when the selection pass the criteria
+var SelectionPromptByPass; // This is a Logical object telling if the user deliberately exited the Selection Loop
 function SelectionPrompt(SelectionName, SelectionInfo){
   // Selection name is the name of the selection. It is a string that can take the following values:
   // rectangle, oval, polygon, freehand, traced, straight line, segmented line, freehandline, angle, point, multipoint
@@ -315,38 +337,43 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     CurrentSelection=selectionType();
     if(CurrentSelection<0 || CurrentSelection!=SelectionValue){
       if(CurrentSelection<0){
-        MessageError="Sorry but no "+SelectionName+" selection was detected.";
-        MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionName+" was detected.";
+        // Dialog you did not make any selection are you sure?
+        Dialog.create(PluginName+" Information");
+        Dialog.setInsets(0, 0, 0);
+        Dialog.addMessage("Sorry but no multipoint selection was provided.");
+        Dialog.setInsets(0, 0, 0);
+        Dialog.addMessage("Do you want to proceed Without Selecting Any Cell?");
+        Dialog.setInsets(0, 0, 0);
+        TryAgainProceedArray=newArray("Try Again", "Proceed");
+        Dialog.setInsets(0, 100, 0);
+        Dialog.addRadioButtonGroup("", TryAgainProceedArray, 2, 1, "Try Again");
+        Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+        Dialog.show();
+        TryAgainProceedChoice=Dialog.getRadioButton();
+        if(TryAgainProceedChoice=="Proceed"){
+          SelectionPromptPass=1;
+          SelectionPromptByPass=1;
+          }
       } else if(CurrentSelection!=SelectionValue){
         MessageError="Sorry but the Selection is not a "+SelectionName+".";
         MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionName+".";
+        ErrorDialog(MessageError,MessageFix,MessageQuit);
       }
-      ErrorDialog(MessageError,MessageFix,MessageQuit);
       run("Select None");
     } else {
       SelectionPromptPass=1;
+        SelectionPromptByPass=0;
       setBatchMode("hide");
 
     }// End of else Selection is good
   } // End of If selection does not pass prompt for a selection
 } // End of Function Get selection
-////////////////////End of General Functions
 
 
 
 
 
-
-
-
-
-
-
-
-
-//////////////////////Specific Functions
 // Function to Identify the Names of Each Counter
 var IdentifyCounterPass;
 var ListCounterName;
@@ -449,36 +476,43 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   InputFileNameI=InputFileList[FileI];
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);
-
   do {
     SelectionPrompt("multipoint","Point and Click on the Cells of Interest.");
   } while(SelectionPromptPass!=1)
 
   run("Clear Results"); // Clear the results
-  run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=99");
   run("Measure"); // get the Measurements
 
-  // Add the CounterIDs to an array to be used to define the Name of each Counter
-  for(ResultI=0; ResultI<nResults;ResultI++){
-    CounterI=getResult("Counter", ResultI);
-    CounterArray=Append(CounterArray,CounterI);
-  }// end of for ResultI
+  if(SelectionPromptByPass==0){ // If user did not escape the Selection Loop deliberately
+    // Add the CounterIDs to an array to be used to define the Name of each Counter
+    for(ResultI=0; ResultI<nResults;ResultI++){
+      CounterI=getResult("Counter", ResultI);
+      CounterArray=Append(CounterArray,CounterI);
+    }// end of for ResultI
+  } // end of if user exited loop
+
+  if(SelectionPromptByPass==1){ // If User exited the seleciton loop
+    selectWindow("Results"); // Delete the results generated from the All image because no selection was made
+    IJ.deleteRows(0,nResults); // Delete the results
+  }
   selectWindow("Results");
-  saveAs("Results", OutputResultPath+File.nameWithoutExtension+".txt"); // Save the measurements
+  saveAs("Results", OutputResultPath+File.nameWithoutExtension+".txt"); // Save the measurements even empty results
   run("Clear Results"); // Clear the results
 
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
   roiManager("reset"); // Reset the ROI Manager
-  roiManager("Add"); // Add the selection to ROI manager
-  roiManager("Save", OutputROIPath+File.nameWithoutExtension+".zip"); // Save the ROI
+  if(SelectionPromptByPass==0){
+    roiManager("Add"); // Add the selection to ROI manager
+    roiManager("Save", OutputROIPath+File.nameWithoutExtension+".zip"); // Save the ROI
+    run("Select None"); // Remove any selection
+    roiManager("Select", 0); // Select the selection form the ROI manager
+    roiManager("reset"); // Reset the ROI manager
+    run("Remove Overlay"); // Remove any previous overlay
+    run("Add Selection..."); // Add selection to the overlay
+  }
 
-  run("Select None"); // Remove any selection
-  roiManager("Select", 0); // Select the selection form the ROI manager
-  roiManager("reset"); // Reset the ROI manager
-  run("Remove Overlay"); // Remove any previous overlay
-  run("Add Selection..."); // Add selection to the overlay
   selectWindow(InputFileNameI);
   saveAs("Tif", OutputImagePath+File.nameWithoutExtension); // Save the file with overlay
   close();
