@@ -416,8 +416,9 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   }
 
   NbOfResults=0;
-  Array_X=newArray("");
-  Array_Y=newArray("");
+
+  Array_X=newArray(0);
+  Array_Y=newArray(0);
   for (ResultI=0; ResultI<nResults; ResultI++){
     X=getResult("X",ResultI);
     Y=getResult("Y",ResultI);
@@ -434,9 +435,9 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   ImageCenterY=round(ImageHeight/2);
   CenterPosX=Array_X[0];
   CenterPosY=Array_Y[0];
-
+  print(CenterPosX);
   toUnscaled(CenterPosX, CenterPosY); // Transform to pixels
-
+  print(CenterPosX);
   // Calculate the Translation Vectors to center the CC into the Image
   TranslateX=ImageCenterX-CenterPosX;
   TranslateY=ImageCenterY-CenterPosY;
@@ -454,7 +455,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   RotationAngle=((atan(Slope))*180/PI);
   // Rotate the Image
   run("Rotate... ", "angle=&RotationAngle grid=1 interpolation=None enlarge");// Rotation is clockwise if angle is >0 Angle is in degree
-
+  waitForUser(22);
   // Refresh  the Image Dimension
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
   ImageCenterX=round(ImageWidth/2);
