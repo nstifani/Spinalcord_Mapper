@@ -430,51 +430,89 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 
   // Resize Canvas to ensure no data loss
   // Get the Dimension of the Image
-  getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
-  ImageCenterX=round(ImageWidth/2);
-  ImageCenterY=round(ImageHeight/2);
-  CenterPosX=Array_X[0];
-  CenterPosY=Array_Y[0];
-  print(CenterPosX);
-  toUnscaled(CenterPosX, CenterPosY); // Transform to pixels
-  print(CenterPosX);
+  getDimensions(ImageWidth_Ini, ImageHeight_Ini, ImageChannels_Ini, ImageSlices_Ini, ImageFrames_Ini);
+  ImageCenterX_Ini=round(ImageWidth_Ini/2);
+  ImageCenterY_Ini=round(ImageHeight_Ini/2);
+  CC_PosX_Ini=Array_X[0];
+  CC_PosY_Ini=Array_Y[0];
+  toUnscaled(CC_PosX_Ini, CC_PosY_Ini); // Transform to pixels
   // Calculate the Translation Vectors to center the CC into the Image
-  TranslateX=ImageCenterX-CenterPosX;
-  TranslateY=ImageCenterY-CenterPosY;
+  Translate_X = (ImageCenterX_Ini - CC_PosX_Ini);
+  Translate_Y = (ImageCenterY_Ini - CC_PosY_Ini);
 
   // Resize the Canvas so no loss of data
-  NewImageWidth=ImageWidth+2*abs(TranslateX); // Double the Translation data because the resizing is both way but translation only one way
-  NewImageHeight=ImageHeight+2*abs(TranslateY);
-
-  // Center on the Central Canal
+  NewImageWidth=ImageWidth_Ini+2*abs(Translate_X); // Double the Translation data because the resizing is both way but translation only one way
+  NewImageHeight=ImageHeight_Ini+2*abs(Translate_Y);
+  // Scale the Canvas just to avoid data loss
   run("Canvas Size...", "width=&NewImageWidth height=&NewImageHeight position=Center zero");// Resize the Image
-  run("Translate...", "x=&TranslateX y=&TranslateY interpolation=None"); // Translate now it is safe
+// Center on Central canal into Image Center
+  run("Translate...", "x=&Translate_X y=&Translate_Y interpolation=None"); // Translate now it is safe
 
   // Calculate rotation angle
   Slope=((Array_Y[3]-Array_Y[4])/(Array_X[3]-Array_X[4]));
-  RotationAngle=((atan(Slope))*180/PI);
+  RotationAngle_Radian=atan(Slope);
+  RotationAngle_Degrees=((RotationAngle_Radian)*180/PI);
   // Rotate the Image
-  run("Rotate... ", "angle=&RotationAngle grid=1 interpolation=None enlarge");// Rotation is clockwise if angle is >0 Angle is in degree
-  waitForUser(22);
+
+  run("Rotate... ", "angle=&RotationAngle_Degrees grid=1 interpolation=None enlarge");// Rotation is clockwise if angle is >0 Angle is in degree
+
   // Refresh  the Image Dimension
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
   ImageCenterX=round(ImageWidth/2);
   ImageCenterY=round(ImageHeight/2);
+
   // Calculate new Coordinates
-  // Center Coordinates on CC_X
+  Array_X_Transformed=newArray(0);
+  Array_Y_Transformed=newArray(0);
+
+for(PointI=0; PointI<Array_X.length; PointI++){
+  // Get coordinates in X and Y
+  Coordinates_X_Ini=(Array_X[PointI]);
+  Coordinates_Y_Ini=(Array_Y[PointI]);
+  // Unscale values
+  toUnscaled(Coordinates_X_Ini);
+  toUnscaled(Coordinates_Y_Ini);
+
+// Calculate coordinates in new Image after transalation
+  Coordinates_X_Translated=Coordinates_X_Ini+abs(Translate_X)+Translate_X;
+  Coordinates_Y_Translated=Coordinates_Y_Ini+abs(Translate_Y)+Translate_Y;
+
+  // Center coordinates on Rotation Center
+  Coordinates_X_Centered=Coordinates_X_Translated- ImageCenterX;
+  Coordinates_Y_Centered=Coordinates_Y_Translated- ImageCenterY;
+
+// Coordinates_X_Rotated=Coordinates_X_Centered;
+// Coordinates_Y_Rotated=Coordinates_Y_Centered;
+print(RotationAngle_Radian);
+print(RotationAngle_Degrees);
+
   // Rotate Coordiantes
-  // Translate in Image Coordinates
-  CC_XOriginal=CC_X;
-  CC_X=CC_XOriginal+TranslateX;
+  if(RotationAngle_Radian>0){ // if Rotation is clockwise
+  Coordinates_X_Rotated=Coordinates_X_Centered*cos(RotationAngle_Radian)+Coordinates_Y_Centered*sin(RotationAngle_Radian);
+  Coordinates_Y_Rotated=Coordinates_Y_Centered*cos(RotationAngle_Radian)-Coordinates_X_Centered*sin(RotationAngle_Radian);
+  }else{ // if Rotation is counterclockwise
+    Coordinates_X_Rotated=Coordinates_X_Centered*cos(RotationAngle_Radian)-Coordinates_Y_Centered*sin(RotationAngle_Radian);
+    Coordinates_Y_Rotated=Coordinates_Y_Centered*cos(RotationAngle_Radian)+Coordinates_X_Centered*sin(RotationAngle_Radian);
+  }
+
+  // Translate Coordinates back in Image Coordinates
+Coordinates_X_Rotated_Translated=Coordinates_X_Rotated+ImageCenterX;
+Coordinates_Y_Rotated_Translated=Coordinates_Y_Rotated+ImageCenterY;
+
+Array_X_Transformed=Append(Array_X_Transformed,Coordinates_X_Rotated_Translated);
+Array_Y_Transformed=Append(Array_Y_Transformed,Coordinates_Y_Rotated_Translated);
+}
 
 
+
+waitForUser(22);
   // Add new Coordinates to overlay
-  makeSelection("point",newArray(12,122),newArray(2,333));
-  setKeyDown("shift");
-  makePoint(x, y);
+  makeSelection("point",Array_X_Transformed,Array_Y_Transformed);
+  // setKeyDown("shift");
+  // makePoint(x, y);
 
   // Save new Registration coordinates in CSV file
-
+waitForUser(33);
 
 
 
