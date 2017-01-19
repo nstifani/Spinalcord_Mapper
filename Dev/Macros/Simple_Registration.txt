@@ -4,7 +4,7 @@ var MacroName="Simple Registration";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Registered";
-var SubDirArray=newArray("Images","ROIs");
+var SubDirArray=newArray("Images");
 CellSeparator= ",";
 LineSeparator="\n";
 
@@ -12,7 +12,7 @@ LineSeparator="\n";
 // Select All measurements, Invert Y, and use 9 decimals
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
 run("Line Width...", "line=1"); // Set Line width as 1
-run("Input/Output...", "jpeg=100 gif=-1 file=.csv use copy_row save_column"); // Set Output as csv and save columns and ignore row numbers
+run("Input/Output...", "jpeg=100 gif=-1 file=.txt use copy_row save_column"); // Set Output as txt and save columns and ignore row numbers
 run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=0");// Set the Point tool as yellow Medium Circle
 run("Colors...", "foreground=white background=black selection=Yellow"); // Set foreground and background colors Selection is yellow
 run("Appearance...", "  menu=0 16-bit=Automatic"); // Change appareance of 16bit image as automatic
@@ -345,7 +345,7 @@ InitialMessage=""+MacroName+" will :"
 +"\n- Save in a new folder"
 +"\n   - Registration Points as a Region of Interest ZIP File"
 +"\n   - Image as TIF File with the Registration Points as an overlay"
-+"\n- Save the X and Y Registration Coordinates in a single CSV File";
++"\n- Save the X and Y Registration Coordinates in a single TXT File";
 
 MessageDialog(InitialMessage); // Display the Intial Dialog
 
@@ -356,14 +356,13 @@ do{
 CreateOutputDir(FolderSuffix); // Create output Directory
 CreateOutputSubDir(SubDirArray); // Create output Sub Directory
 OutputImagePath=""+OutputDirPath+"Images"+File.separator; // Create Subdirectory object path
-OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
 
-//////////////////////////// Create an output CSV File
-CSVFileName=""+InputDirName+"_"+"Registration Coordinates";
-CSVFilePath=OutputDirPath+CSVFileName+".csv";
-CSVFile = File.open(CSVFilePath);
-// Write the header of the CSV
-print(CSVFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
+//////////////////////////// Create an output TXT File
+TXTFileName=""+InputDirName+"_"+"Registration Coordinates";
+TXTFilePath=OutputDirPath+TXTFileName+".txt";
+TXTFile = File.open(TXTFilePath);
+// Write the header of the TXT
+print(TXTFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
 +"DE_R_X"+CellSeparator+"DE_R_Y"+CellSeparator
 +"LE_R_X"+CellSeparator+"LE_R_Y"+CellSeparator
 +"VE_R_X"+CellSeparator+"VE_R_Y"+CellSeparator
@@ -372,7 +371,7 @@ print(CSVFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
 +"DE_L_X"+CellSeparator+"DE_L_Y"+CellSeparator
 +"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
 +"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
-//////////////////////////// End of Create an output CSV File
+//////////////////////////// End of Create an output TXT File
 
 
 
@@ -432,12 +431,6 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
-  roiManager("reset");
-  roiManager("Add"); // Add Points to ROI manager
-  roiManager("Save", OutputROIPath+File.nameWithoutExtension+"_Registration_Points_ROI.zip");
-  run("Select None"); // Select nothing
-  roiManager("Select", 0); // Select the ROI manager
-  roiManager("reset"); // Reset the ROI manager
   run("Remove Overlay"); // Reset the overlay
   run("Add Selection..."); // Add the selection to the overlay
   selectWindow(InputFileNameI);
@@ -447,7 +440,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   ImageWidth=getWidth();
   ImageHeight=getHeight();
   close();
-  print(CSVFile, File.nameWithoutExtension+CellSeparator
+  print(TXTFile, File.nameWithoutExtension+CellSeparator
   +CC_X+CellSeparator+CC_Y+CellSeparator
   +DE_R_X+CellSeparator+DE_R_Y+CellSeparator
   +LE_R_X+CellSeparator+LE_R_Y+CellSeparator
@@ -480,8 +473,8 @@ if(isOpen("Results")){
   run("Close");
 }//end of if Results is open
 
-// Close the CSV File
-File.close(CSVFile);
+// Close the TXT File
+File.close(TXTFile);
 beep();
 
 ///////////////////// Closing Dialog Box
@@ -491,6 +484,6 @@ Dialog.addMessage(NbFile+" "+ FileExt+ " File in the Folder: \"" +InputDirName+"
 Dialog.setInsets(10, 0, 0);
 Dialog.addMessage("Registered Images are saved in the Folder: \""+OutputDirName+"\".");
 Dialog.setInsets(10, 0, 0);
-Dialog.addMessage("Coordinates of Region Of Interest are saved in : \""+CSVFileName+".csv\"");
+Dialog.addMessage("Coordinates are saved in : \""+TXTFileName+".TXT\"");
 Dialog.setLocation(IJPosX, IJPosY+IJSizeY+Spacer);
 Dialog.show();

@@ -4,7 +4,7 @@ var MacroName="Alignment and Registration";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Registered";
-var SubDirArray=newArray("Images","ROIs");
+var SubDirArray=newArray("Images");
 CellSeparator= "\t";
 LineSeparator="\n";
 
@@ -365,7 +365,6 @@ do{
 CreateOutputDir(FolderSuffix); // Create output Directory
 CreateOutputSubDir(SubDirArray); // Create output Sub Directory
 OutputImagePath=""+OutputDirPath+"Images"+File.separator; // Create Subdirectory object path
-OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
 
 
 // Write The Counter in a txt
@@ -382,7 +381,7 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
 +"DE_L_X"+CellSeparator+"DE_L_Y"+CellSeparator
 +"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
 +"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
-//////////////////////////// End of Create an output CSV File
+//////////////////////////// End of Create an output TXT File
 
 
 
@@ -505,18 +504,12 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     Array_X_Transformed=Append(Array_X_Transformed,Coordinates_X_Transformed_Centered);
     Array_Y_Transformed=Append(Array_Y_Transformed,Coordinates_Y_Transformed_Centered);
   }
-  // Add new Coordinates to overlay
-  makeSelection("point",Array_X_Transformed, Array_Y_Transformed);
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
-  roiManager("reset");
-  roiManager("Add"); // Add Points to ROI manager
-  roiManager("Save", OutputROIPath+File.nameWithoutExtension+"_Registration_Points_ROI.zip");
-  run("Select None"); // Select nothing
-  roiManager("Select", 0); // Select the ROI manager
-  roiManager("reset"); // Reset the ROI manager
   run("Remove Overlay"); // Reset the overlay
+  // Add new Coordinates to overlay
+  makeSelection("point",Array_X_Transformed, Array_Y_Transformed);
   run("Add Selection..."); // Add the selection to the overlay
   selectWindow(InputFileNameI);
   saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif");
@@ -561,7 +554,7 @@ if(isOpen("Results")){
   run("Close");
 }//end of if Results is open
 
-// Close the CSV File
+// Close the TXT File
 File.close(TXTFile);
 // Restore Y Invert Coordinates
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
@@ -575,6 +568,6 @@ Dialog.addMessage(NbFile+" "+ FileExt+ " File in the Folder: \"" +InputDirName+"
 Dialog.setInsets(10, 0, 0);
 Dialog.addMessage("Registered Images are saved in the Folder: \""+OutputDirName+"\".");
 Dialog.setInsets(10, 0, 0);
-Dialog.addMessage("Coordinates of Region Of Interest are saved in : \""+TXTFileName+".csv\"");
+Dialog.addMessage("Coordinates are saved in : \""+TXTFileName+".TXT\"");
 Dialog.setLocation(IJPosX, IJPosY+IJSizeY+Spacer);
 Dialog.show();

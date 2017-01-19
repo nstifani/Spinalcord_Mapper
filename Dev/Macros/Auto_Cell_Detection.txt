@@ -5,14 +5,14 @@ var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Auto_Cell_Detection";
 var SubDirArray=newArray("Images","ROIs","Results");
-CellSeparator= ",";
+CellSeparator= "\t";
 LineSeparator="\n";
 
 /////////////// Header, Set Preferences and Options and Housekeeping
 // Select All measurements, Invert Y, and use 9 decimals
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
 run("Line Width...", "line=1"); // Set Line width as 1
-run("Input/Output...", "jpeg=100 gif=-1 file=.csv use copy_row save_column"); // Set Output as csv and save columns and ignore row numbers
+run("Input/Output...", "jpeg=100 gif=-1 file=.txt use copy_row save_column"); // Set Output as txt and save columns and ignore row numbers
 run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=0");// Set the Point tool as yellow Medium Circle
 run("Colors...", "foreground=white background=black selection=Yellow"); // Set foreground and background colors Selection is yellow
 run("Appearance...", "  menu=0 16-bit=Automatic"); // Change appareance of 16bit image as automatic
@@ -1674,7 +1674,7 @@ for (FileI=0; FileI < InputFileList.length; FileI++){
                             CombinedParticleCircularityArray=newArray(MinParticleCircularitySelectedChIA, MaxParticleCircularitySelectedChIA,MinParticleCircularitySelectedChIB, MaxParticleCircularitySelectedChIB);
                             CombinedChNameI=""+NameSelectedChIA+"x"+NameSelectedChIB;
                             CombinedChNbI="_Ch"+ChIA+1+"xCh"+ChIB+1+"_";
-                            OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.csv";
+                            OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.txt";
                             OutputParticleImageCombinedChI=OutputImagePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_Overlay.tif";
 
                             Array.getStatistics(CombinedParticleDiameterArray, MinParticleDiameterCombinedChI, MaxParticleDiameterCombinedChI, MeanParticleDiameterCombinedChI, StDevParticleDiameterCombinedChI);
@@ -1807,7 +1807,7 @@ for (FileI=0; FileI < InputFileList.length; FileI++){
                               CombinedChNameI=""+NameSelectedChIA+"x"+NameSelectedChIB+"x"+NameSelectedChIC;
                               CombinedChNbI="_Ch"+ChIA+1+"xCh"+ChIB+1+"xCh"+ChIC+1+"_";
 
-                              OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.csv";
+                              OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.txt";
                               OutputParticleImageCombinedChI=OutputImagePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_Overlay.tif";
 
                               Array.getStatistics(CombinedParticleDiameterArray, MinParticleDiameterCombinedChI, MaxParticleDiameterCombinedChI, MeanParticleDiameterCombinedChI, StDevParticleDiameterCombinedChI);
@@ -1956,7 +1956,7 @@ for (FileI=0; FileI < InputFileList.length; FileI++){
                                 CombinedChNameI=""+NameSelectedChIA+"x"+NameSelectedChIB+"x"+NameSelectedChIC+"x"+NameSelectedChID;
                                 CombinedChNbI="_Ch"+ChIA+1+"xCh"+ChIB+1+"xCh"+ChIC+1+"xCh"+ChID+1+"_";
 
-                                OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.csv";
+                                OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.txt";
                                 OutputParticleImageCombinedChI=OutputImagePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_Overlay.tif";
 
                                 Array.getStatistics(CombinedParticleDiameterArray, MinParticleDiameterCombinedChI, MaxParticleDiameterCombinedChI, MeanParticleDiameterCombinedChI, StDevParticleDiameterCombinedChI);
@@ -2117,7 +2117,7 @@ for (FileI=0; FileI < InputFileList.length; FileI++){
                                   CombinedChNameI=""+NameSelectedChIA+"x"+NameSelectedChIB+"x"+NameSelectedChIC+"x"+NameSelectedChID+"x"+NameSelectedChIE;
                                   CombinedChNbI="_Ch"+ChIA+1+"xCh"+ChIB+1+"xCh"+ChIC+1+"xCh"+ChID+1+"xCh"+ChIE+1+"_";
 
-                                  OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.csv";
+                                  OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.txt";
                                   OutputParticleImageCombinedChI=OutputImagePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_Overlay.tif";
 
                                   Array.getStatistics(CombinedParticleDiameterArray, MinParticleDiameterCombinedChI, MaxParticleDiameterCombinedChI, MeanParticleDiameterCombinedChI, StDevParticleDiameterCombinedChI);
@@ -2294,7 +2294,7 @@ for (FileI=0; FileI < InputFileList.length; FileI++){
                                     CombinedChNameI=""+NameSelectedChIA+"x"+NameSelectedChIB+"x"+NameSelectedChIC+"x"+NameSelectedChID+"x"+NameSelectedChIE+"x"+NameSelectedChIF;
                                     CombinedChNbI="_Ch"+ChIA+1+"xCh"+ChIB+1+"xCh"+ChIC+1+"xCh"+ChID+1+"xCh"+ChIE+1+"xCh"+ChIF+1+"_";
 
-                                    OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.csv";
+                                    OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.txt";
                                     OutputParticleImageCombinedChI=OutputImagePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_Overlay.tif";
 
                                     Array.getStatistics(CombinedParticleDiameterArray, MinParticleDiameterCombinedChI, MaxParticleDiameterCombinedChI, MeanParticleDiameterCombinedChI, StDevParticleDiameterCombinedChI);
@@ -2488,7 +2488,7 @@ for (FileI=0; FileI < InputFileList.length; FileI++){
                                       CombinedChNameI=""+NameSelectedChIA+"x"+NameSelectedChIB+"x"+NameSelectedChIC+"x"+NameSelectedChID+"x"+NameSelectedChIE+"x"+NameSelectedChIF+"x"+NameSelectedChIG;
                                       CombinedChNbI="_Ch"+ChIA+1+"xCh"+ChIB+1+"xCh"+ChIC+1+"xCh"+ChID+1+"xCh"+ChIE+1+"xCh"+ChIF+1+"xCh"+ChIG+1"_";
 
-                                      OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.csv";
+                                      OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.txt";
                                       OutputParticleImageCombinedChI=OutputImagePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_Overlay.tif";
 
                                       Array.getStatistics(CombinedParticleDiameterArray, MinParticleDiameterCombinedChI, MaxParticleDiameterCombinedChI, MeanParticleDiameterCombinedChI, StDevParticleDiameterCombinedChI);
@@ -2712,21 +2712,21 @@ for (FileI=0; FileI < InputFileList.length; FileI++){
                       ///////////////////////// Close the original file
 
 
-                      OutputSummaryCountDataPath=OutputDirPath+InputFileNameiNoExt+"_SummaryResults.csv";
+                      OutputSummaryCountDataPath=OutputDirPath+InputFileNameiNoExt+"_SummaryResults.txt";
                       selectWindow("Summary");
                       saveAs("Text", OutputSummaryCountDataPath);
-                      selectWindow(InputFileNameiNoExt+"_SummaryResults.csv");
+                      selectWindow(InputFileNameiNoExt+"_SummaryResults.txt");
                       run("Close");
 
 
-                      OutputMeasurementDataPath=OutputMeasurementPath+InputFileNameiNoExt+"_Measurements.csv";
+                      OutputMeasurementDataPath=OutputMeasurementPath+InputFileNameiNoExt+"_Measurements.txt";
                       selectWindow("MeasurementData");
                       saveAs("Text", OutputMeasurementDataPath);
-                      selectWindow(InputFileNameiNoExt+"_Measurements.csv");
+                      selectWindow(InputFileNameiNoExt+"_Measurements.txt");
                       run("Close");
 
                       ///////////////////////// Save the text files with the data
-                      OutputParameterDataPath=OutputParameterPath+InputFileNameiNoExt+"_Parameters.csv";
+                      OutputParameterDataPath=OutputParameterPath+InputFileNameiNoExt+"_Parameters.txt";
                       selectWindow("ParameterData");
                       saveAs("Text", OutputParameterDataPath);
                       run("Close");
@@ -2734,7 +2734,7 @@ for (FileI=0; FileI < InputFileList.length; FileI++){
 
 
 
-                      OutputDetailedResultsPath=OutputTablePath+InputFileNameiNoExt+"_CellCount_DetailedResult.csv";
+                      OutputDetailedResultsPath=OutputTablePath+InputFileNameiNoExt+"_CellCount_DetailedResult.txt";
                       selectWindow("Results");
                       saveAs("Text", OutputDetailedResultsPath);
                       run("Clear Results");

@@ -5,14 +5,14 @@ var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Cell_Detected";
 var SubDirArray=newArray("Images","ROIs","Results");
-CellSeparator= ",";
+CellSeparator= "\t";
 LineSeparator="\n";
 
 /////////////// Header, Set Preferences and Options and Housekeeping
 // Select All measurements, Invert Y, and use 9 decimals
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
 run("Line Width...", "line=1"); // Set Line width as 1
-run("Input/Output...", "jpeg=100 gif=-1 file=.csv use copy_row save_column"); // Set Output as csv and save columns and ignore row numbers
+run("Input/Output...", "jpeg=100 gif=-1 file=.txt use copy_row save_column"); // Set Output as txt and save columns and ignore row numbers
 run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=0");// Set the Point tool as yellow Medium Circle
 run("Colors...", "foreground=white background=black selection=Yellow"); // Set foreground and background colors Selection is yellow
 run("Appearance...", "  menu=0 16-bit=Automatic"); // Change appareance of 16bit image as automatic
@@ -344,7 +344,7 @@ InitialMessage=""+MacroName+" will :"
 +"\n- Save in a new folder"
 +"\n   - Detected Cells as a Region of Interest ZIP File"
 +"\n   - Image as TIF File with the Detected Cells as an overlay"
-+"\n   - X and Y Coordinates of Dectected Cells in a single CSV File";
++"\n   - X and Y Coordinates of Dectected Cells in a single txt File";
 
 
 MessageDialog(InitialMessage);
@@ -359,10 +359,10 @@ OutputImagePath=""+OutputDirPath+"Images"+File.separator;
 OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
 OutputResultPath=""+OutputDirPath+"Results"+File.separator;
 
-//////////////////////////// Create an output CSV File
-// CSVFileName=""+InputDirName+"Detected Cells Coordinates";
-// CSVFilePath=OutputDirPath+CSVFileName+".csv";
-// CSVFile = File.open(CSVFilePath);
+//////////////////////////// Create an output TXT File
+// TXTFileName=""+InputDirName+"Detected Cells Coordinates";
+// TXTFilePath=OutputDirPath+TXTFileName+".txt";
+// TXTFile = File.open(TXTFilePath);
 // setBatchMode(true);
 // run("Dot Blot (7K)"); // Opend a dummy image to get the header
 // List.setMeasurements; // Get the Header of Measurements
@@ -370,8 +370,8 @@ OutputResultPath=""+OutputDirPath+"Results"+File.separator;
 // close();
 // setBatchMode(false);
 // MeasurementsHeader=replace(MeasurementsHeader,"=.*\n",","); // Replace lines with commas
-// print(CSVFile, "File_ID"+CellSeparator+ MeasurementsHeader+LineSeparator);
-//////////////////////////// End of Create an output CSV File
+// print(TXTFile, "File_ID"+CellSeparator+ MeasurementsHeader+LineSeparator);
+//////////////////////////// End of Create an output TXT File
 
 
 // Start of the loop going through the list of files in the input folder selected above
@@ -388,7 +388,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   run("Clear Results"); // Clear the results
   run("Measure"); // get the Measurements
   selectWindow("Results");
-  saveAs("Results", OutputResultPath+File.nameWithoutExtension+".csv"); // Save the measurements
+  saveAs("Results", OutputResultPath+File.nameWithoutExtension+".txt"); // Save the measurements
   run("Clear Results"); // Clear the results
 
 
@@ -407,7 +407,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif"); // Save the file with overlay
   close();
 
-  //print(CSVFile, File.nameWithoutExtension+CellSeparator++LineSeparator);
+  //print(TXTFile, File.nameWithoutExtension+CellSeparator++LineSeparator);
 
   // Update the progress bar
   showProgress(FileI, InputFileList.length);
@@ -426,8 +426,8 @@ if(isOpen("Results")){
   run("Close");
 }//end of if Results is open
 
-// Close the CSV File
-//File.close(CSVFile);
+// Close the TXT File
+//File.close(TXTFile);
 beep();
 
 ///////////////////// Closing Dialog Box
@@ -437,6 +437,6 @@ Dialog.addMessage(NbFile+" "+ FileExt+ " File in the Folder: \"" +InputDirName+"
 Dialog.setInsets(10, 0, 0);
 Dialog.addMessage("Registered Images are saved in the Folder: \""+OutputDirName+"\".");
 Dialog.setInsets(10, 0, 0);
-//Dialog.addMessage("Coordinates of Region Of Interest are saved in : \""+CSVFileName+".csv\"");
+//Dialog.addMessage("Coordinates of Region Of Interest are saved in : \""+TXTFileName+".txt\"");
 Dialog.setLocation(IJPosX, IJPosY+IJSizeY+Spacer);
 Dialog.show();
