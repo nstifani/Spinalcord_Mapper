@@ -1,6 +1,6 @@
 // Defines Global Variables
 var PluginName="Spinalcord Mapper";
-var MacroName="SC Registration";
+var MacroName="Simple Registration";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Registered";

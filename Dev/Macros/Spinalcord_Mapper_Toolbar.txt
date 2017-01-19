@@ -377,22 +377,32 @@ run("Resize Images");
 </macro>
 
 <button>2 line 3
-label=SC Registration
+label=Simple Registration
 icon=noicon
 arg=<macro>
-run("SC Registration");
+run("Simple Registration");
 </macro>
 </line>
 
 <line>
 <button>1 line 4
+label=Alignment and Registration
+icon=noicon
+arg=<macro>
+run("Alignment and Registration");
+</macro>
+</line>
+
+
+<line>
+<button>1 line 5
 label=Manual Cell Detection
 icon=noicon
 arg=<macro>
 run("Manual Cell Detection");
 </macro>
 
-<button>2 line 4
+<button>2 line 5
 label=Auto Cell Detection
 icon=noicon
 arg=<macro>
@@ -401,7 +411,7 @@ run("Auto Cell Detection");
 </line>
 
 <line>
-<button>1 line 5
+<button>1 line 6
 label=Toggle Autostart
 icon=noicon
 arg=<macro>
@@ -409,7 +419,7 @@ PluginName="Spinalcord Mapper";
 run(PluginName+" Toggle Autostart");
 </macro>
 
-<button>2 line 5
+<button>2 line 6
 label=Close
 icon=noicon
 arg=<close>

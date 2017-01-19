@@ -35,8 +35,12 @@ public class Spinalcord_Mapper implements PlugIn {
       Resize_Images();
       return;
     }
-    if (arg.equals("SC Registration")){
-      SC_Registration();
+    if (arg.equals("Simple Registration")){
+      Simple_Registration();
+      return;
+    }
+    if (arg.equals("Alignment and Registration")){
+      Alignment_and_Registration();
       return;
     }
     if (arg.equals("Manual Cell Detection")){
@@ -70,8 +74,11 @@ public class Spinalcord_Mapper implements PlugIn {
   void Resize_Images() {
     IJ.runMacro(getText(path+"Resize_Images.txt"), "");
   }
-  void SC_Registration() {
-    IJ.runMacro(getText(path+"SC_Registration.txt"), "");
+  void Simple_Registration() {
+    IJ.runMacro(getText(path+"Simple_Registration.txt"), "");
+  }
+  void Alignment_and_Registration() {
+    IJ.runMacro(getText(path+"Alignment_and_Registration.txt"), "");
   }
   void Manual_Cell_Detection() {
     IJ.runMacro(getText(path+"Manual_Cell_Detection.txt"), "");

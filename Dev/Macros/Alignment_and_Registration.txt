@@ -1,6 +1,6 @@
 // Defines Global Variables
 var PluginName="Spinalcord Mapper";
-var MacroName="SC Registration";
+var MacroName="Alignment and Registration";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Registered";
@@ -393,6 +393,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);
   NbOfPoints=0;
+  // Make sure at least 7 points are selected
   while(NbOfPoints<7){
     do {
       SelectionPrompt("multipoint","A total of 7 points must be present in the following order:"
@@ -405,6 +406,8 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       +"\n7: Dorsal Spinal Edge (Left hemicord)");
     } while(SelectionPromptPass!=1)
     run("Clear Results");
+    // Use NON inverted Y becuase of bug with unscaled coordinates function
+    run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display redirect=None decimal=9");
     run("Measure");
     NbOfPoints=nResults();
     if(NbOfPoints<7){
@@ -414,135 +417,96 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       ErrorDialog(MessageError,MessageFix,MessageQuit);
     }
   }
-
-  NbOfResults=0;
-
+  getDimensions(ImageWidth_Ini, ImageHeight_Ini, ImageChannels_Ini, ImageSlices_Ini, ImageFrames_Ini);
+  // Create Arrays to save the X and Y Coordinates values in Pixels
   Array_X=newArray(0);
   Array_Y=newArray(0);
+  // Populate the Arrays
   for (ResultI=0; ResultI<nResults; ResultI++){
     X=getResult("X",ResultI);
     Y=getResult("Y",ResultI);
-    Array_X=Append(Array_X,X);
-    Array_Y=Append(Array_Y,Y);
+    toUnscaled(X,Y); // Get the X and Y coordinates in Pixels
+    Array_X=Append(Array_X,round(X));
+    Array_Y=Append(Array_Y,round(Y));
   }
   run("Clear Results");
 
-
   // Resize Canvas to ensure no data loss
-  // Get the Dimension of the Image
-  getDimensions(ImageWidth_Ini, ImageHeight_Ini, ImageChannels_Ini, ImageSlices_Ini, ImageFrames_Ini);
+  // Get the Dimension of the Initial Image
   ImageCenterX_Ini=round(ImageWidth_Ini/2);
   ImageCenterY_Ini=round(ImageHeight_Ini/2);
+  // Get the position of the futur center of the Image (Central canal)
   CC_PosX_Ini=Array_X[0];
   CC_PosY_Ini=Array_Y[0];
-  toUnscaled(CC_PosX_Ini, CC_PosY_Ini); // Transform to pixels
+
   // Calculate the Translation Vectors to center the CC into the Image
   Translate_X = (ImageCenterX_Ini - CC_PosX_Ini);
   Translate_Y = (ImageCenterY_Ini - CC_PosY_Ini);
-
   // Resize the Canvas so no loss of data
-  NewImageWidth=ImageWidth_Ini+2*abs(Translate_X); // Double the Translation data because the resizing is both way but translation only one way
-  NewImageHeight=ImageHeight_Ini+2*abs(Translate_Y);
+  ImageWidth_Resized=ImageWidth_Ini+2*abs(Translate_X); // Double the Translation data because the resizing is both way but translation only one way
+  ImageHeight_Resized=ImageHeight_Ini+2*abs(Translate_Y);
   // Scale the Canvas just to avoid data loss
-  run("Canvas Size...", "width=&NewImageWidth height=&NewImageHeight position=Center zero");// Resize the Image
+  run("Canvas Size...", "width=&ImageWidth_Resized height=&ImageHeight_Resized position=Center zero");// Resize the Image
   // Center on Central canal into Image Center
   run("Translate...", "x=&Translate_X y=&Translate_Y interpolation=None"); // Translate now it is safe
-  getDimensions(ImageWidth_Translated, ImageHeight_Translated, ImageChannels_Translated, ImageSlices_Translated, ImageFrames_Translated);
-  // Calculate rotation angle
+
+  // Calculate rotation angle which is the slope between the two ventral points
   RotationAngle_Radian=atan2((Array_Y[3]-Array_Y[4]),(Array_X[3]-Array_X[4]));
-  RotationAngle_Degrees=((RotationAngle_Radian)*180/PI);
+  RotationAngle_Degrees=((-RotationAngle_Radian)*180/PI); // The minus sign is present because Y coordinates are not inverted and because rotation is done clockwise which is opposite of standard trigonometry direction
   // Rotate the Image
   run("Rotate... ", "angle=&RotationAngle_Degrees grid=1 interpolation=None fill enlarge");// Rotation is clockwise if angle is >0 Angle is in degree
+  // Refresh the Image dimension after rotation
+  // Rotation Resize the image
   getDimensions(ImageWidth_Rotated, ImageHeight_Rotated, ImageChannels_Rotated, ImageSlices_Rotated, ImageFrames_Rotated);
-  Rotational_Translational_Width=ImageWidth_Rotated-ImageWidth_Translated;
-  Rotational_Translational_Height=ImageHeight_Rotated-ImageHeight_Translated;
+  // Calculate the resizing due to the rotation
+  Rotational_Translational_Width=round((ImageWidth_Rotated-ImageWidth_Resized)/2);
+  Rotational_Translational_Height=round((ImageHeight_Rotated-ImageHeight_Resized)/2);
   // Refresh  the Image Dimension
-  ImageCenterX=round(ImageWidth_Rotated/2);
-  ImageCenterY=round(ImageHeight_Rotated/2);
+  ImageRotated_Center_X=round(ImageWidth_Rotated/2);
+  ImageRotated_Center_Y=round(ImageHeight_Rotated/2);
 
   // Calculate new Coordinates
   Array_X_Transformed=newArray(0);
   Array_Y_Transformed=newArray(0);
 
-for(PointI=0; PointI<Array_X.length; PointI++){
-  // Get coordinates in X and Y
-  Coordinates_X_Ini=(Array_X[PointI]);
-  Coordinates_Y_Ini=(Array_Y[PointI]);
-  // Unscale values
-  toUnscaled(Coordinates_X_Ini);
-  toUnscaled(Coordinates_Y_Ini);
+  for(PointI=0; PointI<Array_X.length; PointI++){
+    // Get coordinates in X and Y
+    Coordinates_X_Ini=(Array_X[PointI]);
+    Coordinates_Y_Ini=(Array_Y[PointI]);
 
+    // Calculate coordinates in new Image after transalation
+    Coordinates_X_Translated=Coordinates_X_Ini+abs(Translate_X)+Translate_X+Rotational_Translational_Width;
+    Coordinates_Y_Translated=Coordinates_Y_Ini+abs(Translate_Y)+Translate_Y+Rotational_Translational_Height;
 
+    // Center coordinates on Rotation Center
+    Coordinates_X_Centered=Coordinates_X_Translated - ImageRotated_Center_X;
+    Coordinates_Y_Centered=Coordinates_Y_Translated - ImageRotated_Center_Y;
 
-// Calculate coordinates in new Image after transalation
-  Coordinates_X_Translated=Coordinates_X_Ini+abs(Translate_X)+Translate_X+Rotational_Translational_Width/2;
-  Coordinates_Y_Translated=Coordinates_Y_Ini+abs(Translate_Y)+Translate_Y+Rotational_Translational_Height/2;
-  //print("Coordinates_X_Translated = "+Coordinates_X_Translated);
-  // Center coordinates on Rotation Center
-  Coordinates_X_Centered=Coordinates_X_Translated- ImageCenterX;
-  Coordinates_Y_Centered=Coordinates_Y_Translated- ImageCenterY;
+    // Convert to polar Coordinates
+    VectorLength=sqrt(Coordinates_X_Centered*Coordinates_X_Centered+Coordinates_Y_Centered*Coordinates_Y_Centered);
+  if(Coordinates_X_Centered==0){
+    VectorAngleRad=0;
+  } else{
+    VectorAngleRad=atan(Coordinates_Y_Centered/Coordinates_X_Centered);
+  }
+    // Rotate the Vector
+    VectorAngleRad_Transformed=VectorAngleRad-RotationAngle_Radian;
+    // Convert Back to Cartesian Coordinates
+    Coordinates_X_Transformed=VectorLength*cos(VectorAngleRad_Transformed);
+    Coordinates_Y_Transformed=VectorLength*sin(VectorAngleRad_Transformed);
 
-// Convert to polar Coordinates
-VectorLength=sqrt(Coordinates_X_Centered*Coordinates_X_Centered+Coordinates_Y_Centered*Coordinates_Y_Centered);
-VectorAngleRad=atan(Coordinates_Y_Centered/Coordinates_X_Centered);
-//Rotate the Vector
-VectorAngleRad_Transformed=VectorAngleRad-RotationAngle_Radian;
-// Convert Back to Cartesian Coordinates
-Coordinates_X_Transformed=VectorLength*cos(VectorAngleRad_Transformed);
-Coordinates_Y_Transformed=VectorLength*sin(VectorAngleRad_Transformed);
+    if(Coordinates_X_Centered<0 ){
+      Coordinates_X_Transformed= -Coordinates_X_Transformed;
+      Coordinates_Y_Transformed= -Coordinates_Y_Transformed;
+    }
 
-if(Coordinates_X_Centered>=0){
-Quandrant=1;
-} else if(Coordinates_X_Centered<0 ){
-Quandrant=2;
-Coordinates_X_Transformed= -Coordinates_X_Transformed;
-Coordinates_Y_Transformed= -Coordinates_Y_Transformed;
-}
-
-
-
-
-
-Coordinates_X_Transformed_Centered=Coordinates_X_Transformed+ ImageCenterX;
-Coordinates_Y_Transformed_Centered=ImageHeight_Rotated-(Coordinates_Y_Transformed+ ImageCenterY);
-// Get Which quadrant
-
- makePoint(Coordinates_X_Transformed_Centered, Coordinates_Y_Transformed_Centered);
-print("Quandrant = "+Quandrant);
-print("VectorLength = "+VectorLength);
-print("VectorAngle = "+VectorAngleRad*180/PI);
-print("VectorAngle_Transformed = "+VectorAngleRad_Transformed*180/PI);
-print("Coordinates_X_Transformed_Centered = "+Coordinates_X_Transformed_Centered);
- print("Coordinates_Y_Transformed_Centered = "+Coordinates_Y_Transformed_Centered);
- waitForUser("Point "+PointI+1);
- print("\\Clear");
-// Coordinates_X_Rotated=Coordinates_X_Centered;
-// Coordinates_Y_Rotated=Coordinates_Y_Centered;
-  //
-  // // Rotate Coordiantes
-  // if(RotationAngle_Radian>0){ // if Rotation is clockwise
-  // Coordinates_X_Rotated=Coordinates_X_Centered*cos(RotationAngle_Radian)+Coordinates_Y_Centered*sin(RotationAngle_Radian);
-  // Coordinates_Y_Rotated=Coordinates_Y_Centered*cos(RotationAngle_Radian)-Coordinates_X_Centered*sin(RotationAngle_Radian);
-  // }else{ // if Rotation is counterclockwise
-  //   Coordinates_X_Rotated=Coordinates_X_Centered*cos(RotationAngle_Radian)-Coordinates_Y_Centered*sin(RotationAngle_Radian);
-  //   Coordinates_Y_Rotated=Coordinates_Y_Centered*cos(RotationAngle_Radian)+Coordinates_X_Centered*sin(RotationAngle_Radian);
-  // }
-
-Array_X_Transformed=Append(Array_X_Transformed,Coordinates_X_Transformed_Centered);
-Array_Y_Transformed=Append(Array_Y_Transformed,Coordinates_Y_Transformed_Centered);
-}
-
-
-waitForUser(22);
+    Coordinates_X_Transformed_Centered=Coordinates_X_Transformed + ImageRotated_Center_X;
+    Coordinates_Y_Transformed_Centered=Coordinates_Y_Transformed + ImageRotated_Center_Y;
+    Array_X_Transformed=Append(Array_X_Transformed,Coordinates_X_Transformed_Centered);
+    Array_Y_Transformed=Append(Array_Y_Transformed,Coordinates_Y_Transformed_Centered);
+  }
   // Add new Coordinates to overlay
-  makeSelection("point",Array_X_Transformed,Array_Y_Transformed);
-  // setKeyDown("shift");
-  // makePoint(x, y);
-
-  // Save new Registration coordinates in CSV file
-waitForUser(33);
-
-
+  makeSelection("point",Array_X_Transformed, Array_Y_Transformed);
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
@@ -561,15 +525,15 @@ waitForUser(33);
   ImageWidth=getWidth();
   ImageHeight=getHeight();
   close();
-
+// Invert the Y coordinates here.
   print(TXTFile, File.nameWithoutExtension+CellSeparator
-  +Array_X_Transformed[0]+CellSeparator+Array_Y_Transformed[0]+CellSeparator
-    +Array_X_Transformed[1]+CellSeparator+Array_Y_Transformed[1]+CellSeparator
-      +Array_X_Transformed[2]+CellSeparator+Array_Y_Transformed[2]+CellSeparator
-        +Array_X_Transformed[3]+CellSeparator+Array_Y_Transformed[3]+CellSeparator
-          +Array_X_Transformed[4]+CellSeparator+Array_Y_Transformed[4]+CellSeparator
-            +Array_X_Transformed[5]+CellSeparator+Array_Y_Transformed[5]+CellSeparator
-              +Array_X_Transformed[6]+CellSeparator+Array_Y_Transformed[6]+CellSeparator
+  +Array_X_Transformed[0]+CellSeparator+ImageHeight-Array_Y_Transformed[0]+CellSeparator
+  +Array_X_Transformed[1]+CellSeparator+ImageHeight-Array_Y_Transformed[1]+CellSeparator
+  +Array_X_Transformed[2]+CellSeparator+ImageHeight-Array_Y_Transformed[2]+CellSeparator
+  +Array_X_Transformed[3]+CellSeparator+ImageHeight-Array_Y_Transformed[3]+CellSeparator
+  +Array_X_Transformed[4]+CellSeparator+ImageHeight-Array_Y_Transformed[4]+CellSeparator
+  +Array_X_Transformed[5]+CellSeparator+ImageHeight-Array_Y_Transformed[5]+CellSeparator
+  +Array_X_Transformed[6]+CellSeparator+ImageHeight-Array_Y_Transformed[6]+CellSeparator
   +ImageWidth+CellSeparator+ImageHeight+CellSeparator
   +ImageScale+CellSeparator+Unit+LineSeparator);
 
@@ -599,6 +563,9 @@ if(isOpen("Results")){
 
 // Close the CSV File
 File.close(TXTFile);
+// Restore Y Invert Coordinates
+run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
+
 beep();
 
 ///////////////////// Closing Dialog Box
