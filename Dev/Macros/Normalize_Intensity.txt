@@ -404,9 +404,9 @@ function LinearNormalization (InputFileList, OutputPath){
 /////////////////// End Of Specific Functions
 
 InitialMessage=""+MacroName+" will :"
-+"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process."
-+"\n- Prompt to select the Channels to Process"
-+"\n- Normalize the selected Channels across all the Files";
++"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
++"\n- Normalize the selected Channels across all the Files"
++"\n- Save Images as TIF Files in a new folder";
 
 MessageDialog(InitialMessage);
 

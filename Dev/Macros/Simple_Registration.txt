@@ -342,9 +342,7 @@ InitialMessage=""+MacroName+" will :"
 +"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
 +"\n\nFor each "+FileExt+" File:"
 +"\n- Prompt for 7 registration points"
-+"\n- Save in a new folder"
-+"\n   - Registration Points as a Region of Interest ZIP File"
-+"\n   - Image as TIF File with the Registration Points as an overlay"
++"\n- Save the Images as TIF Fisle with the Registration Points as an Overlay"
 +"\n- Save the X and Y Registration Coordinates in a single TXT File";
 
 MessageDialog(InitialMessage); // Display the Intial Dialog

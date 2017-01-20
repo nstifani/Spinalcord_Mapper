@@ -452,9 +452,10 @@ InitialMessage=""+MacroName+" will :"
 +"\n\nFor each "+FileExt+" File:"
 +"\n- Prompt to Manually Detect Cells of Interest"
 +"\n- Save in a new folder"
-+"\n   - Detected Cells as a Region of Interest ZIP File"
-+"\n   - Image as TIF File with the Detected Cells as an overlay"
-+"\n   - X and Y Coordinates of Dectected Cells in a single TXT File";
++"\n   - Detected Cells as Region of Interest ZIP Files"
++"\n   - Images as TIF Files with the Detected Cells as an overlay"
++"\n   - X and Y Coordinates of Dectected Cells as TXT Files"
++"\n- Prompt for a name for each Counter";
 
 
 MessageDialog(InitialMessage);
@@ -570,7 +571,7 @@ Dialog.create(PluginName+" Information");
 Dialog.setInsets(0, 0, 0);
 Dialog.addMessage(NbFile+" "+ FileExt+ " File in the Folder: \"" +InputDirName+"\" have been processed successfully.");
 Dialog.setInsets(10, 0, 0);
-Dialog.addMessage("Registered Images are saved in the Folder: \""+OutputDirName+"\".");
+Dialog.addMessage("Images with Manually detected Cells are saved in the Folder: \""+OutputDirName+"\".");
 Dialog.setInsets(10, 0, 0);
 Dialog.setLocation(IJPosX, IJPosY+IJSizeY+Spacer);
 Dialog.show();

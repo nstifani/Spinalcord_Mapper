@@ -398,7 +398,10 @@ function FlipV(){run("Flip Vertically");}
 
 
 InitialMessage=""+MacroName+" will :"
-+"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process."
++"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
++"\n- Prompt to select the Processing Method"
++"\n    Global: Apply the same transformation to all files"
++"\n    Individual: Prompt and Apply transformation for each file"
 +"\n\nFor each "+FileExt+" File:"
 +"\n- Apply the selected Transformation"
 +"\n- Save the Images as TIF Files in a new folder";

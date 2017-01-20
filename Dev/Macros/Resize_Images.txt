@@ -430,7 +430,7 @@ function PromptOutputDimension (MinDimension,MaxDimension,MeanDimension,StDevDim
 
 
 InitialMessage=""+MacroName+" will :"
-+"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process."
++"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
 +"\n- Get the largest Dimension from all images"
 +"\n- Prompt to adjust the Final Image Dimension"
 +"\n\nFor each "+FileExt+" File:"

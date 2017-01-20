@@ -348,7 +348,7 @@ function SelectionPrompt(SelectionName, SelectionInfo){
 
 
 InitialMessage=""+MacroName+" will :"
-+"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process."
++"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
 +"\n\nFor each "+FileExt+" File:"
 +"\n- Prompt to draw a Straight Line"
 +"\n- Center and Rotate the Image"
