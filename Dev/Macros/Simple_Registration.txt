@@ -5,7 +5,7 @@ var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Registered";
 var SubDirArray=newArray("Images");
-CellSeparator= ",";
+CellSeparator= "\t";
 LineSeparator="\n";
 
 /////////////// Header, Set Preferences and Options and Housekeeping
