@@ -505,6 +505,10 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     Array_Y_Transformed=Append(Array_Y_Transformed,Coordinates_Y_Transformed_Centered);
   }
 
+
+  // Retransform the X and Y arrays to Scaled coordinates
+toScaled(Array_X_Transformed, Array_Y_Transformed);
+
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
   run("Remove Overlay"); // Reset the overlay
@@ -517,19 +521,23 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   ImageScale=1/PixelWidth;
   ImageWidth=getWidth();
   ImageHeight=getHeight();
+  ImageWidthScaled=ImageWidth;
+  ImageHeightScaled=ImageHeight;
+  toScaled(ImageWidthScaled, ImageHeightScaled);
   close();
-// Invert the Y coordinates here.
+
+
+// InvertY Coordinates here
   print(TXTFile, File.nameWithoutExtension+CellSeparator
-  +Array_X_Transformed[0]+CellSeparator+ImageHeight-Array_Y_Transformed[0]+CellSeparator
-  +Array_X_Transformed[1]+CellSeparator+ImageHeight-Array_Y_Transformed[1]+CellSeparator
-  +Array_X_Transformed[2]+CellSeparator+ImageHeight-Array_Y_Transformed[2]+CellSeparator
-  +Array_X_Transformed[3]+CellSeparator+ImageHeight-Array_Y_Transformed[3]+CellSeparator
-  +Array_X_Transformed[4]+CellSeparator+ImageHeight-Array_Y_Transformed[4]+CellSeparator
-  +Array_X_Transformed[5]+CellSeparator+ImageHeight-Array_Y_Transformed[5]+CellSeparator
-  +Array_X_Transformed[6]+CellSeparator+ImageHeight-Array_Y_Transformed[6]+CellSeparator
+  +Array_X_Transformed[0]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[0]+CellSeparator
+  +Array_X_Transformed[1]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[1]+CellSeparator
+  +Array_X_Transformed[2]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[2]+CellSeparator
+  +Array_X_Transformed[3]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[3]+CellSeparator
+  +Array_X_Transformed[4]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[4]+CellSeparator
+  +Array_X_Transformed[5]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[5]+CellSeparator
+  +Array_X_Transformed[6]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[6]+CellSeparator
   +ImageWidth+CellSeparator+ImageHeight+CellSeparator
   +ImageScale+CellSeparator+Unit+LineSeparator);
-
 
   // Update the progress bar
   showProgress(FileI, InputFileList.length);

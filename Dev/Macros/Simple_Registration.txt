@@ -46,27 +46,27 @@ for(n=0; n<ListWindows.length; n++){
     ToolbarPresent=1;
   }
 }
-// If Toolbar is not present prompt to display it
-if(ToolbarPresent==0){
-  Dialog.create(PluginName+" Information");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("The "+PluginName+" Toolbar is currently inactive.");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("Do you want to start the "+PluginName+" Toolbar?");
-  Dialog.setInsets(0, 0, 0);
-  YesNoArray=newArray("No", "Yes");
-  Dialog.setInsets(0, 100, 0);
-  Dialog.addRadioButtonGroup("", YesNoArray, 2, 1, "Yes");
-  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  Dialog.show();
-  UserChoice=Dialog.getRadioButton();
-  if (UserChoice=="Yes"){
-    run(PluginName+" Toolbar");
-    selectWindow(PluginName+" Toolbar");
-    setLocation(ToolbarPosX,ToolbarPosY);
-    ToolbarPresent=1;
-  }
-}
+// // If Toolbar is not present prompt to display it
+// if(ToolbarPresent==0){
+//   Dialog.create(PluginName+" Information");
+//   Dialog.setInsets(0, 0, 0);
+//   Dialog.addMessage("The "+PluginName+" Toolbar is currently inactive.");
+//   Dialog.setInsets(0, 0, 0);
+//   Dialog.addMessage("Do you want to start the "+PluginName+" Toolbar?");
+//   Dialog.setInsets(0, 0, 0);
+//   YesNoArray=newArray("No", "Yes");
+//   Dialog.setInsets(0, 100, 0);
+//   Dialog.addRadioButtonGroup("", YesNoArray, 2, 1, "Yes");
+//   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+//   Dialog.show();
+//   UserChoice=Dialog.getRadioButton();
+//   if (UserChoice=="Yes"){
+//     run(PluginName+" Toolbar");
+//     selectWindow(PluginName+" Toolbar");
+//     setLocation(ToolbarPosX,ToolbarPosY);
+//     ToolbarPresent=1;
+//   }
+// }
 
 // Set Threshold Window Size and Position
 ThresholdSizeX=290;
@@ -424,6 +424,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 
   DE_L_X=getResult("X",6);
   DE_L_Y=getResult("Y",6);
+
 
   run("Clear Results");
 
