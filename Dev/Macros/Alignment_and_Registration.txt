@@ -405,7 +405,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       +"\n7: Dorsal Spinal Edge (Left hemicord)");
     } while(SelectionPromptPass!=1)
     run("Clear Results");
-    // Use NON inverted Y becuase of bug with unscaled coordinates function
+    // Use NON inverted Y because of bug with unscaled coordinates function
     run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display redirect=None decimal=9");
     run("Measure");
     NbOfPoints=nResults();
@@ -499,15 +499,14 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       Coordinates_Y_Transformed= -Coordinates_Y_Transformed;
     }
 
-    Coordinates_X_Transformed_Centered=Coordinates_X_Transformed + ImageRotated_Center_X;
-    Coordinates_Y_Transformed_Centered=Coordinates_Y_Transformed + ImageRotated_Center_Y;
+    Coordinates_X_Transformed_Centered= round(Coordinates_X_Transformed + ImageRotated_Center_X);
+    Coordinates_Y_Transformed_Centered=round(Coordinates_Y_Transformed + ImageRotated_Center_Y);
     Array_X_Transformed=Append(Array_X_Transformed,Coordinates_X_Transformed_Centered);
     Array_Y_Transformed=Append(Array_Y_Transformed,Coordinates_Y_Transformed_Centered);
   }
 
 
-  // Retransform the X and Y arrays to Scaled coordinates
-toScaled(Array_X_Transformed, Array_Y_Transformed);
+
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
@@ -523,6 +522,8 @@ toScaled(Array_X_Transformed, Array_Y_Transformed);
   ImageHeight=getHeight();
   ImageWidthScaled=ImageWidth;
   ImageHeightScaled=ImageHeight;
+  // Retransform the X and Y arrays to Scaled coordinates
+  toScaled(Array_X_Transformed, Array_Y_Transformed);
   toScaled(ImageWidthScaled, ImageHeightScaled);
   close();
 
