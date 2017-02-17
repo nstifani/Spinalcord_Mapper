@@ -282,16 +282,22 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     Dialog.addMessage("Would you like to adjust the current "+SelectionName+" selection?");
     Dialog.setInsets(0, 0, 0);
     Dialog.addMessage(SelectionInfo);
-    UserChoiceArray=newArray("Keep the current "+SelectionName+" selection", "Let me adjust it");
+    UserChoiceArray=newArray("Keep the current "+SelectionName+" selection", "Let me adjust it", "Discard it");
     Dialog.setInsets(0, 50, 0);
-    Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Keep the current "+SelectionName+" selection");
+    Dialog.addRadioButtonGroup("", UserChoiceArray, 3,1, "Keep the current "+SelectionName+" selection");
     Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
     Dialog.show();
     UserChoice=Dialog.getRadioButton();
-    if (UserChoice=="Keep the current "+SelectionName+" selection"){
-      setBatchMode("hide");
+    if(UserChoice=="Keep the current "+SelectionName+" selection"){
+      setBatchMode("show");
       SelectionPromptPass=1;
-    } else {SelectionPromptPass=0;}
+    } else if (UserChoice=="Discard it"){ // else User wants to adjust the selection
+      run("Remove Overlay");
+      run("Select None");
+        SelectionPromptPass=0; // Set the Switch to 0
+    } else {
+      SelectionPromptPass=0; // Set the Switch to 0
+    }
   } else{
     SelectionPromptPass=0;
     run("Select None");
