@@ -14,12 +14,12 @@ LineSeparator="\n";
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
 run("Line Width...", "line=1"); // Set Line width as 1
 run("Input/Output...", "jpeg=100 gif=-1 file=.txt use copy_row save_column"); // Set Output as Txt and save columns and ignore row numbers
-run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=0");// Set the Point tool as yellow Medium Circle
-run("Colors...", "foreground=white background=black selection=Yellow"); // Set foreground and background colors Selection is yellow
+run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0");// Set the Point tool as yellow Medium Circle
+run("Colors...", "foreground=white background=black selection=White"); // Set foreground and background colors Selection is yellow
 run("Appearance...", "  menu=0 16-bit=Automatic"); // Change appareance of 16bit image as automatic
 run("Misc...", "divide=Infinity"); // Make sure Miscellaneous Options are set correctly
-run("Overlay Options...", "stroke=Orange width=1 point=Dot size=Medium fill=none apply show");
-run("Labels...", "color=Orange font=10 show bold");
+run("Overlay Options...", "stroke=white width=2 point=Hybrid size=Large fill=none apply show");
+run("Labels...", "color=White font=10 show bold");
 call("ij.Prefs.set", "tw.font.size",2);
 
 // Set IJ Size and position
@@ -310,7 +310,7 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     setTool(SelectionName);
     if(SelectionName=="multipoint"){
       setTool("multipoint");
-      run("Point Tool...", "type=Hybrid color=Yellow size=Medium label show counter=0"); // Set the Point tool as yellow Medium Circle
+      run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0"); // Set the Point tool as yellow Medium Circle
       //  doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
     }
     waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
@@ -391,7 +391,7 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
 
 // Start of the loop going through the list of files in the input folder selected above
 for (FileI = 0; FileI < InputFileList.length; FileI++){
-  setBatchMode(false);
+  setBatchMode(true);
   InputFileNameI=InputFileList[FileI];
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);
@@ -399,6 +399,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Make sure at least 7 points are selected
   while(NbOfPoints<7){
     do {
+      setBatchMode("show");
       SelectionPrompt("multipoint","A total of 7 points must be present in the following order:"
       +"\n1: Central Canal"
       +"\n2: Dorsal Spinal Edge (Right hemicord)"
@@ -420,6 +421,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       ErrorDialog(MessageError,MessageFix,MessageQuit);
     }
   }
+  setBatchMode("hide");
   getDimensions(ImageWidth_Ini, ImageHeight_Ini, ImageChannels_Ini, ImageSlices_Ini, ImageFrames_Ini);
   // Create Arrays to save the X and Y Coordinates values in Pixels
   Array_X=newArray(0);
