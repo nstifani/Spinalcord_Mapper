@@ -381,7 +381,7 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
 
 // Start of the loop going through the list of files in the input folder selected above
 for (FileI = 0; FileI < InputFileList.length; FileI++){
-  setBatchMode(false);
+  setBatchMode(true);
   InputFileNameI=InputFileList[FileI];
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);
@@ -397,8 +397,12 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       +"\n6: Lateral Spinal Edge (Left hemicord)"
       +"\n7: Dorsal Spinal Edge (Left hemicord)");
     } while(SelectionPromptPass!=1)
+    // SelectionPromptPass=1;
+    // run("To ROI Manager");
+    // roiManager("Select", 0);
     run("Clear Results");
     run("Measure");
+    // roiManager("Delete");
     NbOfPoints=nResults();
     if(NbOfPoints<7){
       MessageError="Sorry but at least 7 points should be defined.";
