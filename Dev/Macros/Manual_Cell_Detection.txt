@@ -484,7 +484,11 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   do {
     SelectionPrompt("multipoint","Point and Click on the Cells of Interest.");
   } while(SelectionPromptPass!=1)
-
+  // Save the Scale
+  getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
+  ImageScale=1/PixelWidth;
+  //Remove the scale to have coordinates in pixels
+  run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
   run("Clear Results"); // Clear the results
   run("Measure"); // get the Measurements
 
@@ -519,6 +523,8 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   }
 
   selectWindow(InputFileNameI);
+  //Add the scale
+  run("Set Scale...", "distance=&ImageScale known=1 unit=&Unit");
   saveAs("Tif", OutputImagePath+File.nameWithoutExtension); // Save the file with overlay
   close();
   // Update the progress bar

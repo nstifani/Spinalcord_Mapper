@@ -1,10 +1,10 @@
 // Defines Global Variables
 var PluginName="Spinalcord Mapper";
-var MacroName="Cell Detection";
+var MacroName="Simple Registration";
 var FileExt="TIF";
 var MinNbFile=1;
-var FolderSuffix="Cell_Detected";
-var SubDirArray=newArray("Images","ROIs","Results");
+var FolderSuffix="Registered";
+var SubDirArray=newArray("Images");
 CellSeparator= "\t";
 LineSeparator="\n";
 
@@ -13,11 +13,11 @@ LineSeparator="\n";
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
 run("Line Width...", "line=1"); // Set Line width as 1
 run("Input/Output...", "jpeg=100 gif=-1 file=.txt use copy_row save_column"); // Set Output as txt and save columns and ignore row numbers
-run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0");// Set the Point tool as yellow Medium Circle
+run("Point Tool...", "type=Hybrid color=White size=Medium label show counter=0");// Set the Point tool as yellow Medium Circle
 run("Colors...", "foreground=white background=black selection=White"); // Set foreground and background colors Selection is yellow
 run("Appearance...", "  menu=0 16-bit=Automatic"); // Change appareance of 16bit image as automatic
 run("Misc...", "divide=Infinity"); // Make sure Miscellaneous Options are set correctly
-run("Overlay Options...", "stroke=White width=2 point=Hybrid size=Large fill=none apply show");
+run("Overlay Options...", "stroke=White width=2 point=Hybrid size=Medium fill=none apply show");
 run("Labels...", "color=White font=10 show bold");
 call("ij.Prefs.set", "tw.font.size",2);
 
@@ -30,8 +30,8 @@ Spacer=20; // A spacer
 DummyVariable=eval("script","IJ.getInstance().setLocation("+IJPosX+","+IJPosY+");"); // Adjust the position of the ImageJ toolbar
 
 // Set Toolbar Size and position
-ToolbarSizeX=250; // Size of the toolbar
-ToolbarSizeY=100; // Size of the toolbar
+ToolbarSizeX=300; // Size of the toolbar
+ToolbarSizeY=180; // Size of the toolbar
 ToolbarPosX=IJPosX+IJSizeX+Spacer; // Position of the Toolbar is to the right of the ImageJ toolbar
 ToolbarPosY=IJPosY; // Position of to the Toolbar in Y
 // Check if the toolbar is present
@@ -46,27 +46,27 @@ for(n=0; n<ListWindows.length; n++){
     ToolbarPresent=1;
   }
 }
-// If Toolbar is not present prompt to display it
-if(ToolbarPresent==0){
-  Dialog.create(PluginName+" Information");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("The "+PluginName+" Toolbar is currently inactive.");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("Do you want to start the "+PluginName+" Toolbar?");
-  Dialog.setInsets(0, 0, 0);
-  YesNoArray=newArray("No", "Yes");
-  Dialog.setInsets(0, 100, 0);
-  Dialog.addRadioButtonGroup("", YesNoArray, 2, 1, "Yes");
-  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  Dialog.show();
-  UserChoice=Dialog.getRadioButton();
-  if (UserChoice=="Yes"){
-    run(PluginName+" Toolbar");
-    selectWindow(PluginName+" Toolbar");
-    setLocation(ToolbarPosX,ToolbarPosY);
-    ToolbarPresent=1;
-  }
-}
+// // If Toolbar is not present prompt to display it
+// if(ToolbarPresent==0){
+//   Dialog.create(PluginName+" Information");
+//   Dialog.setInsets(0, 0, 0);
+//   Dialog.addMessage("The "+PluginName+" Toolbar is currently inactive.");
+//   Dialog.setInsets(0, 0, 0);
+//   Dialog.addMessage("Do you want to start the "+PluginName+" Toolbar?");
+//   Dialog.setInsets(0, 0, 0);
+//   YesNoArray=newArray("No", "Yes");
+//   Dialog.setInsets(0, 100, 0);
+//   Dialog.addRadioButtonGroup("", YesNoArray, 2, 1, "Yes");
+//   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+//   Dialog.show();
+//   UserChoice=Dialog.getRadioButton();
+//   if (UserChoice=="Yes"){
+//     run(PluginName+" Toolbar");
+//     selectWindow(PluginName+" Toolbar");
+//     setLocation(ToolbarPosX,ToolbarPosY);
+//     ToolbarPresent=1;
+//   }
+// }
 
 // Set Threshold Window Size and Position
 ThresholdSizeX=290;
@@ -96,7 +96,7 @@ call("ij.Prefs.set", "results.height", ResultsSizeY);
 
 
 
-//////////////// Functions
+//////////////// General Functions
 // Function to Append to an array
 function Append(ArrayI, Value) {
   ArrayJ = newArray(ArrayI.length+1);
@@ -311,8 +311,8 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     setTool(SelectionName);
     if(SelectionName=="multipoint"){
       setTool("multipoint");
-      run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0"); // Set the Point tool as yellow Medium Circle
-      doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
+      run("Point Tool...", "type=Hybrid color=White size=Medium label show counter=0"); // Set the Point tool as yellow Medium Circle
+      //doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
     }
     waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
     +SelectionInfo+
@@ -337,7 +337,8 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     }
   }
 }
-////////////////////End of Functions
+////////////////////End of General Functions
+
 
 
 
@@ -346,77 +347,126 @@ function SelectionPrompt(SelectionName, SelectionInfo){
 InitialMessage=""+MacroName+" will :"
 +"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
 +"\n\nFor each "+FileExt+" File:"
-+"\n- Prompt to Manually Detect Cells of Interest"
-+"\n- Save in a new folder"
-+"\n   - Detected Cells as a Region of Interest ZIP File"
-+"\n   - Image as TIF File with the Detected Cells as an overlay"
-+"\n   - X and Y Coordinates of Dectected Cells in a single txt File";
++"\n- Prompt for 7 registration points"
++"\n- Save the Images as TIF Fisle with the Registration Points as an Overlay"
++"\n- Save the X and Y Registration Coordinates in a single TXT File";
 
-
-MessageDialog(InitialMessage);
+MessageDialog(InitialMessage); // Display the Intial Dialog
 
 do{
-  SelectInputDir(MinNbFile,FileExt);
+  SelectInputDir(MinNbFile,FileExt); // Select the InputDirectory
 }while(SelectInputDirPass!=1)
 
-CreateOutputDir(FolderSuffix);
-CreateOutputSubDir(SubDirArray);
-OutputImagePath=""+OutputDirPath+"Images"+File.separator;
-OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
-OutputResultPath=""+OutputDirPath+"Results"+File.separator;
+CreateOutputDir(FolderSuffix); // Create output Directory
+CreateOutputSubDir(SubDirArray); // Create output Sub Directory
+OutputImagePath=""+OutputDirPath+"Images"+File.separator; // Create Subdirectory object path
 
 //////////////////////////// Create an output TXT File
-// TXTFileName=""+InputDirName+"Detected Cells Coordinates";
-// TXTFilePath=OutputDirPath+TXTFileName+".txt";
-// TXTFile = File.open(TXTFilePath);
-// setBatchMode(true);
-// run("Dot Blot (7K)"); // Opend a dummy image to get the header
-// List.setMeasurements; // Get the Header of Measurements
-// MeasurementsHeader=List.getList;
-// close();
-// setBatchMode(false);
-// MeasurementsHeader=replace(MeasurementsHeader,"=.*\n",","); // Replace lines with commas
-// print(TXTFile, "File_ID"+CellSeparator+ MeasurementsHeader+LineSeparator);
+TXTFileName=""+InputDirName+"_"+"Registration Coordinates";
+TXTFilePath=OutputDirPath+TXTFileName+".txt";
+TXTFile = File.open(TXTFilePath);
+// Write the header of the TXT
+print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"+CellSeparator
++"DE_R_X_Pixels"+CellSeparator+"DE_R_Y_Pixels"+CellSeparator
++"LE_R_X_Pixels"+CellSeparator+"LE_R_Y_Pixels"+CellSeparator
++"VE_R_X_Pixels"+CellSeparator+"VE_R_Y_Pixels"+CellSeparator
++"VE_L_X_Pixels"+CellSeparator+"VE_L_Y_Pixels"+CellSeparator
++"LE_L_X_Pixels"+CellSeparator+"LE_L_Y_Pixels"+CellSeparator
++"DE_L_X_Pixels"+CellSeparator+"DE_L_Y_Pixels"+CellSeparator
++"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
++"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
 //////////////////////////// End of Create an output TXT File
+
 
 
 // Start of the loop going through the list of files in the input folder selected above
 for (FileI = 0; FileI < InputFileList.length; FileI++){
-  setBatchMode(false);
+  setBatchMode(true);
   InputFileNameI=InputFileList[FileI];
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);
+  NbOfPoints=0;
+//while(NbOfPoints<7){
+    // do {
+    //   SelectionPrompt("multipoint","A total of 7 points must be present in the following order:"
+    //   +"\n1: Central Canal"
+    //   +"\n2: Dorsal Spinal Edge (Right hemicord)"
+    //   +"\n3: Lateral Spinal Edge (Right hemicord)"
+    //   +"\n4: Ventral Spinal Edge (Right hemicord)"
+    //   +"\n5: Ventral Spinal Edge (Left hemicord)"
+    //   +"\n6: Lateral Spinal Edge (Left hemicord)"
+    //   +"\n7: Dorsal Spinal Edge (Left hemicord)");
+    // } while(SelectionPromptPass!=1)
+    // SelectionPromptPass=1;
+     run("To ROI Manager");
+     roiManager("Select", 0);
+    run("Clear Results");
+    // Use NON inverted Y because of bug with unscaled coordinates function
+    run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display redirect=None decimal=9");
+    run("Measure");
+     roiManager("Delete");
+    NbOfPoints=nResults();
+  // //  if(NbOfPoints<7){
+  //     MessageError="Sorry but at least 7 points should be defined.";
+  //     MessageFix=MacroName+" function requires at least 7 points.";
+  //     MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
+  //     ErrorDialog(MessageError,MessageFix,MessageQuit);
+  //
+  //   }
+  // }
+  setBatchMode("hide");
+  getDimensions(ImageWidth_Ini, ImageHeight_Ini, ImageChannels_Ini, ImageSlices_Ini, ImageFrames_Ini);
+  getPixelSize(Unit_Ini, PixelWidth_Ini, PixelHeight_Ini, PixelDepth_Ini);
 
-  do {
-    SelectionPrompt("multipoint","Point and Click on the Cells of Interest.");
-  } while(SelectionPromptPass!=1)
-
-  run("Clear Results"); // Clear the results
-  run("Measure"); // get the Measurements
-  selectWindow("Results");
-  saveAs("Results", OutputResultPath+File.nameWithoutExtension+".txt"); // Save the measurements
-  run("Clear Results"); // Clear the results
+  NbOfResults=0;
 
 
-  // Add selection to overlay and save the File
+
+  // Create Arrays to save the X and Y Coordinates values in Pixels
+  Array_X=newArray(0);
+  Array_Y=newArray(0);
+  // Populate the Arrays
+  for (ResultI=0; ResultI<nResults; ResultI++){
+    X=getResult("X",ResultI);
+    Y=getResult("Y",ResultI);
+    if(Unit_Ini!="pixels"){
+    toUnscaled(X,Y); // Get the X and Y coordinates in Pixels
+    }
+    Array_X=Append(Array_X,round(X));
+    Array_Y=Append(Array_Y,round(Y));
+  }
+  run("Clear Results");
+
+    // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
-  roiManager("reset"); // Reset the ROI Manager
-  roiManager("Add"); // Add the selection to ROI manager
-  roiManager("Save", OutputROIPath+File.nameWithoutExtension+"_Detected_Cells_ROI.zip"); // Save the ROI
-
-  run("Select None"); // Remove any selection
-  roiManager("Select", 0); // Select the selection form the ROI manager
-  roiManager("reset"); // Reset the ROI manager
-  run("Remove Overlay"); // Remove any previous overlay
-  run("Add Selection..."); // Add selection to the overlay
+  run("Remove Overlay"); // Reset the overlay
+  run("Add Selection..."); // Add the selection to the overlay
   selectWindow(InputFileNameI);
-  saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif"); // Save the file with overlay
+  //saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif");
+  getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
+  ImageScale=1/PixelWidth;
+  ImageWidth=getWidth();
+  ImageHeight=getHeight();
   close();
-
-  //print(TXTFile, File.nameWithoutExtension+CellSeparator++LineSeparator);
-
+  // InvertY Coordinates here
+    print(TXTFile, File.nameWithoutExtension+CellSeparator
+    +Array_X[0]+CellSeparator+ImageHeight-Array_Y[0]+CellSeparator
+    +Array_X[1]+CellSeparator+ImageHeight-Array_Y[1]+CellSeparator
+    +Array_X[2]+CellSeparator+ImageHeight-Array_Y[2]+CellSeparator
+    +Array_X[3]+CellSeparator+ImageHeight-Array_Y[3]+CellSeparator
+    +Array_X[4]+CellSeparator+ImageHeight-Array_Y[4]+CellSeparator
+    +Array_X[5]+CellSeparator+ImageHeight-Array_Y[5]+CellSeparator
+    +Array_X[6]+CellSeparator+ImageHeight-Array_Y[6]+CellSeparator
+    +ImageWidth+CellSeparator+ImageHeight+CellSeparator
+    +ImageScale+CellSeparator+Unit+LineSeparator);
   // Update the progress bar
   showProgress(FileI, InputFileList.length);
+  // Close results windows if it is open
+  if(isOpen("Results")){
+    run("Clear Results");
+    selectWindow("Results");
+    run("Close");
+  }//end of if Results is open
 }/////////////////////End of for Filei loop
 
 // Close Threshold windows if it is open
@@ -433,7 +483,10 @@ if(isOpen("Results")){
 }//end of if Results is open
 
 // Close the TXT File
-//File.close(TXTFile);
+File.close(TXTFile);
+// Restore Y Invert Coordinates
+run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
+
 beep();
 
 ///////////////////// Closing Dialog Box
@@ -443,6 +496,6 @@ Dialog.addMessage(NbFile+" "+ FileExt+ " File in the Folder: \"" +InputDirName+"
 Dialog.setInsets(10, 0, 0);
 Dialog.addMessage("Registered Images are saved in the Folder: \""+OutputDirName+"\".");
 Dialog.setInsets(10, 0, 0);
-//Dialog.addMessage("Coordinates of Region Of Interest are saved in : \""+TXTFileName+".txt\"");
+Dialog.addMessage("Coordinates are saved in : \""+TXTFileName+".TXT\"");
 Dialog.setLocation(IJPosX, IJPosY+IJSizeY+Spacer);
 Dialog.show();
