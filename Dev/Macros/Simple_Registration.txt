@@ -429,7 +429,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   for (ResultI=0; ResultI<nResults; ResultI++){
     X=getResult("X",ResultI);
     Y=getResult("Y",ResultI);
-    if(Unit_Ini!="pixel"){
+    if(Unit_Ini!="pixels"){
     toUnscaled(X,Y); // Get the X and Y coordinates in Pixels
     }
     Array_X=Append(Array_X,round(X));
