@@ -376,13 +376,13 @@ TXTFileName=""+InputDirName+"_"+"Registration_Coordinates";
 TXTFilePath=OutputDirPath+TXTFileName+".txt";
 TXTFile = File.open(TXTFilePath);
 // Write the header
-print(TXTFile, "File_ID"+CellSeparator+"CC_X"+CellSeparator+"CC_Y"+CellSeparator
-+"DE_R_X"+CellSeparator+"DE_R_Y"+CellSeparator
-+"LE_R_X"+CellSeparator+"LE_R_Y"+CellSeparator
-+"VE_R_X"+CellSeparator+"VE_R_Y"+CellSeparator
-+"VE_L_X"+CellSeparator+"VE_L_Y"+CellSeparator
-+"LE_L_X"+CellSeparator+"LE_L_Y"+CellSeparator
-+"DE_L_X"+CellSeparator+"DE_L_Y"+CellSeparator
+print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"+CellSeparator
++"DE_R_X_Pixels"+CellSeparator+"DE_R_Y_Pixels"+CellSeparator
++"LE_R_X_Pixels"+CellSeparator+"LE_R_Y_Pixels"+CellSeparator
++"VE_R_X_Pixels"+CellSeparator+"VE_R_Y_Pixels"+CellSeparator
++"VE_L_X_Pixels"+CellSeparator+"VE_L_Y_Pixels"+CellSeparator
++"LE_L_X_Pixels"+CellSeparator+"LE_L_Y_Pixels"+CellSeparator
++"DE_L_X_Pixels"+CellSeparator+"DE_L_Y_Pixels"+CellSeparator
 +"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
 +"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
 //////////////////////////// End of Create an output TXT File
@@ -423,6 +423,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   }
   setBatchMode("hide");
   getDimensions(ImageWidth_Ini, ImageHeight_Ini, ImageChannels_Ini, ImageSlices_Ini, ImageFrames_Ini);
+  getPixelSize(Unit_Ini, PixelWidth_Ini, PixelHeight_Ini, PixelDepth_Ini);
   // Create Arrays to save the X and Y Coordinates values in Pixels
   Array_X=newArray(0);
   Array_Y=newArray(0);
@@ -430,7 +431,9 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   for (ResultI=0; ResultI<nResults; ResultI++){
     X=getResult("X",ResultI);
     Y=getResult("Y",ResultI);
+    if(Unit_Ini!="pixel"){
     toUnscaled(X,Y); // Get the X and Y coordinates in Pixels
+    }
     Array_X=Append(Array_X,round(X));
     Array_Y=Append(Array_Y,round(Y));
   }
@@ -529,20 +532,20 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   ImageWidthScaled=ImageWidth;
   ImageHeightScaled=ImageHeight;
   // Retransform the X and Y arrays to Scaled coordinates
-  toScaled(Array_X_Transformed, Array_Y_Transformed);
-  toScaled(ImageWidthScaled, ImageHeightScaled);
+  //toScaled(Array_X_Transformed, Array_Y_Transformed);
+  //toScaled(ImageWidthScaled, ImageHeightScaled);
   close();
 
 
 // InvertY Coordinates here
   print(TXTFile, File.nameWithoutExtension+CellSeparator
-  +Array_X_Transformed[0]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[0]+CellSeparator
-  +Array_X_Transformed[1]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[1]+CellSeparator
-  +Array_X_Transformed[2]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[2]+CellSeparator
-  +Array_X_Transformed[3]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[3]+CellSeparator
-  +Array_X_Transformed[4]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[4]+CellSeparator
-  +Array_X_Transformed[5]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[5]+CellSeparator
-  +Array_X_Transformed[6]+CellSeparator+ImageHeightScaled-Array_Y_Transformed[6]+CellSeparator
+  +Array_X_Transformed[0]+CellSeparator+ImageHeight-Array_Y_Transformed[0]+CellSeparator
+  +Array_X_Transformed[1]+CellSeparator+ImageHeight-Array_Y_Transformed[1]+CellSeparator
+  +Array_X_Transformed[2]+CellSeparator+ImageHeight-Array_Y_Transformed[2]+CellSeparator
+  +Array_X_Transformed[3]+CellSeparator+ImageHeight-Array_Y_Transformed[3]+CellSeparator
+  +Array_X_Transformed[4]+CellSeparator+ImageHeight-Array_Y_Transformed[4]+CellSeparator
+  +Array_X_Transformed[5]+CellSeparator+ImageHeight-Array_Y_Transformed[5]+CellSeparator
+  +Array_X_Transformed[6]+CellSeparator+ImageHeight-Array_Y_Transformed[6]+CellSeparator
   +ImageWidth+CellSeparator+ImageHeight+CellSeparator
   +ImageScale+CellSeparator+Unit+LineSeparator);
 
