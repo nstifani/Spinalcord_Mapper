@@ -47,27 +47,6 @@ for(n=0; n<ListWindows.length; n++){
     ToolbarPresent=1;
   }
 }
-// If Toolbar is not present prompt to display it
-// if(ToolbarPresent==0){
-//   Dialog.create(PluginName+" Information");
-//   Dialog.setInsets(0, 0, 0);
-//   Dialog.addMessage("The "+PluginName+" Toolbar is currently inactive.");
-//   Dialog.setInsets(0, 0, 0);
-//   Dialog.addMessage("Do you want to start the "+PluginName+" Toolbar?");
-//   Dialog.setInsets(0, 0, 0);
-//   YesNoArray=newArray("No", "Yes");
-//   Dialog.setInsets(0, 100, 0);
-//   Dialog.addRadioButtonGroup("", YesNoArray, 2, 1, "Yes");
-//   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-//   Dialog.show();
-//   UserChoice=Dialog.getRadioButton();
-//   if(UserChoice=="Yes"){
-//     run(PluginName+" Toolbar");
-//     selectWindow(PluginName+" Toolbar");
-//     setLocation(ToolbarPosX,ToolbarPosY);
-//     ToolbarPresent=1;
-//   }
-// }
 
 // Set Threshold Window Size and Position
 ThresholdSizeX=290;
@@ -121,7 +100,7 @@ function MessageDialog(Message){
 
 // Function to display an error and propose to Fix it / Try again or to quit
 var ErrorDialogPass;
-function ErrorDialog(MessageError, MessageFix, MessageQuit){
+function ErrorDialog(MessageError, MessageFix, MessageQuit, SaveOnQuit, FileToClose){
   ErrorDialogPass=0;
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
@@ -136,6 +115,9 @@ function ErrorDialog(MessageError, MessageFix, MessageQuit){
   Dialog.show();
   UserChoice=Dialog.getRadioButton();
   if(UserChoice=="Cancel & Close"){
+    if(SaveOnQuit=="true"){
+      File.close(FileToClose);
+    }
     exit(MessageQuit);
   }
   ErrorDialogPass=1;
@@ -173,6 +155,8 @@ function SelectInputDir(MinNbFile, FileExt){
         MessageError="Sorry but the "+FileExt+" File:\n\""+InputList[ItemI]+"\"\ncontains more than one \".\" in its filename.";
         MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputList[ItemI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+        SaveOnQuit="false";
+        FileToClose="";
       } else {
         NbFile++; // Increment the nb of files with the correct extension
       }
@@ -183,10 +167,12 @@ function SelectInputDir(MinNbFile, FileExt){
     MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
     MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
     MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
+    SaveOnQuit="false";
+    FileToClose="";
   }
 
   if(NbFile<MinNbFile || BaseNameError==1){ // If filenames have more than 1 "." OR if there is not enough file with the correct extension display an error
-  ErrorDialog(MessageError, MessageFix, MessageQuit);
+  ErrorDialog(MessageError, MessageFix, MessageQuit, SaveOnQuit, FileToClose);
 }else{ // Else if there is no error
   SelectInputDirPass=1; // InputDir Pass the criteria
   InputFileList=newArray(0); // Create a new array with the files having the correct extension
@@ -293,7 +279,7 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     } else if (UserChoice=="Discard it"){ // else User wants to adjust the selection
       run("Remove Overlay");
       run("Select None");
-        SelectionPromptPass=0; // Set the Switch to 0
+      SelectionPromptPass=0; // Set the Switch to 0
     } else {
       SelectionPromptPass=0; // Set the Switch to 0
     }
@@ -322,12 +308,16 @@ function SelectionPrompt(SelectionName, SelectionInfo){
         MessageError="Sorry but no "+SelectionName+" selection was detected.";
         MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionName+" was detected.";
+        SaveOnQuit="true";
+        FileToClose=TXTFile;
       } else if(CurrentSelection!=SelectionValue){
         MessageError="Sorry but the Selection is not a "+SelectionName+".";
         MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionName+".";
+        SaveOnQuit="true";
+        FileToClose=TXTFile;
       }
-      ErrorDialog(MessageError,MessageFix,MessageQuit);
+      ErrorDialog(MessageError,MessageFix,MessageQuit, SaveOnQuit, FileToClose);
       run("Select None");
     } else {
       SelectionPromptPass=1;
@@ -418,7 +408,9 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       MessageError="Sorry but at least 7 points should be defined.";
       MessageFix=MacroName+" function requires at least 7 points.";
       MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
-      ErrorDialog(MessageError,MessageFix,MessageQuit);
+      SaveOnQuit="true";
+      FileToClose=TXTFile;
+      ErrorDialog(MessageError, MessageFix, MessageQuit, SaveOnQuit, FileToClose);
     }
   }
   setBatchMode("hide");
@@ -432,7 +424,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     X=getResult("X",ResultI);
     Y=getResult("Y",ResultI);
     if(Unit_Ini!="pixels"){
-    toUnscaled(X,Y); // Get the X and Y coordinates in Pixels
+      toUnscaled(X,Y); // Get the X and Y coordinates in Pixels
     }
     Array_X=Append(Array_X,round(X));
     Array_Y=Append(Array_Y,round(Y));
@@ -492,11 +484,11 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 
     // Convert to polar Coordinates
     VectorLength=sqrt(Coordinates_X_Centered*Coordinates_X_Centered+Coordinates_Y_Centered*Coordinates_Y_Centered);
-  if(Coordinates_X_Centered==0){
-    VectorAngleRad=0;
-  } else{
-    VectorAngleRad=atan(Coordinates_Y_Centered/Coordinates_X_Centered);
-  }
+    if(Coordinates_X_Centered==0){
+      VectorAngleRad=0;
+    } else{
+      VectorAngleRad=atan(Coordinates_Y_Centered/Coordinates_X_Centered);
+    }
     // Rotate the Vector
     VectorAngleRad_Transformed=VectorAngleRad-RotationAngle_Radian;
     // Convert Back to Cartesian Coordinates
@@ -537,7 +529,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   close();
 
 
-// InvertY Coordinates here
+  // InvertY Coordinates here
   print(TXTFile, File.nameWithoutExtension+CellSeparator
   +Array_X_Transformed[0]+CellSeparator+ImageHeight-Array_Y_Transformed[0]+CellSeparator
   +Array_X_Transformed[1]+CellSeparator+ImageHeight-Array_Y_Transformed[1]+CellSeparator

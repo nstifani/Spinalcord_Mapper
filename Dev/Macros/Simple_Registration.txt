@@ -46,27 +46,6 @@ for(n=0; n<ListWindows.length; n++){
     ToolbarPresent=1;
   }
 }
-// // If Toolbar is not present prompt to display it
-// if(ToolbarPresent==0){
-//   Dialog.create(PluginName+" Information");
-//   Dialog.setInsets(0, 0, 0);
-//   Dialog.addMessage("The "+PluginName+" Toolbar is currently inactive.");
-//   Dialog.setInsets(0, 0, 0);
-//   Dialog.addMessage("Do you want to start the "+PluginName+" Toolbar?");
-//   Dialog.setInsets(0, 0, 0);
-//   YesNoArray=newArray("No", "Yes");
-//   Dialog.setInsets(0, 100, 0);
-//   Dialog.addRadioButtonGroup("", YesNoArray, 2, 1, "Yes");
-//   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-//   Dialog.show();
-//   UserChoice=Dialog.getRadioButton();
-//   if (UserChoice=="Yes"){
-//     run(PluginName+" Toolbar");
-//     selectWindow(PluginName+" Toolbar");
-//     setLocation(ToolbarPosX,ToolbarPosY);
-//     ToolbarPresent=1;
-//   }
-// }
 
 // Set Threshold Window Size and Position
 ThresholdSizeX=290;
@@ -118,9 +97,9 @@ function MessageDialog(Message){
   MessageDialogPass=1;
 }
 
-// Function to display an error and propose to Fix it / Try again or to quit
+// Function to display an error and propose to Fix it Try again or to quit and Save the File
 var ErrorDialogPass;
-function ErrorDialog(MessageError, MessageFix, MessageQuit){
+function ErrorDialog(MessageError, MessageFix, MessageQuit, SaveOnQuit, FileToClose){
   ErrorDialogPass=0;
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
@@ -135,6 +114,9 @@ function ErrorDialog(MessageError, MessageFix, MessageQuit){
   Dialog.show();
   UserChoice=Dialog.getRadioButton();
   if (UserChoice=="Cancel & Close"){
+    if(SaveOnQuit=="true"){
+      File.close(FileToClose);
+    }
     exit(MessageQuit);
   }
   ErrorDialogPass=1;
@@ -151,55 +133,57 @@ var InputList; // List of Files and folders in the input directory (all files no
 var InputFileList; // List of files with the correct extension
 
 function SelectInputDir(MinNbFile, FileExt){
-    // MinNbFile This is the minimum Nb of File to be present in the list to be accepted
-    // FileExt This is the File extension as a string example "tif"
-    // NbFile This is the number of File within the InputList
-    // InputList is ALL the File within the input Directory
-    // InputFileList is the list of File with the correct File extension
+  // MinNbFile This is the minimum Nb of File to be present in the list to be accepted
+  // FileExt This is the File extension as a string example "tif"
+  // NbFile This is the number of File within the InputList
+  // InputList is ALL the File within the input Directory
+  // InputFileList is the list of File with the correct File extension
 
-    InputDirPath=getDirectory("Select a FOLDER containing at least "+MinNbFile+" "+FileExt+" Files to process.");
-    InputList=getFileList(InputDirPath);
-    ParentDir=File.getParent(InputDirPath)+File.separator;
-    InputDirName=File.getName(InputDirPath);
+  InputDirPath=getDirectory("Select a FOLDER containing at least "+MinNbFile+" "+FileExt+" Files to process.");
+  InputList=getFileList(InputDirPath);
+  ParentDir=File.getParent(InputDirPath)+File.separator;
+  InputDirName=File.getName(InputDirPath);
 
-    SelectInputDirPass=0; // Switch to the Function
-    NbFile=0; // Count of Nb of Files
-    BaseNameError=0; // Make sure there is only one "." in the filename
+  SelectInputDirPass=0; // Switch to the Function
+  NbFile=0; // Count of Nb of Files
+  BaseNameError=0; // Make sure there is only one "." in the filename
 
-    // Evaluate the Nb of File
-    for (ItemI=0; ItemI<InputList.length; ItemI++){
-      if(endsWith(toLowerCase(InputList[ItemI]), "."+toLowerCase(FileExt))){ // Select files with correct extension
-        BasenameArray=split(InputList[ItemI],"."); // Make an array from the filename
-        if(BasenameArray.length!=2){// if there is more than one . in the file name abort
-          BaseNameError=1;
-          MessageError="Sorry but the "+FileExt+" File:\n\""+InputList[ItemI]+"\"\ncontains more than one \".\" in its filename.";
-          MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
-          MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputList[ItemI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
-        } else {
-          NbFile++; // Increment the nb of files with the correct extension
-        }
-      } // If ends by Extension increment
-    }
+  // Evaluate the Nb of File
+  for (ItemI=0; ItemI<InputList.length; ItemI++){
+    if(endsWith(toLowerCase(InputList[ItemI]), "."+toLowerCase(FileExt))){ // Select files with correct extension
+      BasenameArray=split(InputList[ItemI],"."); // Make an array from the filename
+      if(BasenameArray.length!=2){// if there is more than one . in the file name abort
+        BaseNameError=1;
+        MessageError="Sorry but the "+FileExt+" File:\n\""+InputList[ItemI]+"\"\ncontains more than one \".\" in its filename.";
+        MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputList[ItemI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+      } else {
+        NbFile++; // Increment the nb of files with the correct extension
+      }
+    } // If ends by Extension increment
+  }
 
-    // This is the Value switch if the InputDir is passing the Min Nb of File criteria
-    if (NbFile<MinNbFile){
-      MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
-      MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
-    }
-    if(NbFile<MinNbFile || BaseNameError==1){ // If filenames have more than 1 "." or if there is not enough file with the correct extension display an error
-    ErrorDialog(MessageError, MessageFix, MessageQuit);
-  }else{ // Else if there is no error
-    SelectInputDirPass=1; // Pass the criteria
-    InputFileList=newArray(0); // Create a new array with the files having the correct extension
-    for(ItemI=0; ItemI<InputList.length;ItemI++){
-      BasenameArray=split(InputList[ItemI],"."); // Split the filename and the extension
-      if(endsWith(toLowerCase(InputList[ItemI]), "."+toLowerCase(FileExt))){ // If the extension is correct
-        FileName=BasenameArray[0]+"."+BasenameArray[1]; // Recreate the filename with the extension
-        InputFileList=Append(InputFileList,FileName); // Append it to the InputFileList
-      }// end of IF endswith
-    }// end for each File
-  } // end of else
+  // This is the Value switch if the InputDir is passing the Min Nb of File criteria
+  if (NbFile<MinNbFile){
+    MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
+    MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
+    SaveOnQuit="false";
+    FileToClose="";
+  }
+  if(NbFile<MinNbFile || BaseNameError==1){ // If filenames have more than 1 "." or if there is not enough file with the correct extension display an error
+  ErrorDialog(MessageError, MessageFix, MessageQuit, SaveOnQuit, FileToClose);
+}else{ // Else if there is no error
+  SelectInputDirPass=1; // Pass the criteria
+  InputFileList=newArray(0); // Create a new array with the files having the correct extension
+  for(ItemI=0; ItemI<InputList.length;ItemI++){
+    BasenameArray=split(InputList[ItemI],"."); // Split the filename and the extension
+    if(endsWith(toLowerCase(InputList[ItemI]), "."+toLowerCase(FileExt))){ // If the extension is correct
+      FileName=BasenameArray[0]+"."+BasenameArray[1]; // Recreate the filename with the extension
+      InputFileList=Append(InputFileList,FileName); // Append it to the InputFileList
+    }// end of IF endswith
+  }// end for each File
+} // end of else
 } // End of Function Select InputDir
 
 // Function to create a new output directory
@@ -294,7 +278,7 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     } else if (UserChoice=="Discard it"){ // else User wants to adjust the selection
       run("Remove Overlay");
       run("Select None");
-        SelectionPromptPass=0; // Set the Switch to 0
+      SelectionPromptPass=0; // Set the Switch to 0
     } else {
       SelectionPromptPass=0; // Set the Switch to 0
     }
@@ -328,7 +312,9 @@ function SelectionPrompt(SelectionName, SelectionInfo){
         MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionName+".";
       }
-      ErrorDialog(MessageError,MessageFix,MessageQuit);
+      SaveOnQuit="true";
+      FileToClose=TXTFile;
+      ErrorDialog(MessageError,MessageFix,MessageQuit,SaveOnQuit, FileToClose);
       run("Select None");
     } else {
       SelectionPromptPass=1;
@@ -410,17 +396,15 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       MessageError="Sorry but at least 7 points should be defined.";
       MessageFix=MacroName+" function requires at least 7 points.";
       MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
-      ErrorDialog(MessageError,MessageFix,MessageQuit);
+      SaveOnQuit="true";
+      FileToClose=TXTFile;
+      ErrorDialog(MessageError,MessageFix,MessageQuit,SaveOnQuit, FileToClose);
 
     }
   }
   setBatchMode("hide");
-  getDimensions(ImageWidth_Ini, ImageHeight_Ini, ImageChannels_Ini, ImageSlices_Ini, ImageFrames_Ini);
-  getPixelSize(Unit_Ini, PixelWidth_Ini, PixelHeight_Ini, PixelDepth_Ini);
-
-  NbOfResults=0;
-
-
+  getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
+  getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
 
   // Create Arrays to save the X and Y Coordinates values in Pixels
   Array_X=newArray(0);
@@ -429,15 +413,15 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   for (ResultI=0; ResultI<nResults; ResultI++){
     X=getResult("X",ResultI);
     Y=getResult("Y",ResultI);
-    if(Unit_Ini!="pixels"){
-    toUnscaled(X,Y); // Get the X and Y coordinates in Pixels
+    if(Unit!="pixels"){
+      toUnscaled(X,Y); // Get the X and Y coordinates in Pixels
     }
     Array_X=Append(Array_X,round(X));
     Array_Y=Append(Array_Y,round(Y));
   }
   run("Clear Results");
 
-    // Add selection to overlay and save the File
+  // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
   run("Remove Overlay"); // Reset the overlay
   run("Add Selection..."); // Add the selection to the overlay
@@ -449,16 +433,16 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   ImageHeight=getHeight();
   close();
   // InvertY Coordinates here
-    print(TXTFile, File.nameWithoutExtension+CellSeparator
-    +Array_X[0]+CellSeparator+ImageHeight-Array_Y[0]+CellSeparator
-    +Array_X[1]+CellSeparator+ImageHeight-Array_Y[1]+CellSeparator
-    +Array_X[2]+CellSeparator+ImageHeight-Array_Y[2]+CellSeparator
-    +Array_X[3]+CellSeparator+ImageHeight-Array_Y[3]+CellSeparator
-    +Array_X[4]+CellSeparator+ImageHeight-Array_Y[4]+CellSeparator
-    +Array_X[5]+CellSeparator+ImageHeight-Array_Y[5]+CellSeparator
-    +Array_X[6]+CellSeparator+ImageHeight-Array_Y[6]+CellSeparator
-    +ImageWidth+CellSeparator+ImageHeight+CellSeparator
-    +ImageScale+CellSeparator+Unit+LineSeparator);
+  print(TXTFile, File.nameWithoutExtension+CellSeparator
+  +Array_X[0]+CellSeparator+ImageHeight-Array_Y[0]+CellSeparator
+  +Array_X[1]+CellSeparator+ImageHeight-Array_Y[1]+CellSeparator
+  +Array_X[2]+CellSeparator+ImageHeight-Array_Y[2]+CellSeparator
+  +Array_X[3]+CellSeparator+ImageHeight-Array_Y[3]+CellSeparator
+  +Array_X[4]+CellSeparator+ImageHeight-Array_Y[4]+CellSeparator
+  +Array_X[5]+CellSeparator+ImageHeight-Array_Y[5]+CellSeparator
+  +Array_X[6]+CellSeparator+ImageHeight-Array_Y[6]+CellSeparator
+  +ImageWidth+CellSeparator+ImageHeight+CellSeparator
+  +ImageScale+CellSeparator+Unit+LineSeparator);
   // Update the progress bar
   showProgress(FileI, InputFileList.length);
   // Close results windows if it is open
@@ -486,7 +470,6 @@ if(isOpen("Results")){
 File.close(TXTFile);
 // Restore Y Invert Coordinates
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
-
 beep();
 
 ///////////////////// Closing Dialog Box
