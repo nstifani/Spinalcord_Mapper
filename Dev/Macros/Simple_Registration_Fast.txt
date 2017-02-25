@@ -4,7 +4,7 @@ var MacroName="Simple Registration";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Registered";
-var SubDirArray=newArray("Images");
+var SubDirArray=newArray("");
 CellSeparator= "\t";
 LineSeparator="\n";
 
@@ -337,8 +337,6 @@ SelectInputDir(MinNbFile,FileExt); // Select the InputDirectory
 }while(SelectInputDirPass!=1)
 
 CreateOutputDir(FolderSuffix); // Create output Directory
-CreateOutputSubDir(SubDirArray); // Create output Sub Directory
-OutputImagePath=""+OutputDirPath+"Images"+File.separator; // Create Subdirectory object path
 
 //////////////////////////// Create an output TXT File
 TXTFileName=""+InputDirName+"_"+"Registration Coordinates";
@@ -421,7 +419,7 @@ selectWindow(InputFileNameI);
 run("Remove Overlay"); // Reset the overlay
 run("Add Selection..."); // Add the selection to the overlay
 selectWindow(InputFileNameI);
-//saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif");
+//saveAs("Tif", OutputDirPath+File.nameWithoutExtension+".tif");
 getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
 ImageScale=1/PixelWidth;
 ImageWidth=getWidth();

@@ -4,10 +4,9 @@ var MacroName="Alignment and Registration";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Aligned and Registered";
-var SubDirArray=newArray("Images");
+var SubDirArray=newArray("");
 CellSeparator= "\t";
 LineSeparator="\n";
-
 
 /////////////// Header, Set Preferences, Options and Housekeeping
 // Select All measurements, Invert Y, and use 9 decimals
@@ -20,7 +19,7 @@ run("Appearance...", "  menu=0 16-bit=Automatic"); // Change appareance of 16bit
 run("Misc...", "divide=Infinity"); // Make sure Miscellaneous Options are set correctly
 run("Overlay Options...", "stroke=white width=2 point=Hybrid size=Large fill=none apply show");
 run("Labels...", "color=White font=10 show bold");
-call("ij.Prefs.set", "tw.font.size",2);
+//call("ij.Prefs.set", "tw.font.size",2);
 
 // Set IJ Size and position
 IJPosX=screenWidth*0.1; // The position of ImageJ in X
@@ -76,6 +75,8 @@ call("ij.Prefs.set", "results.height", ResultsSizeY);
 
 
 
+
+
 //////////////// General Functions
 // Function to Append to an array
 function Append(ArrayI, Value) {
@@ -100,6 +101,7 @@ function MessageDialog(Message){
 
 // Function to display an error and propose to Fix it / Try again or to quit
 var ErrorDialogPass;
+var UserChoice;
 function ErrorDialog(MessageError, MessageFix, MessageQuit, SaveOnQuit, FileToClose){
   ErrorDialogPass=0;
   Dialog.create(PluginName+" Information");
@@ -108,13 +110,13 @@ function ErrorDialog(MessageError, MessageFix, MessageQuit, SaveOnQuit, FileToCl
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageFix);
   Dialog.setInsets(0, 0, 0);
-  TryAgainCancelCloseArray=newArray("Try Again", "Cancel & Close");
+  TryAgainCancelCloseArray=newArray("Try Again", "Close & Save");
   Dialog.setInsets(0, 100, 0);
   Dialog.addRadioButtonGroup("", TryAgainCancelCloseArray, 2, 1, "Try Again");
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
   Dialog.show();
   UserChoice=Dialog.getRadioButton();
-  if(UserChoice=="Cancel & Close"){
+  if(UserChoice=="Close & Save"){
     if(SaveOnQuit=="true"){
       File.close(FileToClose);
     }
@@ -122,6 +124,7 @@ function ErrorDialog(MessageError, MessageFix, MessageQuit, SaveOnQuit, FileToCl
   }
   ErrorDialogPass=1;
 }
+
 
 
 // Function to select an Input Directory containing at least MinNbFile with the correct File Extension FileExt
@@ -136,7 +139,6 @@ var InputFileList; // List of files with the correct extension
 function SelectInputDir(MinNbFile, FileExt){
   // MinNbFile This is the minimum Nb of File to be present in the list to be accepted
   // FileExt This is the File extension as a string example "tif"
-
   InputDirPath=getDirectory("Select a FOLDER containing at least "+MinNbFile+" "+FileExt+" Files to process.");
   InputList=getFileList(InputDirPath);
   ParentDir=File.getParent(InputDirPath)+File.separator;
@@ -187,6 +189,14 @@ function SelectInputDir(MinNbFile, FileExt){
 } // End of Function Select InputDir
 
 
+
+
+
+
+
+
+
+
 // Function to create a new output directory
 var OutputDirPath; // The path of the output directory
 var OutputDirName; // The name of the output directory
@@ -212,6 +222,9 @@ function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the des
 // For each element in the subdirarray addMessage
 // Output[SubDirArrayElementN]Path=""+OutputDirPath+"[SubDirArrayElementN]"+File.separator;
 // Then you can use directly the string to save within a subdirectory
+
+
+
 
 
 // This function Prompt for a specific type of selection and ensure a selection is made before moving next
@@ -326,12 +339,65 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     }// End of else Selection is good
   } // End of If selection does not pass prompt for a selection
 } // End of Function Get selection
+
+
+
+
+
+
+
+
+////// Close Function
+function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName){
+  beep();
+  // Close Threshold windows if it is open
+  if(isOpen("Threshold")){
+    selectWindow("Threshold");
+    run("Close");
+  }//end of if threshold is open
+  // Close results windows if it is open
+  if(isOpen("Results")){
+    run("Clear Results");
+    selectWindow("Results");
+    run("Close");
+  }//end of if Results is open
+  //Close the ROI Manager
+  if(isOpen("ROI Manager")){
+    roiManager("reset");
+    selectWindow("ROI Manager");
+    run("Close");
+  }//End of Close the ROI Manager
+  //Close all images
+  //  run("Close All");
+  ListWindows=getList("window.titles");
+
+  for(n=0; n<ListWindows.length; n++){
+    WindowN=ListWindows[n];
+    selectWindow(WindowN);
+    run("Close");
+  }
+
+  /////////////////////// Closing Dialog Box
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(FileI+" of "+ NbFile+" "+ FileExt+ " Files in the folder:\n"+InputDirName+"\nhave been processed successfully.");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("Files are saved in the following folder:\n"+OutputDirName+".");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+}  ///////////////////////// End of Close Function
+
+
+
+
+
+
+
+
+
+
 ////////////////////End of General Functions
-
-
-
-
-
 
 
 
@@ -357,11 +423,8 @@ do{
 }while(SelectInputDirPass!=1)
 
 CreateOutputDir(FolderSuffix); // Create output Directory
-CreateOutputSubDir(SubDirArray); // Create output Sub Directory
-OutputImagePath=""+OutputDirPath+"Images"+File.separator; // Create Subdirectory object path
 
-
-// Write The Counter in a txt
+// Write The Coordinates in a TXT file
 TXTFileName=""+InputDirName+"_"+"Registration_Coordinates";
 TXTFilePath=OutputDirPath+TXTFileName+".txt";
 TXTFile = File.open(TXTFilePath);
@@ -376,6 +439,9 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"
 +"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
 +"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
 //////////////////////////// End of Create an output TXT File
+
+
+
 
 
 
@@ -516,7 +582,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   makeSelection("point",Array_X_Transformed, Array_Y_Transformed);
   run("Add Selection..."); // Add the selection to the overlay
   selectWindow(InputFileNameI);
-  saveAs("Tif", OutputImagePath+File.nameWithoutExtension+".tif");
+  saveAs("Tif", OutputDirPath+File.nameWithoutExtension+".tif");
   getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
   ImageScale=1/PixelWidth;
   ImageWidth=getWidth();

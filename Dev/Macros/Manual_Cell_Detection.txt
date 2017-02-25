@@ -4,7 +4,7 @@ var MacroName="Manual Cell Detection";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Manual_Cell_Detection";
-var SubDirArray=newArray("Images","ROIs","Results");
+var SubDirArray=newArray("ROIs","Results");
 CellSeparator= "\t";
 LineSeparator="\n";
 var CounterArray=newArray(0); // This is an array containing the Counter Nb
@@ -458,7 +458,6 @@ do{
 
 CreateOutputDir(FolderSuffix);
 CreateOutputSubDir(SubDirArray);
-OutputImagePath=""+OutputDirPath+"Images"+File.separator;
 OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
 OutputResultPath=""+OutputDirPath+"Results"+File.separator;
 
@@ -511,9 +510,6 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   }
 
   selectWindow(InputFileNameI);
-  //Add the scale
-  run("Set Scale...", "distance=&ImageScale known=1 unit=&Unit");
-  saveAs("Tif", OutputImagePath+File.nameWithoutExtension); // Save the file with overlay
   close();
   // Update the progress bar
   showProgress(FileI, InputFileList.length);
