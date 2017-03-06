@@ -218,27 +218,27 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
   beep();
   // Close Threshold windows if it is open
   if(isOpen("Threshold")){
-    selectWindow("Threshold");
-    run("Close");
+    selectWindow("Threshold");    run("Close");
+
   }//end of if threshold is open
   // Close results windows if it is open
   if(isOpen("Results")){
     run("Clear Results");
-    selectWindow("Results");
-    run("Close");
+    selectWindow("Results");    run("Close");
+
   }//end of if Results is open
   //Close the ROI Manager
   if(isOpen("ROI Manager")){
     roiManager("reset");
-    selectWindow("ROI Manager");
-    run("Close");
+    selectWindow("ROI Manager");    run("Close");
+
   }//End of Close the ROI Manager
 
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
-    selectWindow(ImageN);
-    run("Close");
+    selectWindow(ImageN);    run("Close");
+
   }
 
   /////////////////////// Closing Dialog Box
@@ -257,27 +257,27 @@ function CleanExit(MessageQuit){
   beep();
   // Close Threshold windows if it is open
   if(isOpen("Threshold")){
-    selectWindow("Threshold");
-    run("Close");
+    selectWindow("Threshold");    run("Close");
+
   }//end of if threshold is open
   // Close results windows if it is open
   if(isOpen("Results")){
     run("Clear Results");
-    selectWindow("Results");
-    run("Close");
+    selectWindow("Results");    run("Close");
+
   }//end of if Results is open
   //Close the ROI Manager
   if(isOpen("ROI Manager")){
     roiManager("reset");
-    selectWindow("ROI Manager");
-    run("Close");
+    selectWindow("ROI Manager");    run("Close");
+
   }//End of Close the ROI Manager
 
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
-    selectWindow(ListImages);
-    run("Close");
+    selectWindow(ListImages);    run("Close");
+
   }
   /////////////////////// Closing Dialog Box
   Dialog.create(PluginName+" Information");
@@ -462,8 +462,8 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Close results windows if it is open
   if(isOpen("Results")){
     run("Clear Results");
-    selectWindow("Results");
-    run("Close");
+    selectWindow("Results");    run("Close");
+
   }//end of if Results is open
 
   // Calculate the Translation Vectors to center the Segment into the Image

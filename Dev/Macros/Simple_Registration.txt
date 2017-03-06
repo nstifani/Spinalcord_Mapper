@@ -457,6 +457,7 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"
 +"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
 //////////////////////////// End of Create an output TXT File
 
+  var NbOfPoints;
 // Start of the loop going through the list of files in the input folder selected above
 for (FileI = 0; FileI < InputFileList.length; FileI++){
   setBatchMode(true);
@@ -469,7 +470,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Remove the scale to have coordinates in pixels
   run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
-  var NbOfPoints=0;
+  NbOfPoints=0;
   while(NbOfPoints<7){
     do {
       SelectionPrompt("multipoint","A total of 7 points must be present in the following order:"
@@ -522,7 +523,11 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     Array_X=Append(Array_X,X);
     Array_Y=Append(Array_Y,Y);
   }
-  run("Clear Results");
+  if(isOpen("Results")){
+    run("Clear Results");
+    selectWindow("Results");
+    run("Close");
+  } //end of if Results is open
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
