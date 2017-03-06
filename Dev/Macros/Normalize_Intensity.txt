@@ -38,13 +38,13 @@ ToolbarPosY=IJPosY; // Position of to the Toolbar in Y
 ListWindows=getList("window.titles");
 ToolbarPresent=0;
 for(n=0; n<ListWindows.length; n++){
-WindowN=ListWindows[n];
-if(WindowN==PluginName+" Toolbar"){
-// If toolbar is present place it next to the IJ toolbar
-selectWindow(PluginName+" Toolbar");
-setLocation(ToolbarPosX,ToolbarPosY);
-ToolbarPresent=1;
-}
+  WindowN=ListWindows[n];
+  if(WindowN==PluginName+" Toolbar"){
+    // If toolbar is present place it next to the IJ toolbar
+    selectWindow(PluginName+" Toolbar");
+    setLocation(ToolbarPosX,ToolbarPosY);
+    ToolbarPresent=1;
+  }
 }
 
 // Set Threshold Window Size and Position
@@ -78,23 +78,23 @@ call("ij.Prefs.set", "results.height", ResultsSizeY);
 //////////////// General Functions
 // Function to Append to an array
 function Append(ArrayI, Value) {
-ArrayJ = newArray(ArrayI.length+1);
-for (ValueI=0; ValueI<ArrayI.length; ValueI++)
-ArrayJ[ValueI] = ArrayI[ValueI];
-ArrayJ[ArrayI.length] = Value;
-return ArrayJ;
+  ArrayJ = newArray(ArrayI.length+1);
+  for (ValueI=0; ValueI<ArrayI.length; ValueI++)
+  ArrayJ[ValueI] = ArrayI[ValueI];
+  ArrayJ[ArrayI.length] = Value;
+  return ArrayJ;
 }
 
 // Function to display a message
 var MessageDialogPass;
 function MessageDialog(Message){
-MessageDialogPass=0;
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(Message);
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-Dialog.show();
-MessageDialogPass=1;
+  MessageDialogPass=0;
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(Message);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  MessageDialogPass=1;
 }
 
 // Function to display an error and propose to Fix it / Try again or to quit
@@ -203,48 +203,48 @@ function SelectInputDir(MinNbFile, FileExt){
     } else {
 
     }
-} else { // if NbFileWithCorrectExt is above or equal MinNbFile Evaluate Filenames
-  InputFileList=newArray(0);
-  for (FileI=0; FileI<InputCorrectExtFileList.length; FileI++){
-    BasenameFileIArray=split(InputCorrectExtFileList[FileI],"."); // Make an array from the filename
-    if(BasenameFileIArray.length!=2){// if there is more than one . in the file name abort
-      MessageError="Sorry but the "+FileExt+" File:\n\""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\" in its filename.";
-      MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
-      ErrorResponseArray=newArray("Select Another Folder", "Ignore This File", "Cancel and Close");
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+  } else { // if NbFileWithCorrectExt is above or equal MinNbFile Evaluate Filenames
+    InputFileList=newArray(0);
+    for (FileI=0; FileI<InputCorrectExtFileList.length; FileI++){
+      BasenameFileIArray=split(InputCorrectExtFileList[FileI],"."); // Make an array from the filename
+      if(BasenameFileIArray.length!=2){// if there is more than one . in the file name abort
+        MessageError="Sorry but the "+FileExt+" File:\n\""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\" in its filename.";
+        MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
+        ErrorResponseArray=newArray("Select Another Folder", "Ignore This File", "Cancel and Close");
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+        ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+        if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+          exit(MessageQuit);
+        } else if (UserResponseErrorDialog=="Ignore This File"){
+
+        } else if (UserResponseErrorDialog=="Select Another Folder") {
+          FileI=InputCorrectExtFileList.length;
+          SelectInputDirPass=0;
+          ErrorDialogPass=1;
+        }
+      }else { // If basename is good add it to the InputFileList
+        InputFileList=Append(InputFileList, InputCorrectExtFileList[FileI]);
+      }
+    }
+    // Make sure InpuFileList is > MinNbFile
+    NbFile=InputFileList.length;
+    if(NbFile<MinNbFile && ErrorDialogPass!=1){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
+      MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File with no more than one \".\" in its filename.";
+      MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File with one unique \".\" used for the file extension.";
+      ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
       ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
         exit(MessageQuit);
-      } else if (UserResponseErrorDialog=="Ignore This File"){
-
-      } else if (UserResponseErrorDialog=="Select Another Folder") {
-        FileI=InputCorrectExtFileList.length;
+      } else {
         SelectInputDirPass=0;
-        ErrorDialogPass=1;
       }
-    }else { // If basename is good add it to the InputFileList
-      InputFileList=Append(InputFileList, InputCorrectExtFileList[FileI]);
-    }
-  }
-  // Make sure InpuFileList is > MinNbFile
-  NbFile=InputFileList.length;
-  if(NbFile<MinNbFile && ErrorDialogPass!=1){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
-    MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File with no more than one \".\" in its filename.";
-    MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File with one unique \".\" used for the file extension.";
-    ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
-    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
-    if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-      exit(MessageQuit);
+    } else if (ErrorDialogPass==1){
+      SelectInputDirPass=0; // InputDir Pass the criteria
     } else {
-    SelectInputDirPass=0;
+      SelectInputDirPass=1; // InputDir Pass the criteria
     }
-  } else if (ErrorDialogPass==1){
-  SelectInputDirPass=0; // InputDir Pass the criteria
-  } else {
-    SelectInputDirPass=1; // InputDir Pass the criteria
   }
-}
 } // End of Function Select InputDir
 
 
@@ -252,14 +252,14 @@ function SelectInputDir(MinNbFile, FileExt){
 var OutputDirPath; // The path of the output directory
 var OutputDirName; // The name of the output directory
 function CreateOutputDir(ParentDir, InputDirName, FolderSuffix){ // Folder suffix is a string appended to the input Directory
-OutputDirPath=ParentDir+InputDirName+"_"+FolderSuffix+File.separator; // Create the outputdirpath
-n=1;
-while(File.exists(OutputDirPath)!=0){ // If the path already exist, increment with _ n until it does not exist
-n++;
-OutputDirPath=ParentDir+InputDirName+"_"+FolderSuffix+"_"+n+File.separator;
-} // End of making sure the outpudirectory is a new folder
-File.makeDirectory(OutputDirPath); // Create the outpudirectory
-OutputDirName=File.getName(OutputDirPath); // Get the Name of the output directory
+  OutputDirPath=ParentDir+InputDirName+"_"+FolderSuffix+File.separator; // Create the outputdirpath
+  n=1;
+  while(File.exists(OutputDirPath)!=0){ // If the path already exist, increment with _ n until it does not exist
+    n++;
+    OutputDirPath=ParentDir+InputDirName+"_"+FolderSuffix+"_"+n+File.separator;
+  } // End of making sure the outpudirectory is a new folder
+  File.makeDirectory(OutputDirPath); // Create the outpudirectory
+  OutputDirName=File.getName(OutputDirPath); // Get the Name of the output directory
 }
 
 
@@ -322,55 +322,55 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
 var LinearNormalizationPass; // Switch For Linear normalization
 var FileI;
 function LinearNormalization (InputFileList, OutputPath){
-LinearNormalizationPass=0;
-setBatchMode(true);
-// Process all file in the InputFileList
-for (FileI = 0; FileI < InputFileList.length; FileI++){
-InputFileNameI=InputFileList[FileI];
-InputFilePathI = InputDirPath+InputFileNameI;
-open(InputFilePathI);
-ImageBitDepth=bitDepth();
-//Get Image Info
-ImageInfoArray=split(getImageInfo(),"\n");
-for(RowI=0; RowI<ImageInfoArray.length; RowI++){
-ImageInfoRowI=ImageInfoArray[RowI];
-if(startsWith(ImageInfoRowI, "Bits per pixel: ")){
-//Get the bits per pixel
-ImageType=replace(ImageInfoRowI,"Bits per pixel: ","");
-} else {
-ImageType=" ";
-}
-}
+  LinearNormalizationPass=0;
+  setBatchMode(true);
+  // Process all file in the InputFileList
+  for (FileI = 0; FileI < InputFileList.length; FileI++){
+    InputFileNameI=InputFileList[FileI];
+    InputFilePathI = InputDirPath+InputFileNameI;
+    open(InputFilePathI);
+    ImageBitDepth=bitDepth();
+    //Get Image Info
+    ImageInfoArray=split(getImageInfo(),"\n");
+    for(RowI=0; RowI<ImageInfoArray.length; RowI++){
+      ImageInfoRowI=ImageInfoArray[RowI];
+      if(startsWith(ImageInfoRowI, "Bits per pixel: ")){
+        //Get the bits per pixel
+        ImageType=replace(ImageInfoRowI,"Bits per pixel: ","");
+      } else {
+        ImageType=" ";
+      }
+    }
 
-if(ImageType=="8 (color LUT)"){ // Transform 8bit color image into RGB color
-run("RGB Color");
-run("Make Composite");
-} else if(ImageBitDepth==24){ // If it is a RGB Image convert it to RGB Stack
-run("Make Composite");
-}
+    if(ImageType=="8 (color LUT)"){ // Transform 8bit color image into RGB color
+      run("RGB Color");
+      run("Make Composite");
+    } else if(ImageBitDepth==24){ // If it is a RGB Image convert it to RGB Stack
+      run("Make Composite");
+    }
 
 
-getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames);
-ImageBitDepth=bitDepth(); // Refresh the bitDepth
+    getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames);
+    ImageBitDepth=bitDepth(); // Refresh the bitDepth
 
-if(NbChannels==1){ // If Only one color
-run("Grays");
-if(NbSlices>1 || NbFrames>1){ // 1 color but more dimensions
-run("Enhance Contrast...", "saturated=0.15 normalize process_all");
-} else{ // if only 1 dimension
-run("Enhance Contrast...", "saturated=0.15 normalize");
-}
-} else { // If more than one color process each Channel separately
-for(ChannelI=1; ChannelI<NbChannels+1; ChannelI++){
-Stack.setChannel(ChannelI);
-run("Enhance Contrast...", "saturated=0.15 normalize process_all");
-}
-}
-saveAs("Tif", OutputPath+File.nameWithoutExtension);
-close();
-showProgress(FileI, InputFileList.length);
-}
-LinearNormalizationPass=1;
+    if(NbChannels==1){ // If Only one color
+      run("Grays");
+      if(NbSlices>1 || NbFrames>1){ // 1 color but more dimensions
+        run("Enhance Contrast...", "saturated=0.15 normalize process_all");
+      } else{ // if only 1 dimension
+        run("Enhance Contrast...", "saturated=0.15 normalize");
+      }
+    } else { // If more than one color process each Channel separately
+      for(ChannelI=1; ChannelI<NbChannels+1; ChannelI++){
+        Stack.setChannel(ChannelI);
+        run("Enhance Contrast...", "saturated=0.15 normalize process_all");
+      }
+    }
+    saveAs("Tif", OutputPath+File.nameWithoutExtension);
+    close();
+    showProgress(FileI, InputFileList.length);
+  }
+  LinearNormalizationPass=1;
 }
 /////////////////// End Of Specific Functions
 
@@ -382,13 +382,13 @@ InitialMessage=""+MacroName+" will :"
 MessageDialog(InitialMessage);
 
 do{
-SelectInputDir(MinNbFile, FileExt);
+  SelectInputDir(MinNbFile, FileExt);
 }while(SelectInputDirPass!=1)
 
 CreateOutputDir(ParentDir, InputDirName, FolderSuffix);
 
 do{
-LinearNormalization(InputFileList, OutputDirPath);
+  LinearNormalization(InputFileList, OutputDirPath);
 }while(LinearNormalizationPass!=1)
 
 CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);
