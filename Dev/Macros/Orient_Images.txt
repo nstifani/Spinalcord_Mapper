@@ -71,10 +71,6 @@ call("ij.Prefs.set", "results.width", ResultsSizeX);
 call("ij.Prefs.set", "results.height", ResultsSizeY);
 //////////////// Header and Housekeeping
 
-
-
-
-
 //////////////// General Functions
 // Function to Append to an array
 function Append(ArrayI, Value) {
@@ -115,49 +111,6 @@ function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
   UserResponseErrorDialog=Dialog.getRadioButton();
   return UserResponseErrorDialog;
 }
-
-
-//////////////// General Functions
-// Function to Append to an array
-function Append(ArrayI, Value) {
-  ArrayJ = newArray(ArrayI.length+1);
-  for (ValueI=0; ValueI<ArrayI.length; ValueI++)
-  ArrayJ[ValueI] = ArrayI[ValueI];
-  ArrayJ[ArrayI.length] = Value;
-  return ArrayJ;
-}
-
-// Function to display a message
-var MessageDialogPass;
-function MessageDialog(Message){
-  MessageDialogPass=0;
-  Dialog.create(PluginName+" Information");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage(Message);
-  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  Dialog.show();
-  MessageDialogPass=1;
-}
-
-// Function to display an error and propose to Fix it / Try again or to quit
-var ErrorDialogPass;
-var UserResponseErrorDialog;
-function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
-  ErrorDialogPass=0;
-  Dialog.create(PluginName+" Information");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage(MessageError);
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage(MessageFix);
-  Dialog.setInsets(0, 0, 0);
-  Dialog.setInsets(0, 100, 0);
-  Dialog.addRadioButtonGroup("", ErrorResponseArray, ErrorResponseArray.length, 1, ErrorResponseArray[0]);
-  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  Dialog.show();
-  UserResponseErrorDialog=Dialog.getRadioButton();
-  return UserResponseErrorDialog;
-}
-
 
 // Function to select an Input Directory containing at least MinNbFile with the correct File Extension FileExt
 var SelectInputDirPass; // Switch for the dialog box
@@ -173,7 +126,6 @@ var NbFile;
 function SelectInputDir(MinNbFile, FileExt){
   // MinNbFile This is the minimum Nb of File to be present in the list to be accepted
   // FileExt This is the File extension as a string example "tif"
-
   InputDirPath=getDirectory("Select a FOLDER containing at least "+MinNbFile+" "+FileExt+" Files to process."); // Select a Folder
   InputItemList=getFileList(InputDirPath); // List of Item in the selected folder
   ParentDir=File.getParent(InputDirPath)+File.separator;
@@ -183,7 +135,6 @@ function SelectInputDir(MinNbFile, FileExt){
   NbFileWithCorrectExt=0; // Count of Nb of Files
   BaseNameError=0; // Switch to make sure there is only one "." in the filename
   InputCorrectExtFileList=newArray(0);
-
   // Evaluate the Nb of File with correct extension and add them to InputCorrectExtFileList
   for (ItemI=0; ItemI<InputItemList.length; ItemI++){
     if(endsWith(toLowerCase(InputItemList[ItemI]), "."+toLowerCase(FileExt))){ // Select files with correct extension
@@ -199,9 +150,8 @@ function SelectInputDir(MinNbFile, FileExt){
     ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
 
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-      exit(MessageQuit);
+      CleanExit(MessageQuit);
     } else {
-
     }
   } else { // if NbFileWithCorrectExt is above or equal MinNbFile Evaluate Filenames
     InputFileList=newArray(0);
@@ -214,9 +164,8 @@ function SelectInputDir(MinNbFile, FileExt){
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
         ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
         if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-          exit(MessageQuit);
+          CleanExit(MessageQuit);
         } else if (UserResponseErrorDialog=="Ignore This File"){
-
         } else if (UserResponseErrorDialog=="Select Another Folder") {
           FileI=InputCorrectExtFileList.length;
           SelectInputDirPass=0;
@@ -235,7 +184,7 @@ function SelectInputDir(MinNbFile, FileExt){
       MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
       ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-        exit(MessageQuit);
+        CleanExit(MessageQuit);
       } else {
         SelectInputDirPass=0;
       }
@@ -246,7 +195,6 @@ function SelectInputDir(MinNbFile, FileExt){
     }
   }
 } // End of Function Select InputDir
-
 
 // Function to create a new output directory
 var OutputDirPath; // The path of the output directory
@@ -261,9 +209,6 @@ function CreateOutputDir(ParentDir, InputDirName, FolderSuffix){ // Folder suffi
   File.makeDirectory(OutputDirPath); // Create the outpudirectory
   OutputDirName=File.getName(OutputDirPath); // Get the Name of the output directory
 }
-
-
-
 
 ////// Close Function
 function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName){
@@ -286,7 +231,6 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
     run("Close");
   }//End of Close the ROI Manager
 
-
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
@@ -306,17 +250,43 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
 }  ///////////////////////// End of Close Function
 
 
+////// CleanExit Function
+function CleanExit(MessageQuit){
+  beep();
+  // Close Threshold windows if it is open
+  if(isOpen("Threshold")){
+    selectWindow("Threshold");
+    run("Close");
+  }//end of if threshold is open
+  // Close results windows if it is open
+  if(isOpen("Results")){
+    run("Clear Results");
+    selectWindow("Results");
+    run("Close");
+  }//end of if Results is open
+  //Close the ROI Manager
+  if(isOpen("ROI Manager")){
+    roiManager("reset");
+    selectWindow("ROI Manager");
+    run("Close");
+  }//End of Close the ROI Manager
+
+  ListImages=getList("image.titles");
+  for(n=0; n<ListImages.length; n++){
+    ImageN=ListImages[n];
+    selectWindow(ListImages);
+    run("Close");
+  }
+  /////////////////////// Closing Dialog Box
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(MessageQuit);
+  Dialog.setInsets(0, 0, 0);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  exit();
+}  ///////////////////////// End of Exit Function
 ////////////////////End of General Functions
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -338,7 +308,6 @@ function ProcessMethodPrompt (){
   /////////////////////// Initial Dialog Box
 } // End of function
 
-
 // Function to transform
 var Transformation;
 function TransformationPrompt (){
@@ -357,7 +326,6 @@ function TransformationPrompt (){
   /////////////////////// Initial Dialog Box
 } // End of function
 
-
 // Function to apply the transformation
 function rotate90R(){run("Rotate 90 Degrees Right");}
 function rotate90L(){run("Rotate 90 Degrees Left");}
@@ -366,7 +334,6 @@ function FlipH(){run("Flip Horizontally");}
 function FlipV(){run("Flip Vertically");}
 ////////////////////End of Functions
 /////////End Of Specific Functions
-
 
 
 
@@ -396,23 +363,18 @@ if(ProcessMethod=="Global"){
   CreateOutputDir(ParentDir, InputDirName, FolderSuffix);
 }
 
-
-
-
 // Start of the loop going through the list of files in the input folder selected above
 for (FileI = 0; FileI < InputFileList.length; FileI++){
   setBatchMode(true); // Turn ON the batch mode;
   InputFileNameI = InputFileList[FileI];
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);
-
   if(ProcessMethod!="Global"){
     setBatchMode("show");
     setLocation(IJPosX,IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
     TransformationPrompt();
     setBatchMode("hide");
   }
-
   if(Transformation=="Rotate 90 Left"){
     rotate90L();
   } else if(Transformation=="Rotate 90 Right"){
