@@ -99,24 +99,63 @@ MessageDialogPass=1;
 
 // Function to display an error and propose to Fix it / Try again or to quit
 var ErrorDialogPass;
-function ErrorDialog(MessageError, MessageFix, MessageQuit){
-ErrorDialogPass=0;
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(MessageError);
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(MessageFix);
-Dialog.setInsets(0, 0, 0);
-TryAgainCancelCloseArray=newArray("Try Again", "Cancel & Close");
-Dialog.setInsets(0, 100, 0);
-Dialog.addRadioButtonGroup("", TryAgainCancelCloseArray, 2, 1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if(UserChoice=="Cancel & Close"){
-exit(MessageQuit);
+var UserResponseErrorDialog;
+function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
+  ErrorDialogPass=0;
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(MessageError);
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(MessageFix);
+  Dialog.setInsets(0, 0, 0);
+  Dialog.setInsets(0, 100, 0);
+  Dialog.addRadioButtonGroup("", ErrorResponseArray, ErrorResponseArray.length, 1, ErrorResponseArray[0]);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  UserResponseErrorDialog=Dialog.getRadioButton();
+  return UserResponseErrorDialog;
 }
-ErrorDialogPass=1;
+
+
+//////////////// General Functions
+// Function to Append to an array
+function Append(ArrayI, Value) {
+  ArrayJ = newArray(ArrayI.length+1);
+  for (ValueI=0; ValueI<ArrayI.length; ValueI++)
+  ArrayJ[ValueI] = ArrayI[ValueI];
+  ArrayJ[ArrayI.length] = Value;
+  return ArrayJ;
+}
+
+// Function to display a message
+var MessageDialogPass;
+function MessageDialog(Message){
+  MessageDialogPass=0;
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(Message);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  MessageDialogPass=1;
+}
+
+// Function to display an error and propose to Fix it / Try again or to quit
+var ErrorDialogPass;
+var UserResponseErrorDialog;
+function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
+  ErrorDialogPass=0;
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(MessageError);
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(MessageFix);
+  Dialog.setInsets(0, 0, 0);
+  Dialog.setInsets(0, 100, 0);
+  Dialog.addRadioButtonGroup("", ErrorResponseArray, ErrorResponseArray.length, 1, ErrorResponseArray[0]);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+  UserResponseErrorDialog=Dialog.getRadioButton();
+  return UserResponseErrorDialog;
 }
 
 
@@ -125,64 +164,94 @@ var SelectInputDirPass; // Switch for the dialog box
 var InputDirPath; // Path of the input directory
 var ParentDir; // ParentDirectory of the selected input directory
 var InputDirName; // Name of the Input Directory
-var NbFile; // Nb of File with the correct extension in the input directory
-var InputList; // List of Files and folders in the input directory (all files no matter the extension)
-var InputFileList; // List of files with the correct extension
+var NbFileWithCorrectExt; // Nb of File with the correct extension in the input directory
+var InputItemList; // List of Files and folders in the input directory (all files no matter the extension)
+var InputCorrectExtFileList; // List of files with the correct extension
+var InputFileList;
+var NbFile;
 
 function SelectInputDir(MinNbFile, FileExt){
-// MinNbFile This is the minimum Nb of File to be present in the list to be accepted
-// FileExt This is the File extension as a string example "tif"
+  // MinNbFile This is the minimum Nb of File to be present in the list to be accepted
+  // FileExt This is the File extension as a string example "tif"
 
-InputDirPath=getDirectory("Select a FOLDER containing at least "+MinNbFile+" "+FileExt+" Files to process.");
-InputList=getFileList(InputDirPath);
-ParentDir=File.getParent(InputDirPath)+File.separator;
-InputDirName=File.getName(InputDirPath);
+  InputDirPath=getDirectory("Select a FOLDER containing at least "+MinNbFile+" "+FileExt+" Files to process."); // Select a Folder
+  InputItemList=getFileList(InputDirPath); // List of Item in the selected folder
+  ParentDir=File.getParent(InputDirPath)+File.separator;
+  InputDirName=File.getName(InputDirPath);
 
-SelectInputDirPass=0; // Switch for the Function
-NbFile=0; // Count of Nb of Files
-BaseNameError=0; // Switch to make sure there is only one "." in the filename
+  SelectInputDirPass=0; // Switch for the Function
+  NbFileWithCorrectExt=0; // Count of Nb of Files
+  BaseNameError=0; // Switch to make sure there is only one "." in the filename
+  InputCorrectExtFileList=newArray(0);
 
-// Evaluate the Nb of File
-for (ItemI=0; ItemI<InputList.length; ItemI++){
-if(endsWith(toLowerCase(InputList[ItemI]), "."+toLowerCase(FileExt))){ // Select files with correct extension
-BasenameArray=split(InputList[ItemI],"."); // Make an array from the filename
-if(BasenameArray.length!=2){// if there is more than one . in the file name abort
-BaseNameError=1; // Switch the Basename to Error and create the message for the Dialog
-MessageError="Sorry but the "+FileExt+" File:\n\""+InputList[ItemI]+"\"\ncontains more than one \".\" in its filename.";
-MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
-MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputList[ItemI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
-} else {
-NbFile++; // Increment the nb of files with the correct extension
+  // Evaluate the Nb of File with correct extension and add them to InputCorrectExtFileList
+  for (ItemI=0; ItemI<InputItemList.length; ItemI++){
+    if(endsWith(toLowerCase(InputItemList[ItemI]), "."+toLowerCase(FileExt))){ // Select files with correct extension
+      InputCorrectExtFileList=Append(InputCorrectExtFileList, InputItemList[ItemI]);
+    }
+  }
+  NbFileWithCorrectExt=InputCorrectExtFileList.length;
+  if(NbFileWithCorrectExt<MinNbFile){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
+    MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
+    MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
+    ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
+    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+
+    if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+      exit(MessageQuit);
+    } else {
+
+    }
+} else { // if NbFileWithCorrectExt is above or equal MinNbFile Evaluate Filenames
+  InputFileList=newArray(0);
+  for (FileI=0; FileI<InputCorrectExtFileList.length; FileI++){
+    BasenameFileIArray=split(InputCorrectExtFileList[FileI],"."); // Make an array from the filename
+    if(BasenameFileIArray.length!=2){// if there is more than one . in the file name abort
+      MessageError="Sorry but the "+FileExt+" File:\n\""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\" in its filename.";
+      MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
+      ErrorResponseArray=newArray("Select Another Folder", "Ignore This File", "Cancel and Close");
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+      ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+      if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+        exit(MessageQuit);
+      } else if (UserResponseErrorDialog=="Ignore This File"){
+
+      } else if (UserResponseErrorDialog=="Select Another Folder") {
+        FileI=InputCorrectExtFileList.length;
+        SelectInputDirPass=0;
+        ErrorDialogPass=1;
+      }
+    }else { // If basename is good add it to the InputFileList
+      InputFileList=Append(InputFileList, InputCorrectExtFileList[FileI]);
+    }
+  }
+  // Make sure InpuFileList is > MinNbFile
+  NbFile=InputFileList.length;
+  if(NbFile<MinNbFile && ErrorDialogPass!=1){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
+    MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File with no more than one \".\" in its filename.";
+    MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File with one unique \".\" used for the file extension.";
+    ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
+    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+    if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+      exit(MessageQuit);
+    } else {
+    SelectInputDirPass=0;
+    }
+  } else if (ErrorDialogPass==1){
+  SelectInputDirPass=0; // InputDir Pass the criteria
+  } else {
+    SelectInputDirPass=1; // InputDir Pass the criteria
+  }
 }
-} // If ends by Extension increment
-} // End of evaluate NbFile with correct extension
-
-if(NbFile<MinNbFile){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
-MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
-MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
-MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
-}
-
-if(NbFile<MinNbFile || BaseNameError==1){ // If filenames have more than 1 "." OR if there is not enough file with the correct extension display an error
-ErrorDialog(MessageError, MessageFix, MessageQuit);
-}else{ // Else if there is no error
-SelectInputDirPass=1; // InputDir Pass the criteria
-InputFileList=newArray(0); // Create a new array with the files having the correct extension
-for(ItemI=0; ItemI<InputList.length;ItemI++){
-BasenameArray=split(InputList[ItemI],"."); // Split the filename and the extension
-if(endsWith(toLowerCase(InputList[ItemI]), "."+toLowerCase(FileExt))){ // If the extension is correct
-FileName=BasenameArray[0]+"."+BasenameArray[1]; // Recreate the filename with the extension
-InputFileList=Append(InputFileList,FileName); // Append it to the InputFileList
-}// End of IF endswith
-}// End for each File
-} // End of else
 } // End of Function Select InputDir
 
 
 // Function to create a new output directory
 var OutputDirPath; // The path of the output directory
 var OutputDirName; // The name of the output directory
-function CreateOutputDir(FolderSuffix){ // Folder suffix is a string appended to the input Directory
+function CreateOutputDir(ParentDir, InputDirName, FolderSuffix){ // Folder suffix is a string appended to the input Directory
 OutputDirPath=ParentDir+InputDirName+"_"+FolderSuffix+File.separator; // Create the outputdirpath
 n=1;
 while(File.exists(OutputDirPath)!=0){ // If the path already exist, increment with _ n until it does not exist
@@ -193,138 +262,51 @@ File.makeDirectory(OutputDirPath); // Create the outpudirectory
 OutputDirName=File.getName(OutputDirPath); // Get the Name of the output directory
 }
 
-// Function to create subfolders within the newly create outputdirectory
-function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the desired subfolders
-for(i=0;i<SubDirArray.length;i++){
-SubDirPath=OutputDirPath+SubDirArray[i]+File.separator; // Because outpudirpath is unique and new the subfolders do not exist yet so no need to check if they are already present
-File.makeDirectory(SubDirPath);
-} // End of for
-} // End of CreateOutputSubDir function
-// NOTE:It is useful to create a string for the subdirectory paths
-// For each element in the subdirarray addMessage
-// Output[SubDirArrayElementN]Path=""+OutputDirPath+"[SubDirArrayElementN]"+File.separator;
-// Then you can use directly the string to save within a subdirectory
 
 
-// This function Prompt for a specific type of selection and ensure a selection is made before moving next
-var SelectionPromptPass; // This is the switch when the selection pass the criteria
-function SelectionPrompt(SelectionName, SelectionInfo){
-// Selection name is the name of the selection. It is a string that can take the following values:
-// rectangle, oval, polygon, freehand, traced, straight line, segmented line, freehandline, angle, point, multipoint
-// SelectionInfo is a string that explains what the Seleciton should be
-SelectionPromptPass=0;
-// Define what the SelectionType value for each selection
-if(SelectionName=="rectangle"){
-SelectionValue=0;
-} else if(SelectionName=="oval"){
-SelectionValue=1;
-} else if(SelectionName=="polygon"){
-SelectionValue=2;
-} else if(SelectionName=="freehand"){
-SelectionValue=3;
-} else if(SelectionName=="traced"){
-SelectionValue=4;
-} else if(SelectionName=="straight line"){
-SelectionValue=5;
-} else if(SelectionName=="segmented line"){
-SelectionValue=6;
-} else if(SelectionName=="freehand line"){
-SelectionValue=7;
-} else if(SelectionName=="angle"){
-SelectionValue=8;
-} else if(SelectionName=="point"){
-SelectionValue=10;
-} else if(SelectionName=="multipoint"){
-SelectionValue=10;
-} else {
-SelectionValue=-1; // No selection
-}
 
-CurrentImageName=getTitle(); // Get the Image of the Current Image
-CurrentSelection=selectionType(); // Get the Current selection
+////// Close Function
+function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName){
+  beep();
+  // Close Threshold windows if it is open
+  if(isOpen("Threshold")){
+    selectWindow("Threshold");
+    run("Close");
+  }//end of if threshold is open
+  // Close results windows if it is open
+  if(isOpen("Results")){
+    run("Clear Results");
+    selectWindow("Results");
+    run("Close");
+  }//end of if Results is open
+  //Close the ROI Manager
+  if(isOpen("ROI Manager")){
+    roiManager("reset");
+    selectWindow("ROI Manager");
+    run("Close");
+  }//End of Close the ROI Manager
 
-// If the currentselection does not match the expected selection but if there is something in the overlay
-if(CurrentSelection!=SelectionValue && Overlay.size==1){
-run("Show Overlay");
-Overlay.activateSelection(0); // Get the selection from the overlay
-CurrentSelection=selectionType(); // refresh Current selection
-}
 
-if(CurrentSelection==SelectionValue){ // If a correct Selection is present ask what to do
-setBatchMode("show");
-selectWindow(CurrentImageName);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Would you like to adjust the current "+SelectionName+" selection?");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(SelectionInfo);
-UserChoiceArray=newArray("Keep the current "+SelectionName+" selection", "Let me adjust it", "Discard it");
-Dialog.setInsets(0, 50, 0);
-Dialog.addRadioButtonGroup("", UserChoiceArray, 3,1, "Keep the current "+SelectionName+" selection");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if(UserChoice=="Keep the current "+SelectionName+" selection"){
-setBatchMode("show");
-SelectionPromptPass=1;
-} else if (UserChoice=="Discard it"){ // else User wants to adjust the selection
-run("Remove Overlay");
-run("Select None");
-SelectionPromptPass=0; // Set the Switch to 0
-} else {
-SelectionPromptPass=0; // Set the Switch to 0
-}
-} else { // Else the current selection does not match the expected selection
-SelectionPromptPass=0;
-run("Select None");
-}
+  ListImages=getList("image.titles");
+  for(n=0; n<ListImages.length; n++){
+    ImageN=ListImages[n];
+    selectWindow(ListImages);
+    run("Close");
+  }
 
-if(SelectionPromptPass==0){ // If the selection is not set prompt or does not correspond to the expected selection
-setBatchMode("show");
-selectWindow(CurrentImageName);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-run("Hide Overlay");
-setTool(SelectionName);
-if(SelectionName=="multipoint"){
-setTool("multipoint");
-run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0"); // Set the Point tool as yellow Medium Circle
-doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
-}
-waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
-+SelectionInfo+
-"\nWhen done, press OK.");
-CurrentSelection=selectionType();
-if(CurrentSelection<0 || CurrentSelection!=SelectionValue){
-if(CurrentSelection<0){
-MessageError="Sorry but no "+SelectionName+" selection was detected.";
-MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
-MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionName+" was detected.";
-} else if(CurrentSelection!=SelectionValue){
-MessageError="Sorry but the Selection is not a "+SelectionName+".";
-MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
-MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionName+".";
-}
-ErrorDialog(MessageError,MessageFix,MessageQuit);
-run("Select None");
-} else {
-SelectionPromptPass=1;
-setBatchMode("hide");
+  /////////////////////// Closing Dialog Box
+  Dialog.create(PluginName+" Information");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage(FileI+" of "+ NbFile+" "+ FileExt+ " Files in the folder:\n"+InputDirName+"\nhave been processed successfully.");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.addMessage("Files are saved in the following folder:\n"+OutputDirName+".");
+  Dialog.setInsets(0, 0, 0);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.show();
+}  ///////////////////////// End of Close Function
 
-}// End of else Selection is good
-} // End of If selection does not pass prompt for a selection
-} // End of Function Get selection
+
 ////////////////////End of General Functions
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -335,7 +317,7 @@ var PromptNbChPass; // Switch for dialog
 var NbCh; // Total Nb of Channel
 var MinChNb=2; // Min Nb of Channels to Merge
 var MaxChNb=7; // Max Nb of Channels to Merge
-function PromptNbCh (MinChNb, MaxChNb){
+function PromptNbCh (InputFileList, MinChNb, MaxChNb){
 Array.show("Results", InputFileList);// Show The name of InputFileList
 PromptNbChPass=0; // Set the Switch to 0
 NbCh=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".NbCh", 2); // Call the NbofCh from saved in the preferences
@@ -363,9 +345,15 @@ MessageError="Sorry but the provided Number of Channels is invalid.";
 }
 // Display an error
 MessageFix=MacroName+" function requires a positive Number of Channels comprised between "+MinChNb+" and "+MaxChNb+".";
+ErrorResponseArray=newArray("Select Another Number of Channels", "Cancel and Close");
 MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Number of Channels was not comprised between  "+MinChNb+" and "+MaxChNb+".";
-ErrorDialog(MessageError, MessageFix, MessageQuit);
+ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+  exit(MessageQuit);
+} else {
+PromptNbChPass=0;
 NbCh=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".NbCh", 2); // Restore the NbCh Default
+}
 } else {// If NbCh pass then save it in preferences
 PromptNbChPass=1;
 call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".NbCh",NbCh);
@@ -381,8 +369,8 @@ var ListChName; // Name of the Channel for naming when fused
 function IdentifyCh (NbCh){
 IdentifyChPass=0;
 // Get or Set the Default values for the ChIdentifier Position and Names
-ChIDPosition=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ChIDPosition", "Prefix");
-ListChIDString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChID", "C1_,C2_,C3_,C4_,C5_,C6_,C7_");
+ChIDPosition=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ChIDPosition", "Suffix");
+ListChIDString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChID", "_C1,_C2,_C3,_C4,_C5,_C6,_C7");
 ListChID=split(ListChIDString,",");
 ListChNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChName", "DAPI,Hoescht,Nissl,ProteinA,PorteinB,ProteinC,ProteinD");
 ListChName=split(ListChNameString,",");
@@ -394,7 +382,7 @@ Dialog.setInsets(0, 0, 0);
 Dialog.addRadioButtonGroup("Channel Identifier Position :",newArray("Prefix", "Suffix"),1,2,ChIDPosition);
 for (ChI = 0; ChI < NbCh; ChI++){
 Dialog.setInsets(0, 10, 0);
-Dialog.addString("Ch ID "+ChI+1+":", ListChID[ChI], 10);
+Dialog.addString("Ch Identifier "+ChI+1+":", ListChID[ChI], 10);
 Dialog.setInsets(0, 10, 0);
 Dialog.addString("Ch Name "+ChI+1+":", ListChName[ChI], 10);
 }
@@ -422,20 +410,27 @@ ChIDB=ListChID[ChIB];
 ChNameA=ListChName[ChIA];
 ChNameB=ListChName[ChIB];
 if(ChIDA==ChIDB || ChNameA==ChNameB){
-IdentifyChPass=-1;
+IdentifyChPass= -1;
 }
 }
 }
 // Display an error dialog
 if(IdentifyChPass<0){
-MessageError="Sorry but the Channel IDs and Channel Names must be unique and canno't contain any comma \",\" nor dot \".\".";
-MessageFix=MacroName+" function does NOT allow commas \",\" nor dots \".\" in the Channel IDs and Channel Names which must unique.";
-MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channel IDs and Channels Names weren't unique and/or contained commas \",\" or dots \".\"";
-ErrorDialog(MessageError,MessageFix,MessageQuit);
+MessageError="Sorry but the Channel Identifiers and Channel Names must be unique and canno't contain any comma \",\" nor dot \".\".";
+MessageFix=MacroName+" function does NOT allow commas \",\" nor dots \".\" in the Channel Identifiers and Channel Names which must unique.";
+ErrorResponseArray=newArray("Modify Channel Identifiers and Channel Names", "Cancel and Close");
+MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channel Identifiers and Channels Names weren't unique and/or contained commas \",\" or dots \".\"";
+ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
+if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+  exit(MessageQuit);
+} else {
+  IdentifyChPass=0;
+}
 } else {// end of if Identify ChPass=Fail
 IdentifyChPass=1;
 
 //Recreate the Strings from the Arrays
+
 for (ChI=0; ChI < ListChID.length ;ChI++){
 if(ChI==0){
 ListChIDString=""+ListChID[ChI];
@@ -453,18 +448,23 @@ call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChName",ListChNam
 } // end of function Identify Ch
 
 
-// This function ensure that all file in the InputFileList have the correct Ch ID to be Merged
+
+
+
+
+
+// This function ensure that all file in the InputFileList have the correct ChID to be Merged
 // It creates Basenames which are fullname minus the ChID and make sure that all basename+ChID exists
 var InputDirMatchIdentifyChPass; // Switch InputDir has the correct content
 var UsableBaseNameList;
 function InputDirMatchIdentifyCh(InputFileList, ListChID, NbCh){
 InputDirMatchIdentifyChPass=0;
-// Work on the InputFileList to get only the files with NbCh present
+// Work on the InputCorrectExtFileList to get only the files with NbCh present
 InputFileListNoExt=newArray(0); // Create a list of BasenameFileI
 
 // Remove File extension and add to the BaseName List
-for(I=0; I<InputFileList.length; I++){ // Loop around the list of TIF file
-BaseNameIArray=split(InputFileList[I],".");// This is the Array of FileName and FileExtension
+for(I=0; I<InputCorrectExtFileList.length; I++){ // Loop around the list of TIF file
+BaseNameIArray=split(InputCorrectExtFileList[I],".");// This is the Array of FileName and FileExtension
 InputFileListNoExt=Append(InputFileListNoExt,BaseNameIArray[0]);
 }
 
@@ -482,7 +482,7 @@ BaseNameList=Append(BaseNameList,BaseNameINoChID);
 } // end of for
 
 // Remove duplicates
-// Check for duplicates within the list of TIF file with no Ch identifier
+// Check for duplicates within the list of file with no Ch identifier
 BaseNameListNoDuplicate=Array.copy(BaseNameList);
 for (FileI=0; FileI<BaseNameListNoDuplicate.length-1; FileI++){
 for (FileN=FileI+1; FileN<BaseNameListNoDuplicate.length; FileN++){
@@ -537,21 +537,32 @@ ListSelectedChForMessage="";
 for(ChI=0;ChI<ListSelectedCh.length;ChI++){
 ListSelectedChForMessage=ListSelectedChForMessage+"\n"+ListSelectedCh[ChI];
 }
-MessageError="Sorry but the folder \""+InputDirName+"\" does not contain at least "+NbCh+" "+FileExt+" files with the following Channel IDs as "+ChIDPosition+":"+ListSelectedChForMessage;
-MessageFix=MacroName+" function requires at least "+MinNbFile+" "+FileExt+" files with the requested Channel IDs as "+ChIDPosition+".";
+MessageError="Sorry but the folder \""+InputDirName+"\" does not contain at least "+NbCh+" "+FileExt+" files with the following Channel Identifiers as "+ChIDPosition+":"+ListSelectedChForMessage;
+MessageFix=MacroName+" function requires at least "+MinNbFile+" "+FileExt+" files with the requested Channel Identifiers as "+ChIDPosition+".";
+ErrorResponseArray=newArray("Select Another Folder", "Modify the Number of Channels", "Modify the Channel Identifiers and Names", "Cancel and Close");
 MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the folder \""+InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" files with the following Channel IDs :"+"Array.print(Array.trim(ListCHID, NbCh))"+" as "+ChIDPosition+".";
-ErrorDialog(MessageError,MessageFix,MessageQuit);
+ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
+if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+  exit(MessageQuit);
+} else if(UserResponseErrorDialog== "Select Another Folder"){
+  SelectInputDirPass=0;
+} else if (UserResponseErrorDialog== "Modify the Number of Channels"){
+  PromptNbChPass=0;
+} else if (UserResponseErrorDialog== "Modify the Channel Identifiers and Names"){
+  IdentifyChPass=0;
+}
 } else if(UsableBaseNameList.length>0){
 InputDirMatchIdentifyChPass=1;
 } // end of if pass
-}
+} // end of Function
 ////////////////////End of Specific Functions
 
 
+
 InitialMessage=""+MacroName+" will :"
++"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
 +"\n- Prompt to select the Number of Channels to Merge"
 +"\n- Prompt to define the position (Prefix or Suffix) and the Channel Identifiers"
-+"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
 +"\n\nFor each "+FileExt+" File:"
 +"\n  - Open All Channels related to it"
 +"\n  - Merge the Channels into a single Composite Image"
@@ -560,17 +571,18 @@ InitialMessage=""+MacroName+" will :"
 MessageDialog(InitialMessage);
 
 do{
-do{
-SelectInputDir(MinNbFile,FileExt);
-}while(SelectInputDirPass!=1)
 
-do{
-PromptNbCh(MinChNb,MaxChNb);
-} while(PromptNbChPass!=1)
+while(SelectInputDirPass!=1){
+  SelectInputDir(MinNbFile, FileExt);
+}
 
-do{
+while(PromptNbChPass!=1){
+PromptNbCh(InputFileList, MinChNb, MaxChNb);
+}
+
+while(IdentifyChPass!=1){
 IdentifyCh(NbCh);
-}while(IdentifyChPass!=1)
+}
 
 if(isOpen("Results")){
 run("Clear Results");
@@ -581,7 +593,7 @@ InputDirMatchIdentifyCh(InputFileList, ListChID, NbCh);
 } while(InputDirMatchIdentifyChPass!=1)
 
 // Once we checked that at least 1 basename file has all the required ChID
-CreateOutputDir(FolderSuffix);
+CreateOutputDir(ParentDir, InputDirName, FolderSuffix);
 
 // Process all files within the list of Usable BaseName
 setBatchMode(true);
@@ -596,7 +608,7 @@ FilenameChINoExt=ChIDChI+BaseNameI;
 } else if(ChIDPosition=="Suffix"){
 FilenameChINoExt=BaseNameI+ChIDChI;
 }
-// Screen the InputFileList to find the matching file with no extension
+// Screen the InputCorrectExtFileList to find the matching file with no extension
 // Doing this to avoid upper and lower case issue in the file extension
 for(InputFileN=0;InputFileN<InputFileList.length;InputFileN++){
 if(startsWith(InputFileList[InputFileN],FilenameChINoExt)){
@@ -638,38 +650,6 @@ run("Close All");
 
 showProgress(FileI, UsableBaseNameList.length);
 } ////////////////////////end for Filei loop
-///////////////////////// Close Utility windows
-// Close Threshold windows if it is open
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");
-}//end of if threshold is open
-// Close results windows if it is open
-if(isOpen("Results")){
-run("Clear Results");
-selectWindow("Results");
-run("Close");
-}//end of if Results is open
-//Close the ROI Manager
-if(isOpen("ROI Manager")){
-roiManager("reset");
-selectWindow("ROI Manager");
-run("Close");
-}//End of Close the ROI Manager
-///////////////////////// Close Utility windows
 
-///////////// Notification the function is done
-NbOutputFile=UsableBaseNameList.length;
-NbInputFile=NbCh*NbOutputFile;
-beep();
-
-
-/////////////////////// Closing Dialog Box
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(NbInputFile+" "+ FileExt+ " Files in the folder:\n"+InputDirName+"\nhave been processed successfully.");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(""+NbOutputFile+" Files are saved in the following folder:\n"+OutputDirName+".");
-Dialog.setInsets(0, 0, 0);
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-Dialog.show();
+NbFile=UsableBaseNameList.length;
+CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);
