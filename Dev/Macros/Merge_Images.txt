@@ -104,7 +104,7 @@ function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageFix);
   Dialog.setInsets(0, 0, 0);
-  Dialog.setInsets(0, 100, 0);
+  Dialog.setInsets(0, 20, 0);
   Dialog.addRadioButtonGroup("", ErrorResponseArray, ErrorResponseArray.length, 1, ErrorResponseArray[0]);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
   Dialog.show();
@@ -236,7 +236,7 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
-    selectWindow(ListImages);
+    selectWindow(ImageN);
     run("Close");
   }
 
@@ -276,7 +276,7 @@ function CleanExit(MessageQuit){
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
-    selectWindow(ListImages);
+    selectWindow(ImageN);
     run("Close");
   }
   /////////////////////// Closing Dialog Box

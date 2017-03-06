@@ -104,7 +104,7 @@ function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageFix);
   Dialog.setInsets(0, 0, 0);
-  Dialog.setInsets(0, 100, 0);
+  Dialog.setInsets(0, 20, 0);
   Dialog.addRadioButtonGroup("", ErrorResponseArray, ErrorResponseArray.length, 1, ErrorResponseArray[0]);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
   Dialog.show();
@@ -241,7 +241,7 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
-    selectWindow(ListImages);
+    selectWindow(ImageN);
     run("Close");
   }
 
@@ -281,7 +281,7 @@ function CleanExit(MessageQuit){
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
-    selectWindow(ListImages);
+    selectWindow(ImageN);
     run("Close");
   }
   /////////////////////// Closing Dialog Box
@@ -293,40 +293,39 @@ function CleanExit(MessageQuit){
   Dialog.show();
   exit();
 }  ///////////////////////// End of Exit Function
-
 ////////////////////End of General Functions
 
 
 /////////////////////  Sepcific Function
 // This function Prompt for a specific type of selection and ensure a selection is made before moving next
 var SelectionPromptPass; // This is the switch when the selection pass the criteria
-function SelectionPrompt(SelectionName, SelectionInfo){
+function SelectionPrompt(SelectionTypeName, SelectionInfo){
   // Selection name is the name of the selection. It is a string that can take the following values:
   // rectangle, oval, polygon, freehand, traced, straight line, segmented line, freehandline, angle, point, multipoint
   // SelectionInfo is a string that explains what the Seleciton should be
-  SelectionPromptPass=0;
+  //SelectionPromptPass=0;
   // Define what the SelectionType value for each selection
-  if(SelectionName=="rectangle"){
+  if(SelectionTypeName=="rectangle"){
     SelectionValue=0;
-  } else if(SelectionName=="oval"){
+  } else if(SelectionTypeName=="oval"){
     SelectionValue=1;
-  } else if(SelectionName=="polygon"){
+  } else if(SelectionTypeName=="polygon"){
     SelectionValue=2;
-  } else if(SelectionName=="freehand"){
+  } else if(SelectionTypeName=="freehand"){
     SelectionValue=3;
-  } else if(SelectionName=="traced"){
+  } else if(SelectionTypeName=="traced"){
     SelectionValue=4;
-  } else if(SelectionName=="straight line"){
+  } else if(SelectionTypeName=="straight line"){
     SelectionValue=5;
-  } else if(SelectionName=="segmented line"){
+  } else if(SelectionTypeName=="segmented line"){
     SelectionValue=6;
-  } else if(SelectionName=="freehand line"){
+  } else if(SelectionTypeName=="freehand line"){
     SelectionValue=7;
-  } else if(SelectionName=="angle"){
+  } else if(SelectionTypeName=="angle"){
     SelectionValue=8;
-  } else if(SelectionName=="point"){
+  } else if(SelectionTypeName=="point"){
     SelectionValue=10;
-  } else if(SelectionName=="multipoint"){
+  } else if(SelectionTypeName=="multipoint"){
     SelectionValue=10;
   } else {
     SelectionValue=-1; // No selection
@@ -339,31 +338,39 @@ function SelectionPrompt(SelectionName, SelectionInfo){
   if(CurrentSelection!=SelectionValue && Overlay.size==1){
     run("Show Overlay");
     Overlay.activateSelection(0); // Get the selection from the overlay
+    run("Remove Overlay");
     CurrentSelection=selectionType(); // refresh Current selection
   }
 
-  if(CurrentSelection==SelectionValue){ // If a correct Selection is present ask what to do
+  if(CurrentSelection==SelectionValue && NbOfPoints==0){ // If a correct Selection is present ask what to do
     setBatchMode("show");
     selectWindow(CurrentImageName);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
 
-    MessageError="Would you like to adjust the current "+SelectionName+" selection?";
-    MessageFix="";
-    ErrorResponseArray=newArray("Keep the current "+SelectionName+" selection", "Let me adjust it", "Discard it");
+    MessageError="A "+SelectionTypeName+" selection was detected.";
+    MessageFix="What would you like to do?";
+    ErrorResponseArray=newArray("Keep the current "+SelectionTypeName+" selection", "Adjust the current "+SelectionTypeName+" selection", "Discard the current "+SelectionTypeName+" selection", "Cancel and Close");
     MessageQuit="";
     ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[0]){
       SelectionPromptPass=1;
     } else if(UserResponseErrorDialog==ErrorResponseArray[1]){
       SelectionPromptPass=0; // Set the Switch to 0
-    } else if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]) {
+    } else if(UserResponseErrorDialog==ErrorResponseArray[2]) {
       run("Remove Overlay");
       run("Select None");
       SelectionPromptPass=0; // Set the Switch to 0
-    }
+    }else if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]) {
+      File.close(TXTFile);
+      CleanExit(MessageQuit);
+        }
+
   } else { // Else the current selection does not match the expected selection
     SelectionPromptPass=0;
-    run("Select None");
+    if(NbOfPoints==0){
+      run("Select None");
+
+}
   }
 
   if(SelectionPromptPass==0){ // If the selection is not set prompt or does not correspond to the expected selection
@@ -371,36 +378,41 @@ function SelectionPrompt(SelectionName, SelectionInfo){
     selectWindow(CurrentImageName);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
     run("Hide Overlay");
-    setTool(SelectionName);
-    // if(SelectionName=="multipoint"){
+    setTool(SelectionTypeName);
+    // if(SelectionTypeName=="multipoint"){
     //   setTool("multipoint");
     //   run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0"); // Set the Point tool as yellow Medium Circle
     //   doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
     // }
-    waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
+    waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
     +SelectionInfo+
     "\nWhen done, press OK.");
     CurrentSelection=selectionType();
     if(CurrentSelection<0 || CurrentSelection!=SelectionValue){
       if(CurrentSelection<0){
-        MessageError="Sorry but no "+SelectionName+" selection was detected.";
-        MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
-        ErrorResponseArray=newArray("Make a "+SelectionName+" selection", "Cancel and Close");
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionName+" was detected.";
+        MessageError="Sorry but no "+SelectionTypeName+" selection was detected.";
+        MessageFix=MacroName+" function requires a "+SelectionTypeName+" selection.";
+        ErrorResponseArray=newArray("Create a "+SelectionTypeName+" selection", "Cancel and Close");
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionTypeName+" was detected.";
       } else if(CurrentSelection!=SelectionValue){
-        MessageError="Sorry but the Selection is not a "+SelectionName+".";
-        MessageFix=MacroName+" function requires a "+SelectionName+" selection.";
-        ErrorResponseArray=newArray("Make a "+SelectionName+" selection", "Cancel and Close");
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionName+".";
+        MessageError="Sorry but the Selection is not a "+SelectionTypeName+".";
+        MessageFix=MacroName+" function requires a "+SelectionTypeName+" selection.";
+        ErrorResponseArray=newArray("Create a "+SelectionTypeName+" selection", "Cancel and Close");
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionTypeName+".";
       }
       setBatchMode("show");
 
+      // Close results windows if it is open
+      if(isOpen("Results")){
+        run("Clear Results");
+        selectWindow("Results");
+        run("Close");
+      }//end of if Results is open
       ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[0]){
         run("Select None");
         SelectionPromptPass=0;
       } else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-      run("Close All");
         CleanExit(MessageQuit);
       }
     } else {
@@ -418,7 +430,7 @@ InitialMessage=""+MacroName+" will :"
 +"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
 +"\n\nFor each "+FileExt+" File:"
 +"\n- Prompt for 7 registration points"
-+"\n- Save the Images as TIF Fisle with the Registration Points as an Overlay"
++"\n- Save the Images as TIF Files with the Registration Points as an Overlay"
 +"\n- Save the X and Y Registration Coordinates in a single TXT File";
 
 MessageDialog(InitialMessage); // Display the Intial Dialog
@@ -457,7 +469,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Remove the scale to have coordinates in pixels
   run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
-  NbOfPoints=0;
+  var NbOfPoints=0;
   while(NbOfPoints<7){
     do {
       SelectionPrompt("multipoint","A total of 7 points must be present in the following order:"
@@ -469,15 +481,24 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       +"\n6: Lateral Spinal Edge (Left hemicord)"
       +"\n7: Dorsal Spinal Edge (Left hemicord)");
     } while(SelectionPromptPass!=1)
+    SelectionTypeName="multipoint";
     run("Clear Results");
     run("Measure");
     NbOfPoints=nResults();
     if(NbOfPoints<7){
-      MessageError="Sorry but at least 7 points should be defined.";
+      MessageError="At least 7 points should be defined.";
       MessageFix=MacroName+" function requires at least 7 points.";
-      ErrorResponseArray=newArray("Adjust the Current Selection", "Create a New Selection","Cancel and Close");
+      ErrorResponseArray=newArray("Adjust the Current "+SelectionTypeName+" Selection", "Create a New "+SelectionTypeName+" Selection","Cancel and Close");
       MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
-setBatchMode("show");
+      setBatchMode("show");
+            setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+          run("Hide Overlay");
+      // Close results windows if it is open
+      if(isOpen("Results")){
+        run("Clear Results");
+        selectWindow("Results");
+        run("Close");
+      }//end of if Results is open
       ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[0]){
         SelectionPromptPass=0;
@@ -486,11 +507,8 @@ setBatchMode("show");
         SelectionPromptPass=0;
       } else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
         File.close(TXTFile);
-
-run("Close All");
-  CleanExit(MessageQuit);
+        CleanExit(MessageQuit);
       }
-
     }
   }
   setBatchMode("hide");
