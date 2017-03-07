@@ -236,8 +236,8 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
-    selectWindow(ImageN);
-    run("Close");
+    selectWindow(ImageN);    run("Close");
+
   }
 
   /////////////////////// Closing Dialog Box
@@ -358,14 +358,14 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     }else if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]) {
       File.close(TXTFile);
       CleanExit(MessageQuit);
-        }
+    }
 
   } else { // Else the current selection does not match the expected selection
     SelectionPromptPass=0;
     if(NbOfPoints==0){
       run("Select None");
 
-}
+    }
   }
 
   if(SelectionPromptPass==0){ // If the selection is not set prompt or does not correspond to the expected selection
@@ -499,9 +499,9 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       +"\n6: Lateral Spinal Edge (Left hemicord)"
       +"\n7: Dorsal Spinal Edge (Left hemicord)");
     } while(SelectionPromptPass!=1)
-        SelectionTypeName="multipoint";
-        run("Clear Results");
-        run("Measure");
+    SelectionTypeName="multipoint";
+    run("Clear Results");
+    run("Measure");
     NbOfPoints=nResults();
     if(NbOfPoints<7){
       MessageError="At least 7 points should be defined.";
@@ -509,8 +509,8 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       ErrorResponseArray=newArray("Adjust the Current "+SelectionTypeName+" Selection", "Create a New "+SelectionTypeName+" Selection","Cancel and Close");
       MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
       setBatchMode("show");
-            setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-          run("Hide Overlay");
+      setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+      run("Hide Overlay");
       // Close results windows if it is open
       if(isOpen("Results")){
         run("Clear Results");
@@ -536,8 +536,9 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Populate the Arrays
   for (ResultI=0; ResultI<nResults; ResultI++){
     X=getResult("X",ResultI);
-    Y=getResult("Y",ResultI);
-      Array_X=Append(Array_X,round(X));
+    Y=getResult("Y",ResultI); // Y coordinates are inverted
+    Y=ImageHeight-Y; // Restore Y coordinates
+    Array_X=Append(Array_X,round(X));
     Array_Y=Append(Array_Y,round(Y));
   }
   if(isOpen("Results")){
@@ -556,7 +557,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 
   // Calculate the Translation Vectors to center the CC into the Image
   Translate_X = (ImageCenterX_Ini - CC_PosX_Ini);
-  Translate_Y = (ImageCenterY_Ini - CC_PosY_Ini);
+  Translate_Y = (ImageCenterY_Ini - (CC_PosY_Ini));
   // Resize the Canvas so no loss of data
   ImageWidth_Resized=ImageWidth+2*abs(Translate_X); // Double the Translation data because the resizing is both way but translation only one way
   ImageHeight_Resized=ImageHeight+2*abs(Translate_Y);
@@ -564,10 +565,9 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   run("Canvas Size...", "width=&ImageWidth_Resized height=&ImageHeight_Resized position=Center zero");// Resize the Image
   // Center on Central canal into Image Center
   run("Translate...", "x=&Translate_X y=&Translate_Y interpolation=None"); // Translate now it is safe
-
   // Calculate rotation angle which is the slope between the two ventral points
   RotationAngle_Radian=atan2((Array_Y[3]-Array_Y[4]),(Array_X[3]-Array_X[4]));
-  RotationAngle_Degrees=((-RotationAngle_Radian)*180/PI); // The minus sign is present because Y coordinates are not inverted and because rotation is done clockwise which is opposite of standard trigonometry direction
+  RotationAngle_Degrees=((-RotationAngle_Radian)*180/PI); //negative because non inverted Y coordinates
   // Rotate the Image
   run("Rotate... ", "angle=&RotationAngle_Degrees grid=1 interpolation=None fill enlarge");// Rotation is clockwise if angle is >0 Angle is in degree
   // Refresh the Image dimension after rotation
@@ -619,7 +619,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     Coordinates_Y_Transformed_Centered= (Coordinates_Y_Transformed + ImageRotated_Center_Y);
     Array_X_Transformed=Append(Array_X_Transformed,Coordinates_X_Transformed_Centered);
     Array_Y_Transformed=Append(Array_Y_Transformed,Coordinates_Y_Transformed_Centered);
-  }
+  }// end of for point I
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
@@ -631,19 +631,19 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Add the scale back
   run("Set Scale...", "distance=&ImageScale known=1 pixel=1 unit=&PixelUnit");
   saveAs("Tif", OutputDirPath+File.nameWithoutExtension+".tif");
-// Refresh the Image Width and Height
+  // Refresh the Image Width and Height
   ImageWidth=getWidth();
   ImageHeight=getHeight();
   close();
-
+  // Invert Y coordinates here
   print(TXTFile, File.nameWithoutExtension+CellSeparator
-  +Array_X_Transformed[0]+CellSeparator+Array_Y_Transformed[0]+CellSeparator
-  +Array_X_Transformed[1]+CellSeparator+Array_Y_Transformed[1]+CellSeparator
-  +Array_X_Transformed[2]+CellSeparator+Array_Y_Transformed[2]+CellSeparator
-  +Array_X_Transformed[3]+CellSeparator+Array_Y_Transformed[3]+CellSeparator
-  +Array_X_Transformed[4]+CellSeparator+Array_Y_Transformed[4]+CellSeparator
-  +Array_X_Transformed[5]+CellSeparator+Array_Y_Transformed[5]+CellSeparator
-  +Array_X_Transformed[6]+CellSeparator+Array_Y_Transformed[6]+CellSeparator
+  +Array_X_Transformed[0]+CellSeparator+ImageHeight-Array_Y_Transformed[0]+CellSeparator
+  +Array_X_Transformed[1]+CellSeparator+ImageHeight-Array_Y_Transformed[1]+CellSeparator
+  +Array_X_Transformed[2]+CellSeparator+ImageHeight-Array_Y_Transformed[2]+CellSeparator
+  +Array_X_Transformed[3]+CellSeparator+ImageHeight-Array_Y_Transformed[3]+CellSeparator
+  +Array_X_Transformed[4]+CellSeparator+ImageHeight-Array_Y_Transformed[4]+CellSeparator
+  +Array_X_Transformed[5]+CellSeparator+ImageHeight-Array_Y_Transformed[5]+CellSeparator
+  +Array_X_Transformed[6]+CellSeparator+ImageHeight-Array_Y_Transformed[6]+CellSeparator
   +ImageWidth+CellSeparator+ImageHeight+CellSeparator
   +ImageScale+CellSeparator+PixelUnit+LineSeparator);
 
