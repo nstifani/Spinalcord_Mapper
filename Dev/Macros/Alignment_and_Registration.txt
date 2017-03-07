@@ -4,7 +4,6 @@ var MacroName="Alignment and Registration";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Aligned and Registered";
-var SubDirArray=newArray("");
 CellSeparator= "\t";
 LineSeparator="\n";
 
@@ -417,19 +416,6 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     }// End of else Selection is good
   } // End of If selection does not pass prompt for a selection
 } // End of Function Get selection
-
-
-// Function to create subfolders within the newly create outputdirectory
-function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the desired subfolders
-  for(i=0;i<SubDirArray.length;i++){
-    SubDirPath=OutputDirPath+SubDirArray[i]+File.separator; // Because outpudirpath is unique and new the subfolders do not exist yet so no need to check if they are already present
-    File.makeDirectory(SubDirPath);
-  } // End of for
-} // End of CreateOutputSubDir function
-// NOTE:It is useful to create a string for the subdirectory paths
-// For each element in the subdirarray addMessage
-// Output[SubDirArrayElementN]Path=""+OutputDirPath+"[SubDirArrayElementN]"+File.separator;
-// Then you can use directly the string to save within a subdirectory
 ///////////////////// End Sepcific Function
 
 

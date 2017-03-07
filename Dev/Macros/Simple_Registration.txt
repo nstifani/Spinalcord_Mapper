@@ -4,7 +4,6 @@ var MacroName="Simple Registration";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Registered";
-var SubDirArray=newArray("");
 CellSeparator= "\t";
 LineSeparator="\n";
 

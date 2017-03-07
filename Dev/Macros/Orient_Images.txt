@@ -4,7 +4,6 @@ var MacroName="Orient Images";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Oriented";
-var SubDirArray=newArray("");
 CellSeparator= "\t";
 LineSeparator="\n";
 

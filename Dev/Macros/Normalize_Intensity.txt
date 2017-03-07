@@ -4,7 +4,6 @@ var MacroName="Normalize Intensity";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Normalized";
-var SubDirArray=newArray("");
 CellSeparator= "\t";
 LineSeparator="\n";
 

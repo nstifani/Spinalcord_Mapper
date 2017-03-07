@@ -4,7 +4,6 @@ var MacroName="Align Images";
 var FileExt="TIF";
 var MinNbFile=1;
 var FolderSuffix="Aligned";
-var SubDirArray=newArray("");
 CellSeparator= "\t";
 LineSeparator="\n";
 

@@ -4,7 +4,6 @@ var MacroName="Merge Images";
 var FileExt="TIF";
 var MinNbFile=2;
 var FolderSuffix="Merged";
-var SubDirArray=newArray("");
 CellSeparator= "\t";
 LineSeparator="\n";
 
