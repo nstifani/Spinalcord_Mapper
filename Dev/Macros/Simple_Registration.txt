@@ -360,8 +360,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       run("Select None");
       SelectionPromptPass=0; // Set the Switch to 0
     }else if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]) {
-      File.close(TXTFile);
-      CleanExit(MessageQuit);
+            CleanExit(MessageQuit);
         }
 
   } else { // Else the current selection does not match the expected selection
@@ -454,6 +453,7 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"
 +"DE_L_X_Pixels"+CellSeparator+"DE_L_Y_Pixels"+CellSeparator
 +"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
 +"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
+File.close(TXTFile);
 //////////////////////////// End of Create an output TXT File
 
   var NbOfPoints;
@@ -506,7 +506,6 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
         run("Select None");
         SelectionPromptPass=0;
       } else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-        File.close(TXTFile);
         CleanExit(MessageQuit);
       }
     }
@@ -538,7 +537,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   saveAs("Tif", OutputDirPath+File.nameWithoutExtension+".tif");
   close();
   // InvertY Coordinates here
-  print(TXTFile, File.nameWithoutExtension+CellSeparator
+  File.append(File.nameWithoutExtension+CellSeparator
   +Array_X[0]+CellSeparator+Array_Y[0]+CellSeparator
   +Array_X[1]+CellSeparator+Array_Y[1]+CellSeparator
   +Array_X[2]+CellSeparator+Array_Y[2]+CellSeparator
@@ -547,7 +546,8 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   +Array_X[5]+CellSeparator+Array_Y[5]+CellSeparator
   +Array_X[6]+CellSeparator+Array_Y[6]+CellSeparator
   +ImageWidth+CellSeparator+ImageHeight+CellSeparator
-  +ImageScale+CellSeparator+PixelUnit+LineSeparator);
+  +ImageScale+CellSeparator+PixelUnit, TXTFilePath);
+
   // Update the progress bar
   showProgress(FileI, InputFileList.length);
   // Close results windows if it is open
@@ -559,5 +559,5 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 } /////////////////////End of for Filei loop
 
 // Close the TXT File
-File.close(TXTFile);
+
 CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);

@@ -350,6 +350,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     if(UserResponseErrorDialog==ErrorResponseArray[0]){
       SelectionPromptPass=1;
     } else if(UserResponseErrorDialog==ErrorResponseArray[1]){
+  run("Hide Overlay");
       SelectionPromptPass=0; // Set the Switch to 0
     } else if(UserResponseErrorDialog==ErrorResponseArray[2]) {
       run("Remove Overlay");
@@ -361,7 +362,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
 
   } else { // Else the current selection does not match the expected selection
     SelectionPromptPass=0;
-      run("Select None");
+    run("Select None");
   }
 
   if(SelectionPromptPass==0){ // If the selection is not set prompt or does not correspond to the expected selection
@@ -373,7 +374,27 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     if(SelectionTypeName=="multipoint"){
       setTool("multipoint");
       run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0"); // Set the Point tool as yellow Medium Circle
-      doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
+      // if Point tool is not here yet
+      ListWindows=getList("window.titles");
+      PointToolPresent=0;
+      for(n=0; n<ListWindows.length; n++){
+        WindowN=ListWindows[n];
+        if(WindowN=="Point Tool"){
+          PointToolPresent=1;
+        }
+      }
+      if(PointToolPresent==0){
+        doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
+      }
+
+      if(ImageChannels>1){
+        Stack.setDisplayMode("grayscale");
+        for(ChannelI=1; ChannelI<ImageChannels+1; ChannelI++){
+          Stack.setChannel(ChannelI);
+          wait(500);
+        }
+        Stack.setChannel(1);
+      }
     }
     waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
     +SelectionInfo+
@@ -397,18 +418,17 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
           // Ask Channel Identification here?
           CleanExit(MessageQuit);
         }
-        } else if(CurrentSelection!=SelectionValue){
+      } else if(CurrentSelection!=SelectionValue){
         MessageError="Sorry but the Selection is not a "+SelectionTypeName+".";
         MessageFix=MacroName+" function requires a "+SelectionTypeName+" selection.";
         ErrorResponseArray=newArray("Create a "+SelectionTypeName+" selection", "Cancel and Close");
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionTypeName+".";
-      }
       // Close results windows if it is open
       if(isOpen("Results")){
         run("Clear Results");
         selectWindow("Results");        run("Close");
       }//end of if Results is open
-setBatchMode("show");
+      setBatchMode("show");
       ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[0]){
         run("Select None");
@@ -416,7 +436,8 @@ setBatchMode("show");
       } else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
         CleanExit(MessageQuit);
       }
-    } else {
+    }
+  } else {
       SelectionPromptPass=1;
       SelectionPromptByPass=0;
       setBatchMode("hide");
@@ -551,11 +572,12 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   ImageScale=1/PixelWidth;
   // Remove the scale to have coordinates in pixels
   run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
+  var ImageChannels;
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
 
   do {
     SelectionPrompt("multipoint","Point and Click on the Cells of Interest.");
-  } while(SelectionPromptPass!=1)
+  }while(SelectionPromptPass!=1)
   run("Clear Results"); // Clear the results
   run("Measure"); // get the Measurements
 
@@ -579,7 +601,11 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
   roiManager("reset"); // Reset the ROI Manager
-  if(SelectionPromptByPass==0){
+
+  if(SelectionPromptByPass==1){
+run("Select All");
+  }
+
     roiManager("Add"); // Add the selection to ROI manager
     roiManager("Save", OutputROIPath+File.nameWithoutExtension+".zip"); // Save the ROI
     run("Select None"); // Remove any selection
@@ -587,7 +613,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     roiManager("reset"); // Reset the ROI manager
     run("Remove Overlay"); // Remove any previous overlay
     run("Add Selection..."); // Add selection to the overlay
-  }
+
 
   selectWindow(InputFileNameI);
   close();

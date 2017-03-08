@@ -355,7 +355,6 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       run("Select None");
       SelectionPromptPass=0; // Set the Switch to 0
     }else if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]) {
-      File.close(TXTFile);
       CleanExit(MessageQuit);
     }
 
@@ -452,6 +451,7 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"
 +"DE_L_X_Pixels"+CellSeparator+"DE_L_Y_Pixels"+CellSeparator
 +"Total_Width_Pixels"+CellSeparator+"Total_Height_Pixels"+CellSeparator
 +"Resolution_Pixels_per_Unit"+CellSeparator+"Resolution_Unit"+LineSeparator);
+File.close(TXTFile);
 //////////////////////////// End of Create an output TXT File
 
 
@@ -510,8 +510,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
         run("Select None");
         SelectionPromptPass=0;
       } else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-        File.close(TXTFile);
-        CleanExit(MessageQuit);
+                CleanExit(MessageQuit);
       }
     }
   }
@@ -622,7 +621,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   ImageHeight=getHeight();
   close();
   // Invert Y coordinates here
-  print(TXTFile, File.nameWithoutExtension+CellSeparator
+  File.append(File.nameWithoutExtension+CellSeparator
   +Array_X_Transformed[0]+CellSeparator+ImageHeight-Array_Y_Transformed[0]+CellSeparator
   +Array_X_Transformed[1]+CellSeparator+ImageHeight-Array_Y_Transformed[1]+CellSeparator
   +Array_X_Transformed[2]+CellSeparator+ImageHeight-Array_Y_Transformed[2]+CellSeparator
@@ -631,7 +630,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   +Array_X_Transformed[5]+CellSeparator+ImageHeight-Array_Y_Transformed[5]+CellSeparator
   +Array_X_Transformed[6]+CellSeparator+ImageHeight-Array_Y_Transformed[6]+CellSeparator
   +ImageWidth+CellSeparator+ImageHeight+CellSeparator
-  +ImageScale+CellSeparator+PixelUnit+LineSeparator);
+  +ImageScale+CellSeparator+PixelUnit, TXTFilePath);
 
   // Update the progress bar
   showProgress(FileI, InputFileList.length);
@@ -643,6 +642,4 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   }//end of if Results is open
 }/////////////////////End of for Filei loop
 
-// Close the TXT File
-File.close(TXTFile);
 CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);
