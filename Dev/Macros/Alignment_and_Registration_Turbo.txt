@@ -480,7 +480,7 @@ var NbOfPoints;
 for (FileI = 0; FileI < InputFileList.length; FileI++){
   setBatchMode(true);
   InputFileNameI=InputFileList[FileI];
-  BasenameArray=split(InputFileNameI[FileI],".");
+  BasenameArray=split(InputFileNameI,".");
   InputFileNameINoExt=BasenameArray[0];
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);

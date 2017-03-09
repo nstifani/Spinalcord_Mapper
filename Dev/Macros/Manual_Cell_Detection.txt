@@ -568,7 +568,7 @@ if(isOpen("Results")){ run("Clear Results"); selectWindow("Results"); run("Close
   for (FileI = 0; FileI < InputFileList.length; FileI++){
     setBatchMode(false);
     InputFileNameI=InputFileList[FileI];
-    BasenameArray=split(InputFileNameI[FileI],".");
+    BasenameArray=split(InputFileNameI,".");
     InputFileNameINoExt=BasenameArray[0];
     InputFilePathI = InputDirPath+InputFileNameI;
     open(InputFilePathI);
