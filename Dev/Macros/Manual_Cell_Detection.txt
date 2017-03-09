@@ -385,15 +385,35 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       }
       if(PointToolPresent==0){
         doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
+        selectWindow("Point Tool");
+        B&CWidth=150;
+        B&CHeight=350;
+        PointToolWidth=250;
+        PointToolHeight=300;
+        setLocation(screenHeight-200,screenWidth-200);
       }
 
       if(ImageChannels>1){
-        Stack.setDisplayMode("grayscale");
+        run("16 Colors");
         for(ChannelI=1; ChannelI<ImageChannels+1; ChannelI++){
           Stack.setChannel(ChannelI);
           wait(500);
         }
         Stack.setChannel(1);
+        ListWindows=getList("window.titles");
+        BrigthnessContrastPresent=0;
+        for(n=0; n<ListWindows.length; n++){
+          WindowN=ListWindows[n];
+          if(WindowN=="B&C"){
+          BrigthnessContrastPresent=1;
+          }
+        }
+        if(BrigthnessContrastPresent!=1){
+        run("Brightness/Contrast...");
+        selectWindow("B&C");
+        setLocation(screenHeight-200,screenWidth-200);
+
+      }
       }
     }
     waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
@@ -594,7 +614,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     IJ.deleteRows(0,nResults); // Delete the results
   }
   selectWindow("Results");
-  saveAs("Results", OutputResultPath+File.nameWithoutExtension+".txt"); // Save the measurements even empty results
+  saveAs("Results", OutputResultPath+InputFileNameI+".txt"); // Save the measurements even empty results
   run("Clear Results"); // Clear the results
 
 
@@ -605,9 +625,8 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   if(SelectionPromptByPass==1){
 run("Select All");
   }
-
     roiManager("Add"); // Add the selection to ROI manager
-    roiManager("Save", OutputROIPath+File.nameWithoutExtension+".zip"); // Save the ROI
+    roiManager("Save", OutputROIPath+InputFileNameI+".zip"); // Save the ROI
     run("Select None"); // Remove any selection
     roiManager("Select", 0); // Select the selection form the ROI manager
     roiManager("reset"); // Reset the ROI manager

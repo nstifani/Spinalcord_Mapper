@@ -504,7 +504,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
 
   // Add the scale back
   run("Set Scale...", "distance=&ImageScale known=1 pixel=1 unit=&PixelUnit");
-  saveAs("Tif", OutputDirPath+File.nameWithoutExtension);
+  saveAs("Tif", OutputDirPath+InputFileNameI);
   close();
   showProgress(FileI, InputFileList.length);
 }

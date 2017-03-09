@@ -408,7 +408,7 @@ InputFileNameI = InputFileList[FileI];
 InputFilePathI = InputDirPath+InputFileNameI;
 open(InputFilePathI);
 run("Canvas Size...", "width=OutputDimension height=OutputDimension position=Center zero");
-saveAs("Tif", OutputDirPath+File.nameWithoutExtension);
+saveAs("Tif", OutputDirPath+InputFileNameI);
 close();
 showProgress(FileI, InputFileList.length);
 }

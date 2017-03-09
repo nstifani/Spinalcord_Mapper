@@ -385,7 +385,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   } else if(Transformation =="Flip Vertically"){
     FlipV();
   }
-  saveAs("Tif", OutputDirPath+File.nameWithoutExtension);
+  saveAs("Tif", OutputDirPath+InputFileNameI);
   close();
   showProgress(FileI, InputFileList.length);
 }// End of ForFileI

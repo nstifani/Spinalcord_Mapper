@@ -534,10 +534,10 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   selectWindow(InputFileNameI);
   // Add the scale back
   run("Set Scale...", "distance=&ImageScale known=1 pixel=1 unit=&PixelUnit");
-  saveAs("Tif", OutputDirPath+File.nameWithoutExtension+".tif");
+  saveAs("Tif", OutputDirPath+InputFileNameI+".tif");
   close();
   // InvertY Coordinates here
-  File.append(File.nameWithoutExtension+CellSeparator
+  File.append(InputFileNameI+CellSeparator
   +Array_X[0]+CellSeparator+Array_Y[0]+CellSeparator
   +Array_X[1]+CellSeparator+Array_Y[1]+CellSeparator
   +Array_X[2]+CellSeparator+Array_Y[2]+CellSeparator

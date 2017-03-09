@@ -355,7 +355,7 @@ function LinearNormalization (InputFileList, OutputPath){
         run("Enhance Contrast...", "saturated=0.15 normalize process_all");
       }
     }
-    saveAs("Tif", OutputPath+File.nameWithoutExtension);
+    saveAs("Tif", OutputPath+InputFileNameI);
     close();
     showProgress(FileI, InputFileList.length);
   }

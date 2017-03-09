@@ -592,14 +592,14 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   selectWindow(InputFileNameI);
   // Add the scale back
   run("Set Scale...", "distance=&ImageScale known=1 pixel=1 unit=&PixelUnit");
-  saveAs("Tif", OutputDirPath+File.nameWithoutExtension+".tif");
+  saveAs("Tif", OutputDirPath+InputFileNameI+".tif");
   // Refresh the Image Width and Height
   ImageWidth=getWidth();
   ImageHeight=getHeight();
   close();
   // Invert Y coordinates here
 
-  File.append(File.nameWithoutExtension+CellSeparator
+  File.append(InputFileNameI+CellSeparator
   +Array_X_Transformed[0]+CellSeparator+ImageHeight-Array_Y_Transformed[0]+CellSeparator
   +Array_X_Transformed[1]+CellSeparator+ImageHeight-Array_Y_Transformed[1]+CellSeparator
   +Array_X_Transformed[2]+CellSeparator+ImageHeight-Array_Y_Transformed[2]+CellSeparator
