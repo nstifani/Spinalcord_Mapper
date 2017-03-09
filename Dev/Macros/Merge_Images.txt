@@ -7,6 +7,7 @@ var FolderSuffix="Merged";
 CellSeparator= "\t";
 LineSeparator="\n";
 
+
 /////////////// Header, Set Preferences, Options and Housekeeping
 // Select All measurements, Invert Y, and use 9 decimals
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
@@ -20,54 +21,66 @@ run("Overlay Options...", "stroke=White width=2 point=Hybrid size=Large fill=non
 run("Labels...", "color=White font=10 show bold");
 call("ij.Prefs.set", "tw.font.size",2);
 
-// Set IJ Size and position
-IJPosX=screenWidth*0.1; // The position of ImageJ in X
+
+IJPosX=screenWidth*0.1; // The position of ImageJ in X // Set IJ Size and position
 IJPosY=screenHeight*0; // The position of ImageJ in Y at the top of the screen
-IJSizeX=575; // The width of ImageJ toolbar in pixel
+IJSizeX=570; // The width of ImageJ toolbar in pixel
 IJSizeY=100; // The Height of ImageJ toolbar in pixel
-Spacer=20; // A spacer
+Spacer=25; // A spacer
 DummyVariable=eval("script","IJ.getInstance().setLocation("+IJPosX+","+IJPosY+");"); // Adjust the position of the ImageJ toolbar
 
-// Set Toolbar Size and position
-ToolbarSizeX=300; // Size of the toolbar
-ToolbarSizeY=180; // Size of the toolbar
+ToolbarSizeX=300;// Set Toolbar Size and position
+ToolbarSizeY=200; // Size of the toolbar
 ToolbarPosX=IJPosX+IJSizeX+Spacer; // Position of the Toolbar is to the right of the ImageJ toolbar
 ToolbarPosY=IJPosY; // Position of to the Toolbar in Y
-// Check if the toolbar is present
-ListWindows=getList("window.titles");
-ToolbarPresent=0;
-for(n=0; n<ListWindows.length; n++){
-  WindowN=ListWindows[n];
-  if(WindowN==PluginName+" Toolbar"){
-    // If toolbar is present place it next to the IJ toolbar
-    selectWindow(PluginName+" Toolbar");
-    setLocation(ToolbarPosX,ToolbarPosY);
-    ToolbarPresent=1;
-  }
+
+if(isOpen(PluginName+" Toolbar")){
+  selectWindow(PluginName+" Toolbar");
+  setLocation(ToolbarPosX,ToolbarPosY);
 }
 
-// Set Threshold Window Size and Position
-ThresholdSizeX=290;
+ThresholdSizeX=290;// Set Threshold Window Size and Position
 ThresholdSizeY=260;
 ThresholdPosX=ToolbarPosX; // The Position in X of the threshold window
 ThresholdPosY=ToolbarPosY+ToolbarSizeY+Spacer; // Threshold toolbar is just below the plugin toolbar
 call("ij.Prefs.set", "threshold.loc", ThresholdPosX+" , "+ThresholdPosY);
 
-// Set ROI Manager Size and Position
-ROIManagerSizeX=290;
-ROIManagerSizeY=260;
+ROIManagerSizeX=250;// Set ROI Manager Size and Position
+ROIManagerSizeY=300;
 ROIManagerPosX=ToolbarPosX; // The Position in X of the ROI manager window which is to the right of the Treshold widnow
 ROIManagerPosY=ThresholdPosY+ThresholdSizeY+Spacer;
 call("ij.Prefs.set", "manager.loc", ROIManagerPosX+" , "+ROIManagerPosY);
 
-// Set Results Size and Position to the right of the toolbar until the bottom of Threhsold window
-ResultsSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer));
-ResultsSizeY=ROIManagerPosY;
-ResultsPosX=ToolbarPosX+ToolbarSizeX+Spacer; // The Position in X of the ROI manager window
+ResultsSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer)); // Set Results Size and Position to the right of the toolbar until the bottom of Threhsold window
+ResultsSizeY=ROIManagerPosY-Spacer;
+ResultsPosX=ToolbarPosX+ToolbarSizeX+Spacer;
 ResultsPosY=ToolbarPosY;
 call("ij.Prefs.set", "results.loc", ResultsPosX+" , "+ResultsPosY);
 call("ij.Prefs.set", "results.width", ResultsSizeX);
 call("ij.Prefs.set", "results.height", ResultsSizeY);
+
+LogSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer)); // Set Log location
+LogSizeY=ROIManagerPosY-Spacer;
+LogPosX=ToolbarPosX+ToolbarSizeX+Spacer; // The Position in X of the ROI manager window
+LogPosY=ToolbarPosY;
+call("ij.Prefs.set", "log.loc", LogPosX+" , "+LogPosY);
+
+DebugSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer)); // Set Debug location
+DebugSizeY= ROIManagerPosY-Spacer;
+DebugPosX=ToolbarPosX+ToolbarSizeX+Spacer; // The Position in X of the ROI manager window
+DebugPosY=ToolbarPosY;
+call("ij.Prefs.set", "debug.loc", DebugPosX+" , "+DebugPosY);
+
+PointToolSizeX=250;// Set point Tool location
+PointToolSizeY=300;
+PointToolPosX= ROIManagerPosX+ROIManagerSizeX+Spacer;
+PointToolPosY= ROIManagerPosY;
+
+BCSizeX=150;// Set Brightness and contrast location
+BCSizeY=300;
+BCPosX=PointToolPosX+PointToolSizeX+Spacer;
+BCPosY=ROIManagerPosY;
+call("ij.Prefs.set", "b&c.loc", BCPosX+" , "+BCPosY);
 //////////////// Header and Housekeeping
 
 //////////////// General Functions
@@ -88,6 +101,8 @@ function MessageDialog(Message){
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(Message);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
   MessageDialogPass=1;
 }
@@ -106,6 +121,8 @@ function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
   Dialog.setInsets(0, 20, 0);
   Dialog.addRadioButtonGroup("", ErrorResponseArray, ErrorResponseArray.length, 1, ErrorResponseArray[0]);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
   UserResponseErrorDialog=Dialog.getRadioButton();
   return UserResponseErrorDialog;
@@ -214,30 +231,13 @@ function CreateOutputDir(ParentDir, InputDirName, FolderSuffix){ // Folder suffi
 ////// Close Function
 function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName){
   beep();
-  // Close Threshold windows if it is open
-  if(isOpen("Threshold")){
-    selectWindow("Threshold");    run("Close");
-
-  }//end of if threshold is open
-  // Close results windows if it is open
-  if(isOpen("Results")){
-    run("Clear Results");
-    selectWindow("Results");    run("Close");
-
-  }//end of if Results is open
-  //Close the ROI Manager
-  if(isOpen("ROI Manager")){
-    roiManager("reset");
-    selectWindow("ROI Manager");    run("Close");
-
-  }//End of Close the ROI Manager
 
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
     selectWindow(ImageN);    run("Close");
-
   }
+
 
   /////////////////////// Closing Dialog Box
   Dialog.create(PluginName+" Information");
@@ -247,30 +247,18 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
   Dialog.addMessage("Files are saved in the following folder:\n"+OutputDirName+".");
   Dialog.setInsets(0, 0, 0);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
 }  ///////////////////////// End of Close Function
-
 
 ////// CleanExit Function
 function CleanExit(MessageQuit){
   beep();
-  // Close Threshold windows if it is open
-  if(isOpen("Threshold")){
-    selectWindow("Threshold");    run("Close");
-
-  }//end of if threshold is open
-  // Close results windows if it is open
-  if(isOpen("Results")){
-    run("Clear Results");
-    selectWindow("Results");    run("Close");
-
-  }//end of if Results is open
-  //Close the ROI Manager
-  if(isOpen("ROI Manager")){
-    roiManager("reset");
-    selectWindow("ROI Manager");    run("Close");
-
-  }//End of Close the ROI Manager
+  if(isOpen("Threshold")){    selectWindow("Threshold");    run("Close");  }//end of if threshold is open
+  if(isOpen("Results")){    run("Clear Results");    selectWindow("Results");    run("Close");  }//end of if Results is open
+  if(isOpen("ROI Manager")){    roiManager("reset");    selectWindow("ROI Manager");    run("Close");  }//End of Close the ROI Manager
+  if(isOpen("B&C")){    selectWindow("B&C");    run("Close");  }//End of Close the Brightness window
 
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
@@ -278,16 +266,32 @@ function CleanExit(MessageQuit){
     selectWindow(ImageN);    run("Close");
 
   }
-  /////////////////////// Closing Dialog Box
-  Dialog.create(PluginName+" Information");
+Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageQuit);
   Dialog.setInsets(0, 0, 0);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
   exit();
-}  ///////////////////////// End of Exit Function
+}  ///////////////////////// End of CleanExit Function
+
+//////////Close UtilityWindows
+function CloseUtilityWindows(ListUtilityWindows){
+// Typically  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  for(WindowI=0; WindowI<ListUtilityWindows.length; WindowI++){
+    UtilityWindowI=ListUtilityWindows[WindowI];
+    if(isOpen(UtilityWindowI)){
+      if(UtilityWindowI=="Results"){        run("Clear Results");       }
+      if(UtilityWindowI=="ROI Manager"){       roiManager("reset");      }
+        selectWindow(UtilityWindowI); run("Close");
+      }
+  }
+}
+//////////End of Close UtilityWindows
 ////////////////////End of General Functions
+
 
 
 /////////// Specific Functions

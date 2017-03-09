@@ -22,54 +22,66 @@ run("Overlay Options...", "stroke=White width=2 point=Hybrid size=Large fill=non
 run("Labels...", "color=White font=10 show bold");
 call("ij.Prefs.set", "tw.font.size",2);
 
-// Set IJ Size and position
-IJPosX=screenWidth*0.1; // The position of ImageJ in X
+
+IJPosX=screenWidth*0.1; // The position of ImageJ in X // Set IJ Size and position
 IJPosY=screenHeight*0; // The position of ImageJ in Y at the top of the screen
-IJSizeX=575; // The width of ImageJ toolbar in pixel
+IJSizeX=570; // The width of ImageJ toolbar in pixel
 IJSizeY=100; // The Height of ImageJ toolbar in pixel
-Spacer=20; // A spacer
+Spacer=25; // A spacer
 DummyVariable=eval("script","IJ.getInstance().setLocation("+IJPosX+","+IJPosY+");"); // Adjust the position of the ImageJ toolbar
 
-// Set Toolbar Size and position
-ToolbarSizeX=300; // Size of the toolbar
-ToolbarSizeY=180; // Size of the toolbar
+ToolbarSizeX=300;// Set Toolbar Size and position
+ToolbarSizeY=200; // Size of the toolbar
 ToolbarPosX=IJPosX+IJSizeX+Spacer; // Position of the Toolbar is to the right of the ImageJ toolbar
 ToolbarPosY=IJPosY; // Position of to the Toolbar in Y
-// Check if the toolbar is present
-ListWindows=getList("window.titles");
-ToolbarPresent=0;
-for(n=0; n<ListWindows.length; n++){
-  WindowN=ListWindows[n];
-  if(WindowN==PluginName+" Toolbar"){
-    // If toolbar is present place it next to the IJ toolbar
-    selectWindow(PluginName+" Toolbar");
-    setLocation(ToolbarPosX,ToolbarPosY);
-    ToolbarPresent=1;
-  }
+
+if(isOpen(PluginName+" Toolbar")){
+  selectWindow(PluginName+" Toolbar");
+  setLocation(ToolbarPosX,ToolbarPosY);
 }
 
-// Set Threshold Window Size and Position
-ThresholdSizeX=290;
+ThresholdSizeX=290;// Set Threshold Window Size and Position
 ThresholdSizeY=260;
 ThresholdPosX=ToolbarPosX; // The Position in X of the threshold window
 ThresholdPosY=ToolbarPosY+ToolbarSizeY+Spacer; // Threshold toolbar is just below the plugin toolbar
 call("ij.Prefs.set", "threshold.loc", ThresholdPosX+" , "+ThresholdPosY);
 
-// Set ROI Manager Size and Position
-ROIManagerSizeX=290;
-ROIManagerSizeY=260;
+ROIManagerSizeX=250;// Set ROI Manager Size and Position
+ROIManagerSizeY=300;
 ROIManagerPosX=ToolbarPosX; // The Position in X of the ROI manager window which is to the right of the Treshold widnow
 ROIManagerPosY=ThresholdPosY+ThresholdSizeY+Spacer;
 call("ij.Prefs.set", "manager.loc", ROIManagerPosX+" , "+ROIManagerPosY);
 
-// Set Results Size and Position to the right of the toolbar until the bottom of Threhsold window
-ResultsSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer));
-ResultsSizeY=ROIManagerPosY;
-ResultsPosX=ToolbarPosX+ToolbarSizeX+Spacer; // The Position in X of the ROI manager window
+ResultsSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer)); // Set Results Size and Position to the right of the toolbar until the bottom of Threhsold window
+ResultsSizeY=ROIManagerPosY-Spacer;
+ResultsPosX=ToolbarPosX+ToolbarSizeX+Spacer;
 ResultsPosY=ToolbarPosY;
 call("ij.Prefs.set", "results.loc", ResultsPosX+" , "+ResultsPosY);
 call("ij.Prefs.set", "results.width", ResultsSizeX);
 call("ij.Prefs.set", "results.height", ResultsSizeY);
+
+LogSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer)); // Set Log location
+LogSizeY=ROIManagerPosY-Spacer;
+LogPosX=ToolbarPosX+ToolbarSizeX+Spacer; // The Position in X of the ROI manager window
+LogPosY=ToolbarPosY;
+call("ij.Prefs.set", "log.loc", LogPosX+" , "+LogPosY);
+
+DebugSizeX=(screenWidth-(ToolbarPosX+ToolbarSizeX+Spacer)); // Set Debug location
+DebugSizeY= ROIManagerPosY-Spacer;
+DebugPosX=ToolbarPosX+ToolbarSizeX+Spacer; // The Position in X of the ROI manager window
+DebugPosY=ToolbarPosY;
+call("ij.Prefs.set", "debug.loc", DebugPosX+" , "+DebugPosY);
+
+PointToolSizeX=250;// Set point Tool location
+PointToolSizeY=300;
+PointToolPosX= ROIManagerPosX+ROIManagerSizeX+Spacer;
+PointToolPosY= ROIManagerPosY;
+
+BCSizeX=150;// Set Brightness and contrast location
+BCSizeY=300;
+BCPosX=PointToolPosX+PointToolSizeX+Spacer;
+BCPosY=ROIManagerPosY;
+call("ij.Prefs.set", "b&c.loc", BCPosX+" , "+BCPosY);
 //////////////// Header and Housekeeping
 
 //////////////// General Functions
@@ -90,6 +102,8 @@ function MessageDialog(Message){
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(Message);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
   MessageDialogPass=1;
 }
@@ -108,6 +122,8 @@ function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
   Dialog.setInsets(0, 20, 0);
   Dialog.addRadioButtonGroup("", ErrorResponseArray, ErrorResponseArray.length, 1, ErrorResponseArray[0]);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
   UserResponseErrorDialog=Dialog.getRadioButton();
   return UserResponseErrorDialog;
@@ -216,30 +232,13 @@ function CreateOutputDir(ParentDir, InputDirName, FolderSuffix){ // Folder suffi
 ////// Close Function
 function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName){
   beep();
-  // Close Threshold windows if it is open
-  if(isOpen("Threshold")){
-    selectWindow("Threshold");    run("Close");
-
-  }//end of if threshold is open
-  // Close results windows if it is open
-  if(isOpen("Results")){
-    run("Clear Results");
-    selectWindow("Results");    run("Close");
-
-  }//end of if Results is open
-  //Close the ROI Manager
-  if(isOpen("ROI Manager")){
-    roiManager("reset");
-    selectWindow("ROI Manager");    run("Close");
-
-  }//End of Close the ROI Manager
 
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
     selectWindow(ImageN);    run("Close");
-
   }
+
 
   /////////////////////// Closing Dialog Box
   Dialog.create(PluginName+" Information");
@@ -249,30 +248,18 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
   Dialog.addMessage("Files are saved in the following folder:\n"+OutputDirName+".");
   Dialog.setInsets(0, 0, 0);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
 }  ///////////////////////// End of Close Function
-
 
 ////// CleanExit Function
 function CleanExit(MessageQuit){
   beep();
-  // Close Threshold windows if it is open
-  if(isOpen("Threshold")){
-    selectWindow("Threshold");    run("Close");
-
-  }//end of if threshold is open
-  // Close results windows if it is open
-  if(isOpen("Results")){
-    run("Clear Results");
-    selectWindow("Results");    run("Close");
-
-  }//end of if Results is open
-  //Close the ROI Manager
-  if(isOpen("ROI Manager")){
-    roiManager("reset");
-    selectWindow("ROI Manager");    run("Close");
-
-  }//End of Close the ROI Manager
+  if(isOpen("Threshold")){    selectWindow("Threshold");    run("Close");  }//end of if threshold is open
+  if(isOpen("Results")){    run("Clear Results");    selectWindow("Results");    run("Close");  }//end of if Results is open
+  if(isOpen("ROI Manager")){    roiManager("reset");    selectWindow("ROI Manager");    run("Close");  }//End of Close the ROI Manager
+  if(isOpen("B&C")){    selectWindow("B&C");    run("Close");  }//End of Close the Brightness window
 
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
@@ -280,15 +267,30 @@ function CleanExit(MessageQuit){
     selectWindow(ImageN);    run("Close");
 
   }
-  /////////////////////// Closing Dialog Box
-  Dialog.create(PluginName+" Information");
+Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageQuit);
   Dialog.setInsets(0, 0, 0);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
   exit();
-}  ///////////////////////// End of Exit Function
+}  ///////////////////////// End of CleanExit Function
+
+//////////Close UtilityWindows
+function CloseUtilityWindows(ListUtilityWindows){
+// Typically  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  for(WindowI=0; WindowI<ListUtilityWindows.length; WindowI++){
+    UtilityWindowI=ListUtilityWindows[WindowI];
+    if(isOpen(UtilityWindowI)){
+      if(UtilityWindowI=="Results"){        run("Clear Results");       }
+      if(UtilityWindowI=="ROI Manager"){       roiManager("reset");      }
+        selectWindow(UtilityWindowI); run("Close");
+      }
+  }
+}
+//////////End of Close UtilityWindows
 ////////////////////End of General Functions
 
 /////////////////////  Sepcific Function
@@ -350,7 +352,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     if(UserResponseErrorDialog==ErrorResponseArray[0]){
       SelectionPromptPass=1;
     } else if(UserResponseErrorDialog==ErrorResponseArray[1]){
-  run("Hide Overlay");
+      run("Hide Overlay");
       SelectionPromptPass=0; // Set the Switch to 0
     } else if(UserResponseErrorDialog==ErrorResponseArray[2]) {
       run("Remove Overlay");
@@ -374,259 +376,243 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     if(SelectionTypeName=="multipoint"){
       setTool("multipoint");
       run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0"); // Set the Point tool as yellow Medium Circle
-      // if Point tool is not here yet
-      ListWindows=getList("window.titles");
-      PointToolPresent=0;
-      for(n=0; n<ListWindows.length; n++){
-        WindowN=ListWindows[n];
-        if(WindowN=="Point Tool"){
-          PointToolPresent=1;
-        }
-      }
-      if(PointToolPresent==0){
+}
+      //If the Point Tool is not shown
+      if(isOpen("Point Tool")!=1){
         doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
-        selectWindow("Point Tool");
-        B&CWidth=150;
-        B&CHeight=350;
-        PointToolWidth=250;
-        PointToolHeight=300;
-        setLocation(screenHeight-200,screenWidth-200);
       }
+      selectWindow("Point Tool");
+      setLocation(PointToolPosX,PointToolPosY);
 
       if(ImageChannels>1){
+        Stack.setDisplayMode("grayscale");
         run("16 Colors");
         for(ChannelI=1; ChannelI<ImageChannels+1; ChannelI++){
           Stack.setChannel(ChannelI);
           wait(500);
         }
         Stack.setChannel(1);
-        ListWindows=getList("window.titles");
-        BrigthnessContrastPresent=0;
-        for(n=0; n<ListWindows.length; n++){
-          WindowN=ListWindows[n];
-          if(WindowN=="B&C"){
-          BrigthnessContrastPresent=1;
+      } else {
+        run("Grays");
+      }
+      //If the Brightness
+      if(isOpen("B&C")!=1){
+        run("Brightness/Contrast...");
+      }
+      selectWindow("B&C");
+      setLocation(BCPosX,BCPosY);
+
+      waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
+      +SelectionInfo+
+      "\nWhen done, press OK.");
+      CurrentSelection=selectionType();
+      if(CurrentSelection<0 || CurrentSelection!=SelectionValue){
+        if(CurrentSelection<0){
+          // Dialog you did not make any selection are you sure?
+          MessageError="Sorry but no "+SelectionTypeName+" selection was detected.";
+          MessageFix="Do you want to proceed without selecting any Cell?";
+          ErrorResponseArray=newArray("Proceed Without selecting any Cell", "Create a "+SelectionTypeName+" selection", "Cancel and Close");
+          MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionTypeName+" was detected.";
+if(isOpen("Results")){ run("Clear Results"); selectWindow("Results"); run("Close"); }// Close results windows if it is open
+          ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
+          if(UserResponseErrorDialog==ErrorResponseArray[0]){
+            SelectionPromptPass=1;
+            SelectionPromptByPass=1;
+          } else if(UserResponseErrorDialog==ErrorResponseArray[1]){
+            SelectionPromptPass=0;
+            SelectionPromptByPass=0;
+          }  else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+            CleanExit(MessageQuit);
+          }
+        } else if(CurrentSelection!=SelectionValue){
+          MessageError="Sorry but the Selection is not a "+SelectionTypeName+".";
+          MessageFix=MacroName+" function requires a "+SelectionTypeName+" selection.";
+          ErrorResponseArray=newArray("Create a "+SelectionTypeName+" selection", "Cancel and Close");
+          MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionTypeName+".";
+          if(isOpen("Results")){ run("Clear Results"); selectWindow("Results"); run("Close"); }// Close results windows if it is open
+          setBatchMode("show");
+          ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
+          if(UserResponseErrorDialog==ErrorResponseArray[0]){
+            run("Select None");
+            SelectionPromptPass=0;
+          } else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+            CleanExit(MessageQuit);
           }
         }
-        if(BrigthnessContrastPresent!=1){
-        run("Brightness/Contrast...");
-        selectWindow("B&C");
-        setLocation(screenHeight-200,screenWidth-200);
+      } else {
+        SelectionPromptPass=1;
+        SelectionPromptByPass=0;
+        setBatchMode("hide");
 
-      }
+      }// End of else Selection is good
+    } // End of If selection does not pass prompt for a selection
+  } // End of Function Get selection
+
+
+  // Function to create subfolders within the newly create outputdirectory
+  function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the desired subfolders
+    for(i=0;i<SubDirArray.length;i++){
+      SubDirPath=OutputDirPath+SubDirArray[i]+File.separator; // Because outpudirpath is unique and new the subfolders do not exist yet so no need to check if they are already present
+      File.makeDirectory(SubDirPath);
+    } // End of for
+  } // End of CreateOutputSubDir function
+  // NOTE:It is useful to create a string for the subdirectory paths
+  // For each element in the subdirarray addMessage
+  // Output[SubDirArrayElementN]Path=""+OutputDirPath+"[SubDirArrayElementN]"+File.separator;
+  // Then you can use directly the string to save within a subdirectory
+
+  // Function to Identify the Names of Each Counter
+  var IdentifyCounterPass;
+  var ListCounterName;
+  function IdentifyCounter (NbOfCounter){
+    IdentifyCounterPass=0;
+    // Get or Set the Default values for the Counter Identifier Position and Names
+    ListCounterNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListCounterName", "DAPI,Hoescht,Nissl,ProteinA,PorteinB,ProteinC,ProteinD");
+    ListCounterName=split(ListCounterNameString,",");
+
+    // Elongate the ListCounterName if there is more than the Default Channels
+    if(ListCounterName.length<NbOfCounter){
+      NbCounterName=ListCounterName.length;
+      for(MissingCounterI=1; MissingCounterI<(NbOfCounter-NbCounterName+1); MissingCounterI++){
+        ListCounterName=Append(ListCounterName,"Counter_"+NbCounterName+MissingCounterI-1);
       }
     }
-    waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
-    +SelectionInfo+
-    "\nWhen done, press OK.");
-    CurrentSelection=selectionType();
-    if(CurrentSelection<0 || CurrentSelection!=SelectionValue){
-      if(CurrentSelection<0){
-        // Dialog you did not make any selection are you sure?
-        MessageError="Sorry but no "+SelectionTypeName+" selection was detected.";
-        MessageFix="Do you want to proceed without selecting any Cell?";
-        ErrorResponseArray=newArray("Proceed Without selecting any Cell", "Create a "+SelectionTypeName+" selection", "Cancel and Close");
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionTypeName+" was detected.";
-        ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
-        if(UserResponseErrorDialog==ErrorResponseArray[0]){
-          SelectionPromptPass=1;
-          SelectionPromptByPass=1;
-        } else if(UserResponseErrorDialog==ErrorResponseArray[1]){
-          SelectionPromptPass=0;
-          SelectionPromptByPass=0;
-        }  else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-          // Ask Channel Identification here?
-          CleanExit(MessageQuit);
+
+    Dialog.create(PluginName+" Information");
+    Dialog.setInsets(0, 0, 0);
+    Dialog.addMessage("You used "+NbOfCounter+" Counter(s).");
+    Dialog.setInsets(0, 0, 0);
+    Dialog.addMessage("Please give an unique name to each of them.");
+    Dialog.setInsets(0, 0, 0);
+    for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
+      Dialog.setInsets(0, 20, 0);
+      Dialog.addString("Counter "+CounterI+" :", ListCounterName[CounterI], 20);
+    }
+    Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+    ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+    CloseUtilityWindows(ListUtilityWindows);
+    Dialog.show();
+    for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
+      ListCounterName[CounterI]=Dialog.getString();
+    }
+
+    // Make sure CounterNames do not contain , nor .
+    for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
+      if(matches(ListCounterName[CounterI],".*[,.].*")==1){
+        IdentifyCounterPass= -1;
+      }
+    }
+
+    // Make sure CounterNames are unique
+    for (CounterIA = 0; CounterIA < NbOfCounter-1; CounterIA++){
+      for (CounterIB = CounterIA+1; CounterIB < NbOfCounter; CounterIB++){
+        CounterNameA=ListCounterName[CounterIA];
+        CounterNameB=ListCounterName[CounterIB];
+        if(CounterNameA==CounterNameB){
+          IdentifyCounterPass=-1;
         }
-      } else if(CurrentSelection!=SelectionValue){
-        MessageError="Sorry but the Selection is not a "+SelectionTypeName+".";
-        MessageFix=MacroName+" function requires a "+SelectionTypeName+" selection.";
-        ErrorResponseArray=newArray("Create a "+SelectionTypeName+" selection", "Cancel and Close");
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionTypeName+".";
-      // Close results windows if it is open
-      if(isOpen("Results")){
-        run("Clear Results");
-        selectWindow("Results");        run("Close");
-      }//end of if Results is open
-      setBatchMode("show");
-      ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
+      }
+    }
+
+    if(IdentifyCounterPass<0){
+      MessageError="Sorry but the Counter Names must be unique and canno't contain any comma \",\" nor dot \".\".";
+      MessageFix=MacroName+" function does NOT allow commas \",\" nor dots \".\" in the Counter Names which must unique.";
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Counter Names weren't unique and/or contained commas \",\" or dots \".\"";
+      ErrorResponseArray=newArray("Re-Enter Counter Names", "Cancel and Close");
+      ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[0]){
-        run("Select None");
-        SelectionPromptPass=0;
+        IdentifyCounterPass=0;
       } else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
         CleanExit(MessageQuit);
       }
+    } else {// end of if Identify Counter=Fail
+      IdentifyCounterPass=1;
+
+      //Recreate the Strings from the Arrays
+      for (CounterI=0; CounterI < ListCounterName.length ;CounterI++){
+        if(CounterI==0){
+          ListCounterNameString=""+ListCounterName[CounterI];
+        }else{
+          ListCounterNameString=ListCounterNameString+","+ListCounterName[CounterI];
+        }// end of else
+      } // end of for each Counter
+      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListCounterName",ListCounterNameString); // Save the Countername in the preferences
+    }// end of if pass
+  } // end of function Identify Counter
+  /////////////////////End of Specific Functions
+
+
+  InitialMessage=""+MacroName+" will :"
+  +"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
+  +"\n\nFor each "+FileExt+" File:"
+  +"\n- Prompt to Manually Detect Cells of Interest"
+  +"\n- Save in a new folder"
+  +"\n   - Detected Cells as Region of Interest ZIP Files"
+  +"\n   - X and Y Coordinates of Dectected Cells as TXT Files"
+  +"\n- Prompt for a name for each Counter";
+
+
+  MessageDialog(InitialMessage);
+
+  do{
+    SelectInputDir(MinNbFile,FileExt);
+  }while(SelectInputDirPass!=1)
+
+  CreateOutputDir(ParentDir,InputDirName,FolderSuffix);
+  CreateOutputSubDir(SubDirArray);
+  OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
+  OutputResultPath=""+OutputDirPath+"Results"+File.separator;
+
+
+  // Start of the loop going through the list of files in the input folder selected above
+  for (FileI = 0; FileI < InputFileList.length; FileI++){
+    setBatchMode(false);
+    InputFileNameI=InputFileList[FileI];
+    BasenameArray=split(InputFileNameI[FileI],".");
+    InputFileNameINoExt=BasenameArray[0];
+    InputFilePathI = InputDirPath+InputFileNameI;
+    open(InputFilePathI);
+
+    // Save the Scale
+    getPixelSize(PixelUnit, PixelWidth, PixelHeight, PixelDepth);
+    ImageScale=1/PixelWidth;
+    // Remove the scale to have coordinates in pixels
+    run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
+    var ImageChannels;
+    getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
+
+    do {
+      SelectionPrompt("multipoint","Point and Click on the Cells of Interest.");
+    }while(SelectionPromptPass!=1)
+    run("Clear Results"); // Clear the results
+    run("Measure"); // get the Measurements
+
+    if(SelectionPromptByPass==0){ // If user did not escape the Selection Loop deliberately
+      // Add the CounterIDs to an array to be used to define the Name of each Counter
+      for(ResultI=0; ResultI<nResults;ResultI++){
+        CounterI=getResult("Counter", ResultI);
+        CounterArray=Append(CounterArray,CounterI);
+      }// end of for ResultI
+    } // end of if user exited loop
+
+    if(SelectionPromptByPass==1){ // If User exited the seleciton loop
+      selectWindow("Results"); // Delete the results generated from the All image because no selection was made
+      IJ.deleteRows(0,nResults); // Delete the results
     }
-  } else {
-      SelectionPromptPass=1;
-      SelectionPromptByPass=0;
-      setBatchMode("hide");
-
-    }// End of else Selection is good
-  } // End of If selection does not pass prompt for a selection
-} // End of Function Get selection
+    selectWindow("Results");
+    saveAs("Results", OutputResultPath+InputFileNameINoExt+".txt"); // Save the measurements even empty results
+    run("Clear Results"); // Clear the results
 
 
-// Function to create subfolders within the newly create outputdirectory
-function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the desired subfolders
-  for(i=0;i<SubDirArray.length;i++){
-    SubDirPath=OutputDirPath+SubDirArray[i]+File.separator; // Because outpudirpath is unique and new the subfolders do not exist yet so no need to check if they are already present
-    File.makeDirectory(SubDirPath);
-  } // End of for
-} // End of CreateOutputSubDir function
-// NOTE:It is useful to create a string for the subdirectory paths
-// For each element in the subdirarray addMessage
-// Output[SubDirArrayElementN]Path=""+OutputDirPath+"[SubDirArrayElementN]"+File.separator;
-// Then you can use directly the string to save within a subdirectory
+    // Add selection to overlay and save the File
+    selectWindow(InputFileNameI);
+    roiManager("reset"); // Reset the ROI Manager
 
-// Function to Identify the Names of Each Counter
-var IdentifyCounterPass;
-var ListCounterName;
-function IdentifyCounter (NbOfCounter){
-  IdentifyCounterPass=0;
-  // Get or Set the Default values for the Counter Identifier Position and Names
-  ListCounterNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListCounterName", "DAPI,Hoescht,Nissl,ProteinA,PorteinB,ProteinC,ProteinD");
-  ListCounterName=split(ListCounterNameString,",");
-
-  // Elongate the ListCounterName if there is more than the Default Channels
-  if(ListCounterName.length<NbOfCounter){
-    NbCounterName=ListCounterName.length;
-    for(MissingCounterI=1; MissingCounterI<(NbOfCounter-NbCounterName+1); MissingCounterI++){
-      ListCounterName=Append(ListCounterName,"Counter_"+NbCounterName+MissingCounterI-1);
+    if(SelectionPromptByPass==1){
+      run("Select All");
     }
-  }
-
-  Dialog.create(PluginName+" Information");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("You used "+NbOfCounter+" Counter(s).");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("Please give an unique name to each of them.");
-  Dialog.setInsets(0, 0, 0);
-  for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
-    Dialog.setInsets(0, 20, 0);
-    Dialog.addString("Counter "+CounterI+" :", ListCounterName[CounterI], 20);
-  }
-  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  Dialog.show();
-  for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
-    ListCounterName[CounterI]=Dialog.getString();
-  }
-
-  // Make sure CounterNames do not contain , nor .
-  for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
-    if(matches(ListCounterName[CounterI],".*[,.].*")==1){
-      IdentifyCounterPass= -1;
-    }
-  }
-
-  // Make sure CounterNames are unique
-  for (CounterIA = 0; CounterIA < NbOfCounter-1; CounterIA++){
-    for (CounterIB = CounterIA+1; CounterIB < NbOfCounter; CounterIB++){
-      CounterNameA=ListCounterName[CounterIA];
-      CounterNameB=ListCounterName[CounterIB];
-      if(CounterNameA==CounterNameB){
-        IdentifyCounterPass=-1;
-      }
-    }
-  }
-
-  if(IdentifyCounterPass<0){
-    MessageError="Sorry but the Counter Names must be unique and canno't contain any comma \",\" nor dot \".\".";
-    MessageFix=MacroName+" function does NOT allow commas \",\" nor dots \".\" in the Counter Names which must unique.";
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Counter Names weren't unique and/or contained commas \",\" or dots \".\"";
-    ErrorResponseArray=newArray("Re-Enter Counter Names", "Cancel and Close");
-    ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
-    if(UserResponseErrorDialog==ErrorResponseArray[0]){
-      IdentifyCounterPass=0;
-    } else if (UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-      CleanExit(MessageQuit);
-    }
-  } else {// end of if Identify Counter=Fail
-    IdentifyCounterPass=1;
-
-    //Recreate the Strings from the Arrays
-    for (CounterI=0; CounterI < ListCounterName.length ;CounterI++){
-      if(CounterI==0){
-        ListCounterNameString=""+ListCounterName[CounterI];
-      }else{
-        ListCounterNameString=ListCounterNameString+","+ListCounterName[CounterI];
-      }// end of else
-    } // end of for each Counter
-    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListCounterName",ListCounterNameString); // Save the Countername in the preferences
-  }// end of if pass
-} // end of function Identify Counter
-/////////////////////End of Specific Functions
-
-
-InitialMessage=""+MacroName+" will :"
-+"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
-+"\n\nFor each "+FileExt+" File:"
-+"\n- Prompt to Manually Detect Cells of Interest"
-+"\n- Save in a new folder"
-+"\n   - Detected Cells as Region of Interest ZIP Files"
-+"\n   - X and Y Coordinates of Dectected Cells as TXT Files"
-+"\n- Prompt for a name for each Counter";
-
-
-MessageDialog(InitialMessage);
-
-do{
-  SelectInputDir(MinNbFile,FileExt);
-}while(SelectInputDirPass!=1)
-
-CreateOutputDir(ParentDir,InputDirName,FolderSuffix);
-CreateOutputSubDir(SubDirArray);
-OutputROIPath=""+OutputDirPath+"ROIs"+File.separator;
-OutputResultPath=""+OutputDirPath+"Results"+File.separator;
-
-
-// Start of the loop going through the list of files in the input folder selected above
-for (FileI = 0; FileI < InputFileList.length; FileI++){
-  setBatchMode(false);
-  InputFileNameI=InputFileList[FileI];
-  InputFilePathI = InputDirPath+InputFileNameI;
-  open(InputFilePathI);
-
-  // Save the Scale
-  getPixelSize(PixelUnit, PixelWidth, PixelHeight, PixelDepth);
-  ImageScale=1/PixelWidth;
-  // Remove the scale to have coordinates in pixels
-  run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
-  var ImageChannels;
-  getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
-
-  do {
-    SelectionPrompt("multipoint","Point and Click on the Cells of Interest.");
-  }while(SelectionPromptPass!=1)
-  run("Clear Results"); // Clear the results
-  run("Measure"); // get the Measurements
-
-  if(SelectionPromptByPass==0){ // If user did not escape the Selection Loop deliberately
-    // Add the CounterIDs to an array to be used to define the Name of each Counter
-    for(ResultI=0; ResultI<nResults;ResultI++){
-      CounterI=getResult("Counter", ResultI);
-      CounterArray=Append(CounterArray,CounterI);
-    }// end of for ResultI
-  } // end of if user exited loop
-
-  if(SelectionPromptByPass==1){ // If User exited the seleciton loop
-    selectWindow("Results"); // Delete the results generated from the All image because no selection was made
-    IJ.deleteRows(0,nResults); // Delete the results
-  }
-  selectWindow("Results");
-  saveAs("Results", OutputResultPath+InputFileNameI+".txt"); // Save the measurements even empty results
-  run("Clear Results"); // Clear the results
-
-
-  // Add selection to overlay and save the File
-  selectWindow(InputFileNameI);
-  roiManager("reset"); // Reset the ROI Manager
-
-  if(SelectionPromptByPass==1){
-run("Select All");
-  }
     roiManager("Add"); // Add the selection to ROI manager
-    roiManager("Save", OutputROIPath+InputFileNameI+".zip"); // Save the ROI
+    roiManager("Save", OutputROIPath+InputFileNameINoExt+".zip"); // Save the ROI
     run("Select None"); // Remove any selection
     roiManager("Select", 0); // Select the selection form the ROI manager
     roiManager("reset"); // Reset the ROI manager
@@ -634,33 +620,33 @@ run("Select All");
     run("Add Selection..."); // Add selection to the overlay
 
 
-  selectWindow(InputFileNameI);
-  close();
-  // Update the progress bar
-  showProgress(FileI, InputFileList.length);
-}/////////////////////End of for Filei loop
+    selectWindow(InputFileNameI);
+    close();
+    // Update the progress bar
+    showProgress(FileI, InputFileList.length);
+  }/////////////////////End of for Filei loop
 
-// Get the Maximum Nb of Counter from the Counter Array
-// Add a 0 to the Array to avoid having aberrant MaxCounter_ID when only 1 counter (counter 0) is used
-CounterArray=Append(CounterArray, 0);
-Array.getStatistics(CounterArray, MinCounter_ID, MaxCounter_ID, MeanCounter_ID, StdDevCounter_ID);
-NbCounter=MaxCounter_ID+1;
-// Prompt for a name to each Counter
-do{
-  IdentifyCounter(NbCounter);
-}while(IdentifyCounterPass!=1)
+  // Get the Maximum Nb of Counter from the Counter Array
+  // Add a 0 to the Array to avoid having aberrant MaxCounter_ID when only 1 counter (counter 0) is used
+  CounterArray=Append(CounterArray, 0);
+  Array.getStatistics(CounterArray, MinCounter_ID, MaxCounter_ID, MeanCounter_ID, StdDevCounter_ID);
+  NbCounter=MaxCounter_ID+1;
+  // Prompt for a name to each Counter
+  do{
+    IdentifyCounter(NbCounter);
+  }while(IdentifyCounterPass!=1)
 
-// Write The Counter in a txt
-TXTFileName=""+InputDirName+"_"+"Marker-Information";
-TXTFilePath=OutputDirPath+TXTFileName+".txt";
-TXTFile = File.open(TXTFilePath);
-// Write Header of MarkerFile
-print(TXTFile, "Marker_ID"+CellSeparator+ "Marker_Name"+LineSeparator);
-// Add
-for(Counter_IDI=0;Counter_IDI<NbCounter;Counter_IDI++){
-  Counter_IDIPadded=IJ.pad(Counter_IDI, 3);
-  print(TXTFile, Counter_IDIPadded+CellSeparator+ ListCounterName[Counter_IDI]+LineSeparator);
-}
-// Close the TXT File
-File.close(TXTFile);
-CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);
+  // Write The Counter in a txt
+  TXTFileName=""+InputDirName+"_"+"Marker-Information";
+  TXTFilePath=OutputDirPath+TXTFileName+".txt";
+  TXTFile = File.open(TXTFilePath);
+  // Write Header of MarkerFile
+  print(TXTFile, "Marker_ID"+CellSeparator+ "Marker_Name"+LineSeparator);
+  // Add
+  for(Counter_IDI=0;Counter_IDI<NbCounter;Counter_IDI++){
+    Counter_IDIPadded=IJ.pad(Counter_IDI, 3);
+    print(TXTFile, Counter_IDIPadded+CellSeparator+ ListCounterName[Counter_IDI]+LineSeparator);
+  }
+  // Close the TXT File
+  File.close(TXTFile);
+  CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);
