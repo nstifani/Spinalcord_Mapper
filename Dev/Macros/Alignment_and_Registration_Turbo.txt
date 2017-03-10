@@ -381,7 +381,8 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     //   run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0"); // Set the Point tool as yellow Medium Circle
     //   doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
     // }
-    waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
+    call("ij.gui.WaitForUserDialog.setNextLocation", ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer)
+      waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
     +SelectionInfo+
     "\nWhen done, press OK.");
     CurrentSelection=selectionType();
