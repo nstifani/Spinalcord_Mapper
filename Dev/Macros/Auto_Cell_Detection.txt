@@ -161,10 +161,10 @@ function SelectInputDir(MinNbFile, FileExt){
   }
   NbFileWithCorrectExt=InputCorrectExtFileList.length;
   if(NbFileWithCorrectExt<MinNbFile){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
-    MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
+    MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ndoes not contain at least "+MinNbFile+" "+FileExt+" File.";
     MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
     ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File.";
     ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
 
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
@@ -179,7 +179,7 @@ function SelectInputDir(MinNbFile, FileExt){
         MessageError="Sorry but the "+FileExt+" File:\n\""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\" in its filename.";
         MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
         ErrorResponseArray=newArray("Select Another Folder", "Ignore This File", "Cancel and Close");
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
         ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
         if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
           CleanExit(MessageQuit);
@@ -197,10 +197,10 @@ function SelectInputDir(MinNbFile, FileExt){
     // Make sure InpuFileList is > MinNbFile
     NbFile=InputFileList.length;
     if(NbFile<MinNbFile && ErrorDialogPass!=1){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
-      MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File with no more than one \".\" in its filename.";
+      MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ndoes not contain at least "+MinNbFile+" "+FileExt+" File with no more than one \".\" in its filename.";
       MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File with one unique \".\" used for the file extension.";
       ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
       ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
         CleanExit(MessageQuit);
@@ -238,8 +238,6 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
     ImageN=ListImages[n];
     selectWindow(ImageN);    run("Close");
   }
-
-
   /////////////////////// Closing Dialog Box
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
@@ -298,400 +296,257 @@ function CloseUtilityWindows(ListUtilityWindows){
 
 
 /////////Specific Functions
-var ProcessMethodPromptPass; // Switch for Processing Method
-var ProcessMethod;
-function ProcessMethodPrompt (){
-  ProcessMethodPromptPass=0;
-  ProcessMethod=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethod", "Global");
+var ProcessingMethodPass; // Switch for Processing Method
+var ProcessingMethod;
+function ProcessingMethodPrompt (){
+  ProcessingMethodPass=0;
+  ProcessingMethod=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethod", "Global");
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage("Select the Processing Method:");
-  Dialog.addRadioButtonGroup("", newArray("Global","Individual"), 2, 1, ProcessMethod)
+  Dialog.addRadioButtonGroup("", newArray("Global","Individual"), 2, 1, ProcessingMethod)
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
   Dialog.show();
-  ProcessMethod = Dialog.getRadioButton;
-  ProcessMethodPromptPass=1;
-  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ProcessingMethod", ProcessMethod);
+  ProcessingMethod = Dialog.getRadioButton;
+  ProcessingMethodPass=1;
+  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ProcessingMethod", ProcessingMethod);
 } // End of Prompt Processing Method function
 
-/////////// Specific Functions
 
-function SelectChannels(){
-SelectChannelPass=0;
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(5, 0, 0);
-Dialog.addMessage("Select the Channels you would like to process:");
-Dialog.setInsets(5, 20, 0);
-ListChNamesCurrentImage=Array.trim(ListChNames, NbChannels);
-ListChSelectionStatusCurrentImage=Array.trim(ListChSelectionStatus, NbChannels);
-Dialog.addCheckboxGroup(1,NbChannels,ListChNamesCurrentImage,ListChSelectionStatusCurrentImage);
-Dialog.addMessage("Channel Names:");
-for (ChI=0; ChI < NbChannels; ChI++){
-Dialog.setInsets(5, 40, 0);
-Dialog.addString("Ch "+ChI+1+":", ListChNames[ChI], 10);
-}
-Dialog.setInsets(20, 10, 0);
-Dialog.addMessage("ROI Methods:");
-Dialog.setInsets(5, 10, 0);
-Dialog.addCheckboxGroup(1,2,ROIMethodOptions,ROIMethodStatus);
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
+///////// Function to create subfolders within the newly create outputdirectory
+function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the desired subfolders
+  for(i=0;i<SubDirArray.length;i++){
+    SubDirPath=OutputDirPath+SubDirArray[i]+File.separator; // Because outpudirpath is unique and new the subfolders do not exist yet so no need to check if they are already present
+    File.makeDirectory(SubDirPath);
+  } // End of for
+} // End of CreateOutputSubDir function
+// NOTE:It is useful to create a string for the subdirectory paths
+// For each element in the subdirarray addMessage
+// Output[SubDirArrayElementN]Path=""+OutputDirPath+"[SubDirArrayElementN]"+File.separator;
+// Then you can use directly the string to save within a subdirectory
 
-// Get the selection status and channel names
-for (ChI=0; ChI < NbChannels; ChI++){
-ListChSelectionStatus[ChI]=Dialog.getCheckbox();
-ListChNames[ChI]=Dialog.getString();
-}// End of geet the selection status and channel names
+////////////////Function to get Image Info and Save it into arrays
+var GetImageInfoPass;
+var DimensionArray;
+var NbChannelArray;
+var NbSliceArray;
+var NbFrameArray;
+function GetImageInfo (InputFileList){
+  GetImageInfoPass=0;
+  setBatchMode(true);
+  /////// Open the arrays to store parameters and measurement data
+  DimensionArray=newArray(0);
+  NbChannelArray=newArray(0);
+  NbSliceArray=newArray(0);
+  NbFrameArray=newArray(0);
 
-// Get ROI Method
-ROIMethodStatus[0]=Dialog.getCheckbox();
-ROIMethodStatus[1]=Dialog.getCheckbox();
-
-// Get the Nb of Selected Channels
-NbSelectedCh=0;
-for (ChI=0; ChI < NbChannels; ChI++){
-NbSelectedCh=NbSelectedCh+ListChSelectionStatus[ChI];
-}
-
-// Check the Nb of Select Channel is at least 1
-if(NbSelectedCh<1){
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("At least 1 Channel should be selected.");
-Dialog.setInsets(0, 0, 0);
-UserChoiceArray=newArray("Try Again", "Cancel & Close");
-Dialog.setInsets(0, 50, 0);
-Dialog.addRadioButtonGroup("", UserChoiceArray, 2, 1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if (UserChoice== "Cancel & Close"){
-exit(MacroName+ " Information:\nThe function "+ MacroName+" has stopped because No Channel was selected. "+PluginName+" requires the selection of at least 1 Channel.");
-}else { // Reset Ch Status
-ListChSelectionStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChSelectionStatus", "1,1,1,1,1,1,1"); // List of status for 5 channels. 1=selected; 0=ignored.
-ListChSelectionStatus=split(ListChSelectionStatusString,",");
-}
-} else { // If at least one channel is selected Make sure the names are unambiguous
-SelectChannelPass=1;
-for (ChIA = 0; ChIA < NbChannels-1; ChIA++){
-for (ChIB = ChIA+1; ChIB < NbChannels; ChIB++){
-ChNameA=ListChNames[ChIA];
-ChNameB=ListChNames[ChIB];
-if (ChNameA==ChNameB){
-SelectChannelPass=0;
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Channels "+ChIA+1+" and "+ChIB+1+" have the same name \""+ChNameA+"\".");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Channel Names should be unambiguous.");
-UserChoiceArray=newArray("Try Again", "Cancel & Close");
-Dialog.setInsets(0, 80, 0);
-Dialog.addRadioButtonGroup("", UserChoiceArray, 2, 1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if (UserChoice== "Cancel & Close"){
-exit(MacroName+ " Information:\nThe function "+ MacroName+" has stopped because Channels "+ChIA+1+" and "+ChIB+1+" have the same name \""+ChNameA+"\".\n"+PluginName+" requires unambiguous Channel Names.");
-} else { // if try again then reset the values
-ListChNamesString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChNames", "Ch1,Ch2,Ch3,Ch4,Ch5,Ch6,Ch7"); // List of name of 5 channels.
-ListChNames=split(ListChNamesString,",");
-}
-}
-} // end ChIB
-} // end ChIA
-} // end of else NbSelectedCh is at least 1 evaluate the names
-}// End of Function select Ch
-/////////////////////////////////// Functions
+  //Loop around each file
+  for (FileI = 0; FileI < InputFileList.length; FileI++){
+    InputFileNameI=InputFileList[FileI];
+    InputFilePathI = InputDirPath+InputFileNameI;
+    open(InputFilePathI);
+    //Get the dimension
+    getDimensions(WidthI, HeightI, ChannelsI, SlicesI, FramesI);
+    close(); // Close the Image
+    //Append the Values to the arrays
+    DimensionArray=Append(DimensionArray,WidthI);
+    DimensionArray=Append(DimensionArray,HeightI);
+    NbChannelArray=Append(NbChannelArray,ChannelsI);
+    NbSliceArray=Append(NbSliceArray,SlicesI);
+    NbFrameArray=Append(NbFrameArray,FramesI);
+    showProgress(FileI, InputFileList.length);
+  }
+  GetImageInfoPass=1;
+}///////////// End of Function getImage Info
 
 
+// This function Prompt to Select the Channels to Process
+var SelectChannelPass; // Switch for dialog
+function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
+  SelectChannelPass=0;
+  NbSelectedChPass=0;
+  ChNamePass=0;
+  setBatchMode("show");
+  selectWindow(InputFileNameI);
+  setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+  getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
+  ListChSelectionStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChSelectionStatusString", "1,1,1,1,1,1,1"); // List of status for 5 channels. 1=selected; 0=ignored.
+  ListChNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChNameString", "Ch1,Ch2,Ch3,Ch4,Ch5,Ch6,Ch7"); // List of name of 5 channels.
+  ROIMethodStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ROIMethodStatusString", "0,0"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
+  ListChSelectionStatus=split(ListChSelectionStatusString,",");
+  ListChName=split(ListChNameString,",");
+  ROIMethodStatus=split(ROIMethodStatusString,",");
+  ListChNameCurrentImage=Array.trim(ListChName, ImageChannels);
+  ListChSelectionStatusCurrentImage=Array.trim(ListChSelectionStatus, ImageChannels);
+  ROIMethodOptions=newArray("Detect Sample","Manually Select ROI"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// This function Prompt for the Nb of Channels to Merge
-var PromptNbChPass; // Switch for dialog
-var NbCh; // Total Nb of Channel
-var MinChNb=2; // Min Nb of Channels to Merge
-var MaxChNb=7; // Max Nb of Channels to Merge
-function PromptNbCh (InputFileList, MinChNb, MaxChNb){
-  Array.show("Results", InputFileList);// Show The name of InputFileList
-  PromptNbChPass=0; // Set the Switch to 0
-  NbCh=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".NbCh", 2); // Call the NbofCh from saved in the preferences
   Dialog.create(PluginName+" Information");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("Indicate the number of Channels to process (min: "+MinChNb+" ; max: "+MaxChNb+").");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addSlider("Number Channels :",2,7, NbCh);
-  Dialog.setInsets(0, 0, 0);
-  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+  Dialog.setInsets(5, 0, 0);
+  Dialog.addMessage("Select the Channels you would like to process:");
+  Dialog.setInsets(5, 20, 0);
+  Dialog.addCheckboxGroup(1,ImageChannels, ListChNameCurrentImage, ListChSelectionStatusCurrentImage);
+  Dialog.addMessage("Channel Names:");
+  for (ChI=0; ChI < ImageChannels; ChI++){
+    Dialog.setInsets(5, 40, 0);
+    Dialog.addString("Ch "+ChI+1+":", ListChNameCurrentImage[ChI], 10);
+  }
+  Dialog.setInsets(20, 10, 0);
+  Dialog.addMessage("ROI Methods:");
+  Dialog.setInsets(5, 10, 0);
+  Dialog.addCheckboxGroup(2,1,ROIMethodOptions,ROIMethodStatus);
+  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
   Dialog.show();
-  NbCh=Dialog.getNumber();
-  NbCh=round(NbCh); // Round the NbofCh because user can enter manual values
-  if(isNaN(NbCh)==1 || NbCh<MinChNb || NbCh>MaxChNb || NbCh<1){ // Make sure the NbCh is a valid integer or display an error
-    if(isNaN(NbCh)==1){
-      MessageError="Sorry but the provided Number of Channels is not a number.";
-    } else if(NbCh<MinChNb){
-      MessageError="Sorry but the provided Number of Channels is too small.";
-    } else if(NbCh>MaxChNb){
-      MessageError="Sorry but the provided Number of Channels is too big.";
-    }else if(NbCh<1){
-      MessageError="Sorry but the provided Number of Channels is too big.";
+
+  // Get the selection status and channel names
+  for (ChI=0; ChI < ImageChannels; ChI++){
+    ListChSelectionStatus[ChI]=Dialog.getCheckbox();
+    ListChName[ChI]=Dialog.getString();
+  }// End of geet the selection status and channel names
+
+  // Get ROI Method
+  ROIMethodStatus[0]=Dialog.getCheckbox();
+  ROIMethodStatus[1]=Dialog.getCheckbox();
+  ROIMethodStatusString=""+ROIMethodStatus[0]+","+ROIMethodStatus[1];
+  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ROIMethodStatusString",ROIMethodStatusString);
+
+  // Get the Nb of Selected Channels
+  NbSelectedCh=0;
+  for (ChI=0; ChI < ImageChannels; ChI++){
+    NbSelectedCh=NbSelectedCh+ListChSelectionStatus[ChI];
+  }
+
+  // Chcek the Nb Selected Channels is Valid
+  if(isNaN(NbSelectedCh)==1 || NbSelectedCh<MinChNb || NbSelectedCh>MaxChNb || NbSelectedCh<1){ // Make sure the NbSelectedCh is a valid integer or display an error
+    if(isNaN(NbSelectedCh)==1){
+      MessageError="Sorry but the Number of Selected Channels is not a number.";
+    } else if(NbSelectedCh<MinChNb){
+      MessageError="Sorry but the Number of Selected Channels is too small.";
+    } else if(NbSelectedCh>MaxChNb){
+      MessageError="Sorry but the Number of Selected Channels is too big.";
+    }else if(NbSelectedCh<1){
+      MessageError="Sorry but the Number of Selected Channels is too low.";
     } else {
-      MessageError="Sorry but the provided Number of Channels is invalid.";
+      MessageError="Sorry but the provided Number of Selected Channels is invalid.";
     }
     // Display an error
-    MessageFix=MacroName+" function requires a positive Number of Channels comprised between "+MinChNb+" and "+MaxChNb+".";
-    ErrorResponseArray=newArray("Select Another Number of Channels", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Number of Channels was not comprised between  "+MinChNb+" and "+MaxChNb+".";
+    MessageFix=MacroName+" function requires a positive Number of Selected Channels comprised between "+MinChNb+" and "+MaxChNb+".";
+    ErrorResponseArray=newArray("Modify the Channel Selection", "Cancel and Close");
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Number of Selected Channels was not comprised between "+MinChNb+" and "+MaxChNb+".";
     ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
       CleanExit(MessageQuit);
     } else {
-      PromptNbChPass=0;
-      NbCh=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".NbCh", 2); // Restore the NbCh Default
+      NbSelectedChPass=0;
+      SelectChannelPass=0;
+      //Reset ChSelectionStatus String
+      ListChSelectionStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChSelectionStatusString", "1,1,1,1,1,1,1"); // List of status for 5 channels. 1=selected; 0=ignored.
+      ListChSelectionStatus=split(ListChSelectionStatusString,",");
     }
   } else {// If NbCh pass then save it in preferences
-    PromptNbChPass=1;
-    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".NbCh",NbCh);
-  }
-} // End of function PromptNbCh
+    NbSelectedChPass=1;
+    ChNamePass=0;
+    SelectChannelPass=0;
+    //Update and Save Selection status
 
-// Prompt how to Identify each Ch
-var IdentifyChPass; // Switch to pass Ch Identification
-var ChIDPosition; // Position of ChannelID with the file names (Prefix or Suffix)
-var ListChID; // ChID in the original file
-var ListChName; // Name of the Channel for naming when fused
-function IdentifyCh (NbCh){
-  IdentifyChPass=0;
-  // Get or Set the Default values for the ChIdentifier Position and Names
-  ChIDPosition=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ChIDPosition", "Suffix");
-  ListChIDString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChID", "_C1,_C2,_C3,_C4,_C5,_C6,_C7");
-  ListChID=split(ListChIDString,",");
-  ListChNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChName", "DAPI,Hoescht,Nissl,ProteinA,PorteinB,ProteinC,ProteinD");
-  ListChName=split(ListChNameString,",");
-  // Display a dialog
-  Dialog.create(PluginName+" Information");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("Indicate how to identify each channel.");
-  Dialog.setInsets(0, 0, 0);
-  Dialog.addRadioButtonGroup("Channel Identifier Position :",newArray("Prefix", "Suffix"),1,2,ChIDPosition);
-  for (ChI = 0; ChI < NbCh; ChI++){
-    Dialog.setInsets(0, 10, 0);
-    Dialog.addString("Ch Identifier "+ChI+1+":", ListChID[ChI], 10);
-    Dialog.setInsets(0, 10, 0);
-    Dialog.addString("Ch Name "+ChI+1+":", ListChName[ChI], 10);
-  }
-  Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  Dialog.show();
-
-  ChIDPosition=Dialog.getRadioButton();//Get the position of ChID suffix or prefix
-  for (ChI = 0; ChI < NbCh; ChI++){ // FOr each Channel get the ID and the Name
-    ListChID[ChI]=Dialog.getString();
-    ListChName[ChI]=Dialog.getString();
-  }
-
-  // Make sure ChID and ChNames do not contain , nor .
-  for (ChI = 0; ChI < NbCh; ChI++){
-    if(matches(ListChID[ChI],".*[,.].*")==1 || matches(ListChName[ChI],".*[,.].*")==1){
-      IdentifyChPass= -1;
-    }
-  }
-
-  // Make sure ChID and ChName are unique
-  for (ChIA = 0; ChIA < NbCh-1; ChIA++){
-    for (ChIB = ChIA+1; ChIB < NbCh; ChIB++){
-      ChIDA=ListChID[ChIA];
-      ChIDB=ListChID[ChIB];
-      ChNameA=ListChName[ChIA];
-      ChNameB=ListChName[ChIB];
-      if(ChIDA==ChIDB || ChNameA==ChNameB){
-        IdentifyChPass= -1;
-      }
-    }
-  }
-  // Display an error dialog
-  if(IdentifyChPass<0){
-    MessageError="Sorry but the Channel Identifiers and Channel Names must be unique and canno't contain any comma \",\" nor dot \".\".";
-    MessageFix=MacroName+" function does NOT allow commas \",\" nor dots \".\" in the Channel Identifiers and Channel Names which must unique.";
-    ErrorResponseArray=newArray("Modify Channel Identifiers and Channel Names", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channel Identifiers and Channels Names weren't unique and/or contained commas \",\" or dots \".\"";
-    ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
-    if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-      CleanExit(MessageQuit);
-    } else {
-      IdentifyChPass=0;
-    }
-  } else {// end of if Identify ChPass=Fail
-    IdentifyChPass=1;
-
-    //Recreate the Strings from the Arrays
-
-    for (ChI=0; ChI < ListChID.length ;ChI++){
+    for (ChI=0; ChI < ListChSelectionStatus.length ;ChI++){
       if(ChI==0){
-        ListChIDString=""+ListChID[ChI];
-        ListChNameString=""+ListChName[ChI];
+        ListChSelectionStatusString=""+ListChSelectionStatus[ChI];
       }else{
-        ListChIDString=ListChIDString+","+ListChID[ChI];
-        ListChNameString=ListChNameString+","+ListChName[ChI];
+        ListChSelectionStatusString=ListChSelectionStatusString+","+ListChSelectionStatus[ChI];
       }
-    }// End of recreate the strings from the arrays
+        }// End of recreate the strings from the arrays
     // Save the ID Position, IDs and Names in the preferences
-    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ChIDPosition",ChIDPosition);
-    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChID",ListChIDString);
-    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChName",ListChNameString);
-  } // End of If Ch are correctly identified
-} // end of function Identify Ch
+    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChSelectionStatusString",ListChSelectionStatusString);
 
 
-// This function ensure that all file in the InputFileList have the correct ChID to be Merged
-// It creates Basenames which are fullname minus the ChID and make sure that all basename+ChID exists
-var InputDirMatchIdentifyChPass; // Switch InputDir has the correct content
-var UsableBaseNameList;
-function InputDirMatchIdentifyCh(InputFileList, ListChID, NbCh){
-  InputDirMatchIdentifyChPass=0;
-  // Work on the InputCorrectExtFileList to get only the files with NbCh present
-  InputFileListNoExt=newArray(0); // Create a list of BasenameFileI
-
-  // Remove File extension and add to the BaseName List
-  for(I=0; I<InputCorrectExtFileList.length; I++){ // Loop around the list of TIF file
-    BaseNameIArray=split(InputCorrectExtFileList[I],".");// This is the Array of FileName and FileExtension
-    InputFileListNoExt=Append(InputFileListNoExt,BaseNameIArray[0]);
-  }
-
-  // Remove ChIDs from the BaseNameList
-  BaseNameList=newArray(0); // Create a NewArray
-  for(I=0; I<InputFileListNoExt.length; I++){ // Loop around the list of TIF file
-    BaseNameI=InputFileListNoExt[I];
-    for(ChI=0;ChI<NbCh;ChI++){ // Loop around the Channels
-      ChIDChI=ListChID[ChI];
-      if(startsWith(BaseNameI,ChIDChI) || endsWith(BaseNameI,ChIDChI)){
-        BaseNameINoChID=replace(BaseNameI,ChIDChI,""); // Replace the ChIdentifier (prefix) by Empty string
-        BaseNameList=Append(BaseNameList,BaseNameINoChID);
-      }// end of if else starts with
-    } // end of Loop around the channels
-  } // end of for
-
-  // Remove duplicates
-  // Check for duplicates within the list of file with no Ch identifier
-  BaseNameListNoDuplicate=Array.copy(BaseNameList);
-  for (FileI=0; FileI<BaseNameListNoDuplicate.length-1; FileI++){
-    for (FileN=FileI+1; FileN<BaseNameListNoDuplicate.length; FileN++){
-      BaseNameI=BaseNameListNoDuplicate[FileI];
-      BaseNameN=BaseNameListNoDuplicate[FileN];
-      if(BaseNameI!="" && BaseNameI==BaseNameN){ // If TifFile basename I is not empty and it is identical to the next then erase the next
-        BaseNameListNoDuplicate[FileN]="";//Remove the duplicate
-      } // end of if
-    } // end of for n
-  } // end of for i
-
-  //Remove empty strings
-  UniqueBaseNameList=newArray(0);
-  for (FileI=0; FileI<BaseNameListNoDuplicate.length; FileI++){
-    BaseNameI=BaseNameListNoDuplicate[FileI];
-    if(BaseNameI!=""){
-      UniqueBaseNameList=Append(UniqueBaseNameList,BaseNameI);
-    }
-  }
-
-  // Make a list of Usable Basename (only the ones that have all their required Nb Channels file)
-  UsableBaseNameList=newArray(0);
-  for(I=0;I<UniqueBaseNameList.length;I++){
-    UniqueBaseNameI=UniqueBaseNameList[I];
-    NbMatchingFile=0;
-    for(ChI=0;ChI<NbCh;ChI++){
-      ChIDChI=ListChID[ChI];
-      // Reconstruct the FilePath for each Ch
-      if(ChIDPosition=="Prefix"){
-        FilenameChINoExt=ChIDChI+UniqueBaseNameI;
-      } else if(ChIDPosition=="Suffix"){
-        FilenameChINoExt=UniqueBaseNameI+ChIDChI;
+    // if Nb SelectedChannels is Valid Check ChannelNames are Valid
+    // Make sure ChNames do not contain , nor .
+    for (ChI = 0; ChI < ListChName.length; ChI++){
+      if(matches(ListChName[ChI],".*[,.].*")==1){
+        ChNamePass= -1;
+        ChNameError=ListChName[ChI];
       }
-      // Screen the
-      for(N=0; N<InputFileListNoExt.length;N++){
-        InputFileNoExtN=InputFileListNoExt[N];
-        if(matches(FilenameChINoExt,InputFileNoExtN)==1){
-          NbMatchingFile++;
+    }
+
+    // Make sure ChName of Select Channels are unique
+    for (ChIA = 0; ChIA < (ListChName.length)-1; ChIA++){
+      if(ListChSelectionStatus[ChIA]==1){
+        for (ChIB = ChIA+1; ChIB < ListChName.length; ChIB++){
+          if(ListChSelectionStatus[ChIB]==1){
+            ChNameA=ListChName[ChIA];
+            ChNameB=ListChName[ChIB];
+            if(ChNameA==ChNameB){
+              ChNameError=ChNameA;
+              ChNamePass= -1;
+            }
+          }
         }
       }
-    }
-    if(NbMatchingFile==NbCh){
-      UsableBaseNameList=Append(UsableBaseNameList,UniqueBaseNameI);
-    }
-  }
-  // Create an error if the Nb Usable basename are
-  if(UsableBaseNameList.length==0){
-    InputDirMatchIdentifyChPass=-1;
-    ListSelectedCh=Array.trim(ListChID, NbCh);
-    ListSelectedChForMessage="";
-    for(ChI=0;ChI<ListSelectedCh.length;ChI++){
-      ListSelectedChForMessage=ListSelectedChForMessage+"\n"+ListSelectedCh[ChI];
-    }
-    MessageError="Sorry but the folder \""+InputDirName+"\" does not contain at least "+NbCh+" "+FileExt+" files with the following Channel Identifiers as "+ChIDPosition+":"+ListSelectedChForMessage;
-    MessageFix=MacroName+" function requires at least "+MinNbFile+" "+FileExt+" files with the requested Channel Identifiers as "+ChIDPosition+".";
-    ErrorResponseArray=newArray("Select Another Folder", "Modify the Number of Channels", "Modify the Channel Identifiers and Names", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the folder \""+InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" files with the following Channel IDs :"+"Array.print(Array.trim(ListCHID, NbCh))"+" as "+ChIDPosition+".";
-    ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
-    if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-      CleanExit(MessageQuit);
-    } else if(UserResponseErrorDialog== "Select Another Folder"){
-      SelectInputDirPass=0;
-    } else if (UserResponseErrorDialog== "Modify the Number of Channels"){
-      PromptNbChPass=0;
-    } else if (UserResponseErrorDialog== "Modify the Channel Identifiers and Names"){
-      IdentifyChPass=0;
-    }
-  } else if(UsableBaseNameList.length>0){
-    InputDirMatchIdentifyChPass=1;
-  } // end of if pass
-} // end of Function
+    }// end of evaluate ChNames of Selected Channels
+
+    // Display an error dialog
+    if(ChNamePass<0){
+      MessageError="Sorry but the Channel Names "+ChNameError+"is not unique or contains a comma \",\" or a dot \".\".";
+      MessageFix=MacroName+" function does not allow commas \",\" nor dots \".\" in the Channel Names which must unique.";
+      ErrorResponseArray=newArray("Modify the Channel Names", "Cancel and Close");
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channels Names weren't unique and/or contained commas \",\" or dots \".\"";
+      ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
+      if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+        CleanExit(MessageQuit);
+      } else {
+        ChNamePass=0;
+      }
+    } else {// end of if SelectChannelPass has failed aka is good
+      ChNamePass=1;
+
+      //Recreate the Strings from the Arrays
+      //Update and Save Selection status
+      for (ChI=0; ChI < ListChName.length ;ChI++){
+        if(ChI==0){
+          ListChNameString=""+ListChName[ChI];
+        }else{
+          ListChNameString=ListChNameString+","+ListChName[ChI];
+        }
+            }// End of recreate the strings from the arrays
+      // Save Ch Names in the preferences
+      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChNameString",ListChNameString);
+    } // end ChName Pass
+  }// end of else NbSelectedChannels is Valid
+if(NbSelectedChPass==1 && ChNamePass==1){
+  SelectChannelPass=1;
+}
+} //////////////////// end of function Select Channels
 ////////////////////End of Specific Functions
 
 
 
 /////////////////////// Get or Set previous default values saved in the preferences file
-ProcessingMethodOptionsString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethodOptions", "Global,Individual"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
 ProcessingMethod=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethod", "Global");// This is a coefficient used to compute the minimum and maximum particle diameter for each channel
 
-ROIMethodOptionsString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ROIMethodOptions", "Detect Sample,Manually Select ROI"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
-ROIMethodStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ROIMethodStatus", "0,0"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
-ImageEnhancementOptionsString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ImageEnhancementOptions", "Remove Noise,Use Watershed"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
+ROIMethodStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ROIMethodStatusString", "0,0"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
+ImageEnhancementOptionsString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ImageEnhancementOptionsString", "Remove Noise,Use Watershed"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
 
 LowerSampleThreshold=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".LowerSampleThreshold", "0"); // Sample Threshold Values. First one is Lower Threshold, Second one is UpperThrehsold
 UpperSampleThreshold=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".UpperSampleThreshold", "0");
 
-ListChSelectionStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChSelectionStatus", "1,1,1,1,1,1,1"); // List of status for 5 channels. 1=selected; 0=ignored.
-ListChNamesString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChNames", "Ch1,Ch2,Ch3,Ch4,Ch5,Ch6,Ch7"); // List of name of 5 channels.
-ListChMinParticleDiameterString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMinParticleDiameter", "0,0,0,0,0,0,0"); // List of particle diameter for the 5 channels.
-ListChMaxParticleDiameterString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMaxParticleDiameter", "100,100,100,100,100,100,100"); // List of particle diameter for the 5 channels.
-ListChMinParticleCircularityString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMinParticleCircularity", "0,0,0,0,0,0,0"); // List of particle diameter for the 5 channels.
-ListChMaxParticleCircularityString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMaxParticleCircularity", "100,100,100,100,100,100,100"); // List of particle diameter for the 5 channels.
+ListChSelectionStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChSelectionStatusString", "1,1,1,1,1,1,1"); // List of status for 5 channels. 1=selected; 0=ignored.
+ListChNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChNameString", "Ch1,Ch2,Ch3,Ch4,Ch5,Ch6,Ch7"); // List of name of 5 channels.
+ListChMinParticleDiameterString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMinParticleDiameterString", "0,0,0,0,0,0,0"); // List of particle diameter for the 5 channels.
+ListChMaxParticleDiameterString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMaxParticleDiameterString", "100,100,100,100,100,100,100"); // List of particle diameter for the 5 channels.
+ListChMinParticleCircularityString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMinParticleCircularityString", "0,0,0,0,0,0,0"); // List of particle diameter for the 5 channels.
+ListChMaxParticleCircularityString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMaxParticleCircularityString", "100,100,100,100,100,100,100"); // List of particle diameter for the 5 channels.
 
-ListChLowerThresholdString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChLowerThreshold", "0,0,0,0,0,0,0"); // List of lower threshold for the 5 channels.
-ListChUpperThresholdString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChUpperThreshold", "255,255,255,255,255,255,255"); // List of upper threshold for the 5 channels.
-ListChRemoveNoiseStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChRemoveNoiseStatus", "0,0,0,0,0,0,0");// Status of Remove Noise for each channel 1=selected; 0=ignored.
-ListChWatershedStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChWatershedStatus", "0,0,0,0,0,0,0");// Status of Watershed for each channelds. 1=selected; 0=ignored.
+ListChLowerThresholdString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChLowerThresholdString", "0,0,0,0,0,0,0"); // List of lower threshold for the 5 channels.
+ListChUpperThresholdString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChUpperThresholdString", "255,255,255,255,255,255,255"); // List of upper threshold for the 5 channels.
+ListChRemoveNoiseStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChRemoveNoiseStatusString", "0,0,0,0,0,0,0");// Status of Remove Noise for each channel 1=selected; 0=ignored.
+ListChWatershedStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChWatershedStatusString", "0,0,0,0,0,0,0");// Status of Watershed for each channelds. 1=selected; 0=ignored.
 
 
 /////////////////////// Split the String from the preference file into Vectors
-ProcessingMethodOptions=split(ProcessingMethodOptionsString,",");
-ROIMethodOptions=split(ROIMethodOptionsString,",");
 ROIMethodStatus=split(ROIMethodStatusString,",");
 ImageEnhancementOptions=split(ImageEnhancementOptionsString,",");
 ListChSelectionStatus=split(ListChSelectionStatusString,",");
-ListChNames=split(ListChNamesString,",");
+ListChName=split(ListChNameString,",");
 ListChMinParticleDiameter=split(ListChMinParticleDiameterString,",");
 ListChMaxParticleDiameter=split(ListChMinParticleDiameterString,",");
 ListChMinParticleCircularity=split(ListChMinParticleCircularityString,",");
@@ -720,7 +575,40 @@ do{
   SelectInputDir(MinNbFile,FileExt);
 }while(SelectInputDirPass!=1)
 
-ProcessMethodPrompt();
+ProcessingMethodPrompt();
+
+if(ProcessingMethod=="Global") { // Check InputDir has Files with consistent number of CHannels for Global processing
+  do{
+    GlobalMethodPassInputDir=0;
+    GetImageInfo(InputFileList);
+    Array.getStatistics(NbChannelArray, MinNbCh, MaxNbCh, MeanNbCh, StDevNbCh);
+    Array.getStatistics(NbSliceArray, MinNbSlice, MaxNbSlice, MeanNbSlice, StDevNbSlice);
+    Array.getStatistics(NbFrameArray, MinNbFrame, MaxNbFrame, MeanNbFrame, StDevNbFrame);
+    if(MinNbCh!=MaxNbCh || MaxNbSlice>1 || MaxNbFrame>1){
+      if(MinNbCh!=MaxNbCh){
+        MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ncontains "+FileExt+" Files with inconsistent number of Channels (min:"+MinNbCh+", max:"+MaxNbCh+").";
+        MessageFix="The "+ProcessingMethod+" Processing Method of "+MacroName+" requires a Folder that contains "+FileExt+" Files with the same nummber of Channels.";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain "+FileExt+" Files with the same Number of Channels.";
+      } else {
+        MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ncontains "+FileExt+" Files with more than 3 dimensions (X, Y and Channels) ("+MaxNbSlice+" Slices; "+MaxNbSFrames+" Frames).";
+        MessageFix=MacroName+" can't process Files with more than 3 dimensions (X, Y and Channels).";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\n contained Files with more than 3 dimensions (X, Y and Channels) ("+MaxNbSlice+" Slices; "+MaxNbSFrames+" Frames).";
+      }
+      ErrorResponseArray=newArray("Select Another Folder", "Use Individual Processing Method", "Cancel and Close");
+      ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+      if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+        CleanExit(MessageQuit);
+      } else if (UserResponseErrorDialog==ErrorResponseArray[0]){
+        do{
+          SelectInputDir(MinNbFile,FileExt);
+        }while(SelectInputDirPass!=1)
+      } else if (UserResponseErrorDialog==ErrorResponseArray[1]){
+        ProcessingMethod="Individual";
+        GlobalMethodPassInputDir=1;
+      }
+    }else {GlobalMethodPassInputDir=1;}
+  }while(GlobalMethodPassInputDir!=1)
+}// End of Check InputDir has Files with consistent number of CHannels for Global processing
 
 FolderSuffix=FolderSuffix+"-"+ProcessingMethod;
 
@@ -732,1266 +620,1190 @@ OutputParameterPath=""+OutputDirPath+"Parameters"+File.separator;
 OutputMeasurementPath=""+OutputDirPath+"Measurements"+File.separator;
 
 
-
-
-///////////////////////////////////////////////// Process each file
-///////////////////////////////////////////////// Process each file
-for (FileI=0; FileI < InputFileList.length; FileI++){
-InputFileNamei=InputFileList[FileI];
-InputFileNameiNoExt=replace(InputFileNamei, ".tif", "");
-InputFilePathi=InputDirPath+InputFileNamei;
-FirstResult="true";
-
-setBatchMode("hide");
-
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-open(InputFilePathi);
-selectWindow(InputFileNamei);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-run("Remove Overlay"); // Remove any Overlay
-run("Select None"); // Remove any selection
-roiManager("reset"); // Remove any ROI
-getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames); // Get dimensions of the Image
-
-// Check the Dimension of the File and offer to only Channel Options
-
-
-if(NbSlices>1 || NbFrames>1){
-if(ProcessingMethod=="Global" && FileI>0){
-// do Nothing aka do not prompt and recycle the previous values
-} else {
-// Exit Batchmode
-selectWindow(InputFileNamei);
-setBatchMode("show");
-selectWindow(InputFileNamei);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-// Prompt what to do
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-if(NbSlices>1 && NbFrames>1){
-Dialog.addMessage(InputFileNameiNoExt+" is a Stack and a Video (z-slices and t-frames).");
-} else if (NbSlices>1){
-Dialog.addMessage(InputFileNameiNoExt+" is a Stack (z-slices).");
-} else if (NbFrames>1){
-Dialog.addMessage(InputFileNameiNoExt+" is a Video (t-frames).");
-}
-MultipleDimensionsProcessingOptions=newArray("Process a specific Slice/Frame", "Process the Maximum Intensity Projection", "Cancel & Close");
-Dialog.setInsets(0, 5, 0);
-Dialog.addRadioButtonGroup("", MultipleDimensionsProcessingOptions, 3, 1, "Process a specific Slice");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer);
-Dialog.show();
-MultipleDimensionsProcessing=Dialog.getRadioButton();
-}// end of if process is not global prompt for what to do
-
-// Process the file according to  MultipleDimensionsProcessing Choice
-if(MultipleDimensionsProcessing=="Process a specific Slice/Frame"){
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");
-}
-call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
-if(ProcessingMethod=="Global" && FileI>0){
-// Recyclle the Values and do not prompt for which slice
-setBatchMode("hide");
-} else{ // If process is not global then prompt for which slice
-selectWindow(InputFileNamei);
-setBatchMode("show");
-selectWindow(InputFileNamei);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-waitForUser(PluginName+" Information", "Move to the Slice/Frame you would like to process."
-+"\nWhen done, press OK.");
-setBatchMode("hide");
-selectWindow(InputFileNamei);
-getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames); // Get dimensions of the Image
-Stack.getPosition(CurrentChannel, CurrentSlice, CurrentFrame);
-}
-// Delete the other Slices
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer);
-SubStackString=""+"channels=1-"+NbChannels+" slices="+CurrentSlice+" frames="+CurrentFrame;
-run("Make Substack...", SubStackString);
-selectWindow(InputFileNamei);
-close();
-selectWindow(InputFileNameiNoExt+"-1.tif");
-rename(InputFileNamei);
-selectWindow(InputFileNamei);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-} else if(MultipleDimensionsProcessing=="Process the Maximum Intensity Projection"){
-setBatchMode("hide");
-if(NbSlices>1 && NbFrames>1){
-selectWindow(InputFileNamei);
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer);
-run("Grouped Z Project...", "projection=[Max Intensity] all");
-selectWindow(InputFileNamei);
-close();
-selectWindow("MAX_"+InputFileNamei);
-rename(InputFileNamei);
-}
-selectWindow(InputFileNamei);
-run("Z Project...", "projection=[Max Intensity]");
-selectWindow(InputFileNamei);
-close();
-selectWindow("MAX_"+InputFileNamei);
-rename(InputFileNamei);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-run("Grays");
-} else{
-exit(PluginName+ " Information: The function "+ MacroName+" has stopped because "+InputFileNameiNoExt+ " contains images with more than 1 Slice/Frame (Stack and/or Video).");
-}
-
-
-
-}// End of Check Input File dimensions
-
-// Select the Channels and indicate the Channel Names
-do{
-if(ProcessingMethod=="Global" && FileI>0){
-SelectChannelPass=1;
-setBatchMode("hide");
-} else {
-selectWindow(InputFileNamei);
-setBatchMode("show");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-SelectChannels();
-}
-} while(SelectChannelPass!=1)
-
-// Save the ListChNames, ListChStatus, ROI Methods in preferences and Create List of SelectCh and Dropped Channels
-if(ProcessingMethod=="Global" && FileI>0){
-setBatchMode("hide");
-} else {
-setBatchMode("hide");
-//////////////////////////////// Recreate the Strings to be saved in the Preferences
-ROIMethodStatusString=""+ROIMethodStatus[0]+","+ROIMethodStatus[1];
-for(i=0;i<ListChSelectionStatus.length;i++){
-if(i==0){
-ListChSelectionStatusString=""+ListChSelectionStatus[i];
-ListChNamesString=""+ListChNames[i];
-}else{
-ListChSelectionStatusString=ListChSelectionStatusString+","+ListChSelectionStatus[i];
-ListChNamesString=ListChNamesString+","+ListChNames[i];
-}
-}
-//////////////////////////////// Save the parameters in the Preferences
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ROIMethodStatus",ROIMethodStatusString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChSelectionStatus",ListChSelectionStatusString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChNames",ListChNamesString);
-//////////////////////////////// Create a new array with only the selected Ch
-NbDroppedCh=NbChannels-NbSelectedCh;
-ListSelectedCh=newArray(NbSelectedCh); // This is the List of Channels that are selected
-if(NbDroppedCh!=0){
-ListDroppedCh=newArray(NbDroppedCh);
-}
-// Populate the two arrays
-SelectedChI=0;
-DroppedChI=0;
-for(ChI=0; ChI < NbChannels; ChI++){
-if(ListChSelectionStatus[ChI]==1){
-ListSelectedCh[SelectedChI]=ChI+1; //We add 1 for making a list of Ch number from 1 to 5 and not 0 to 4
-SelectedChI++;
-} else {
-ListDroppedCh[DroppedChI]=ChI+1;
-DroppedChI++;
-}
-}// End of For ChI populate the ListofSelect Ch or DroppedCH
-}// End of Else Process is individual
-
-
-setBatchMode("hide");
-// Duplicate the Opened Image and save it as an Original it will be used at the end to get the Measurements
-selectWindow(InputFileNamei); //  This is the image we are using as a source for other things it will be rescaled to have a nice um unit
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Duplicate...", "title=Original duplicate");// This is exactly the original picture
-selectWindow("Original");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-
-
-
-// Get the Initial Scale of the Image and Adjust it to get some understand values
-setBatchMode("hide");
-selectWindow(InputFileNamei);
-getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
-
-run("Text Window...", "name=ParameterData width=50 height=6 menu");
-setLocation(ToolbarPosX+ToolbarSizeX+Spacer, ToolbarPosY);
-// Write the Header for the parameterdata
-print("[ParameterData]", "Filename"+CellSeparator+"ROI"+CellSeparator+"Parameter"+CellSeparator+"Value"+LineSeparator);
-print("[ParameterData]", "All Files"+CellSeparator+"All ROIs"+CellSeparator+"Processing Method"+CellSeparator+ProcessingMethod+LineSeparator);
-
-
-
-// Write the Initial Scale in the Parameter file
-if(Unit=="pixels"){ // if the scale is not defined
-print("[ParameterData]",InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Scale"+CellSeparator+"Not Defined"+LineSeparator);
-RescaledUnit="pixels";
-} else { // if the scale is defined make sure it is
-InitialScale=1/PixelWidth;
-print("[ParameterData]",InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Resolution (pixels per "+Unit+")"+CellSeparator+InitialScale+LineSeparator);
-
-// Format the Initial Scale to make sure the known distance is 1
-selectWindow(InputFileNamei);
-run("Set Scale...", "distance in pixels=&InitialScale known=1 pixel=1");
-
-// Change the Unit until New Scale is <1 (While>1)
-if (InitialScale>1){ // Then rescale the image
-ScalingFactor=0;
-NewScale=InitialScale;
-while(NewScale>1){
-NewScale=NewScale/10;
-ScalingFactor++;
-}// end of while
-
-// Calculate the new Unit
-NewUnit="10^-"+ScalingFactor+" "+Unit;
-// Calculate the New Known distance
-NewKnownDistance=pow(10,ScalingFactor);
-
-// Rescale the Image
-selectWindow(InputFileNamei);
-run("Set Scale...", "known=&NewKnownDistance unit=&NewUnit");
-selectWindow(InputFileNamei);
-// Get the Rescaled dimensions
-getPixelSize(RescaledUnit, RescaledPixelWidth, RescaledPixelHeight, RescaledPixelDepth);
-FinalScale=1/RescaledPixelWidth;
-print("[ParameterData]",InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Rescaled Resolution (pixel per "+RescaledUnit+")"+CellSeparator+FinalScale+LineSeparator);
-} // end of rescale the image
-}// End of if scale is defined initially
-
-// Get the dimension of the image in pixel and the area
-selectWindow(InputFileNamei);
-ImageTotalWidth=getWidth();
-ImageTotalHeight=getHeight();
-ImageTotalArea=ImageTotalWidth*ImageTotalHeight;
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Image Total Width (pixel)"+CellSeparator+ImageTotalWidth+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Image Total Height (pixel)"+CellSeparator+ImageTotalHeight+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Image Total Area (pixel^2)"+CellSeparator+ImageTotalArea+LineSeparator);
-
-
-// Duplicate InputFIleNamei and Remove the Unused Channels and call it SelectedChannels
-setBatchMode("hide");
-selectWindow(InputFileNamei);
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Duplicate...", "title=SelectedChannels duplicate");// This is the sample
-selectWindow("SelectedChannels");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-if(NbChannels>1 && NbSelectedCh<NbChannels ){
-selectWindow("SelectedChannels");
-for (DroppedChI=ListDroppedCh.length-1; DroppedChI>=0; DroppedChI--){
-DroppedChIListPos=(ListDroppedCh[DroppedChI]);
-setSlice(DroppedChIListPos);
-run("Delete Slice", "delete=channel");
-}
-}
-if(NbSelectedCh==1){
-// Work to identify the sample
-selectWindow("SelectedChannels");
-run("Grays");
-}
-
-
-// Work to identify the sample
-if(ROIMethodStatus[0]==1){
-setBatchMode("hide");
-selectWindow("SelectedChannels");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Duplicate...", "title=Sample duplicate");// This is the sample
-selectWindow("Sample");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-// Flatten The Sample Image if more than 1 Channel
-if(NbSelectedCh>1){
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Z Project...", "title=MIP projection=[Max Intensity]");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-selectWindow("Sample");
-close();
-selectWindow("MAX_Sample");
-rename("Sample");
-run("Grays");
-// This is the Maximum Intensity projection of the image used to detect the sample contour
-} else{ // If only 1 Channels then convert to gray
-run("Grays");
-}
-// From here we have a gray Sample 1 Ch
-
-if(ProcessingMethod=="Global" && FileI>0){ // If process is Global
-setBatchMode("hide");
-selectWindow("Sample");
-setThreshold(LowerSampleThreshold, UpperSampleThreshold);
-run("Convert to Mask");
-}else{
-
-selectWindow("Sample");// We convert the Sample to binary for a mask
-setBatchMode("show");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-// These lines are if you want to bring up threshold values from previous files It causes issues with 16bits images
-// setThreshold(LowerSampleThreshold,UpperSampleThreshold);
-setAutoThreshold("Default dark");
-run("Threshold...");
-call("ij.gui.ImageWindow.setNextLocation", ToolbarPosX,ToolbarPosY+ToolbarSizeY+Spacer);
-waitForUser(PluginName+" Information", "Adjust the Threshold to identify all your SAMPLE."
-+"\nWhen done, press OK.");
-getThreshold(LowerSampleThreshold, UpperSampleThreshold);
-
-setBatchMode("hide");
-selectWindow("Sample");// We convert the Sample to binary for a mask
-setThreshold(LowerSampleThreshold, UpperSampleThreshold);
-run("Convert to Mask");
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-} // end of else if process is individual
-// From Here Sample Image has been Thresholded
-setBatchMode("hide");
-/////////////////////// Process the binary Mask to cover all the tissue
-run("Options...", "iterations=5 count=1 do=Open");
-run("Options...", "iterations=5 count=1 do=Fill Holes");
-run("Options...", "iterations=5 count=1 do=Dilate");
-run("Options...", "iterations=5 count=1 do=Fill Holes");
-run("Options...", "iterations=1 count=1 do=Nothing");
-
-// Create a selection to be added to the ROI
-selectWindow("Sample");
-run("Create Selection");
-// Get the dimension of the selection
-getSelectionBounds(SelectionPosX, SelectionPosY, SelectionWidth, SelectionHeight);
-getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames); // Get dimensions of the Image
-// If the selection is empty ImageJ will use X=0 Y=0 Width=Height=1 or Width=Height=MaxImageHeight
-// Make sure the Selection is not a default ImageJ
-if(SelectionPosX==0 && SelectionPosY==0 && ((SelectionWidth==1 && SelectionHeight==1) || (SelectionWidth==ImageWidth && SelectionHeight==ImageHeight) )){
-// if it is a default selection
-if(ProcessingMethod=="Global" && FileI>0){ // If MEthod is global just select all
-selectWindow("Sample");
-run("Select None");
-run("Select All");// If it is then select all
-} else { // If method is individual then prompt the user
-setBatchMode("hide");
-call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
-selectWindow("Sample"); // Close the sample because it is empty
-close();
-// Recreate a Sample but do not Threhsold this time
-selectWindow("SelectedChannels");
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Duplicate...", "title=Sample duplicate");// This is the sample
-selectWindow("Sample");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-// Delete the Unselected Channels
-selectWindow("Sample");
-if(NbSelectedCh>1){
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Z Project...", "title=MIP projection=[Max Intensity]");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-selectWindow("Sample");
-close();
-selectWindow("MAX_Sample");
-rename("Sample");
-run("Grays");
-// This is the Maximum Intensity projection of the image used to detect the sample contour
-} else{
-run("Grays");
-}
-
-selectWindow("Sample");
-setBatchMode("show");
-selectWindow("Sample");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-
-do {
-SelectionPass=0;
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-selectWindow("Sample");
-run("Select None");
-setTool("freehand");
-call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
-waitForUser(PluginName+" Information", "The Sample could not be detected automatically.\nPlease use a Selection Tool to Select the Sample Area.\nWhen done press OK.");
-CurrentSelection=selectionType();
-// Ensure a selection is provided
-if(CurrentSelection<0){
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Sorry but no selection has been detected."
-+"\nUse a Selection Tool to Select the Sample Area.");
-UserChoiceArray=newArray("Try Again", "Cancel & Close");
-Dialog.setInsets(0, 80, 0);
-Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if (UserChoice=="Cancel & Close"){
-exit(PluginName+" has stopped because no Sample Selection was provided.");
-}
-}else {SelectionPass=1;}
-} while(SelectionPass!=1)
-} // if no sample area could be identified automatically and Method is not global then Prompt to draw a Sample Area
-}// End of if Threshold Sample gave an empty image and
-setBatchMode("hide");
-// Write the Threshold Values in the preferences Only if Sample was Selected
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".LowerSampleThreshold",LowerSampleThreshold);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".UpperSampleThreshold",UpperSampleThreshold);
-
-// Save the Selection into the ROI manager
-roiManager("reset");
-selectWindow("Sample");
-roiManager("Add");
-roiManager("Select", 0);
-roiManager("Rename", "Sample");
-roiManager("Set Color", "magenta");
-roiManager("Set Line Width", 10);
-selectWindow("Sample"); // We have the ROI of the sample in the ROI manager so we can close the window
-close();
-
-// Duplicate the SelectedChannels Image to Save the Sample as Overlay
-selectWindow("SelectedChannels");
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Duplicate...", "title=Sample duplicate");// This is the sample
-selectWindow("Sample");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-roiManager("Select", 0);
-run("Add Selection..."); // Add to Overlay
-run("Overlay Options...", "stroke=cyan width=10 fill=none apply");
-OutputSampleImage=OutputImagePath+InputFileNameiNoExt+"_1_Sample_Overlay.tif";
-selectWindow("Sample");
-saveAs("Tiff", OutputSampleImage);
-close();
-
-
-} else { // End of if Sample should be detected. so if sample is NOT detected
-LowerSampleThreshold="No Sample detection"; // To be written in the parameters
-UpperSampleThreshold="No Sample detection";
-}// End of IF Sample is Not detected
-
-// Print Parameters data
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Lower Sample Threshold"+CellSeparator+LowerSampleThreshold+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Upper Sample Threshold"+CellSeparator+UpperSampleThreshold+LineSeparator);
-
-
-//Work on the Manual ROI
-if(ROIMethodStatus[1]==1){
-setBatchMode("hide");
-selectWindow("SelectedChannels");
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Duplicate...", "title=RegionOfInterest duplicate");// This is the sample
-selectWindow("RegionOfInterest");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-
-if(ProcessingMethod=="Global" && FileI>0){ // If process is global then Use the Sample as a ROI
-setBatchMode("hide");
-if(ROIMethodStatus[0]==0){ // If sample was not defined earlier
-selectWindow("RegionOfInterest");
-run("Select None");
-run("Select All");
-} else { // If sample was defined earlier
-// Use the previous ROI and copy it
-selectWindow("RegionOfInterest");
-NbROI=roiManager("count");
-run("Select None");
-roiManager("Select", NbROI-1);
-} // End of if sample was not defined earlier
-} else { // end of if process is global so if process is individual
-if(ROIMethodStatus[0]==0){ // If sample was not defined earlier then prompt to draw a selection
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-selectWindow("RegionOfInterest");
-run("Select None"); // deselect any pre selection
-selectWindow("RegionOfInterest");
-setBatchMode("show");
-selectWindow("RegionOfInterest");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-setTool("freehand");
-waitForUser(PluginName+" Information", "Please, use a Selection Tool to Select the Region of Interest (ROI).\nWhen done press OK.");
-CurrentSelection=selectionType();
-if(CurrentSelection<0){
-do {
-SelectionPass=0;
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-selectWindow("RegionOfInterest");
-run("Select None");
-setTool("freehand");
-call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
-waitForUser(PluginName+" Information", "The Region of Interest (ROI) could not be detected.\nPlease use a Selection Tool to Select the Region of Interest (ROI).\nWhen done press OK.");
-CurrentSelection=selectionType();
-// Ensure a selection is provided
-if(CurrentSelection<0){
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Sorry but no selection has been detected."
-+"\nUse a Selection Tool to Select the Region of Interest (ROI).");
-UserChoiceArray=newArray("Try Again", "Cancel & Close");
-Dialog.setInsets(0, 80, 0);
-Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if (UserChoice=="Cancel & Close"){
-exit(PluginName+" has stopped because no Region of Interest (ROI) Selection was provided.");
-}
-}else {SelectionPass=1;}
-} while(SelectionPass!=1) // end of ensure a Selection
-}
-} else { // end of if sample was not defined earlier so Sample WAS actually then prompt to ADJUST the previous selection
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-selectWindow("RegionOfInterest");
-setBatchMode("show");
-selectWindow("RegionOfInterest");
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-selectWindow("RegionOfInterest");
-NbROI=roiManager("count");
-run("Select None");
-roiManager("Select", NbROI-1);
-setTool("freehand");
-call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
-waitForUser(PluginName+" Information", "If necessary, Adjust the Current Region of Interest (ROI).\nUse\nShift+Click & Drag to ADD\nor\nOption+Click & Drag to SUBTRACT to the Current Selection\nWhen done press OK.");
-CurrentSelection=selectionType();
-
-if(CurrentSelection<0){
-do {
-SelectionPass=0;
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-selectWindow("RegionOfInterest");
-run("Select None");
-setTool("freehand");
-call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
-waitForUser(PluginName+" Information", "The Region of Interest (ROI) could not be detected.\nPlease use a Selection Tool to Select the Region of Interest (ROI).\nWhen done press OK.");
-CurrentSelection=selectionType();
-// Ensure a selection is provided
-if(CurrentSelection<0){
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Sorry but no Selection has been detected."
-+"\nUse a Selection Tool to Select the Region of Interest (ROI).");
-UserChoiceArray=newArray("Try Again", "Cancel & Close");
-Dialog.setInsets(0, 80, 0);
-Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if (UserChoice=="Cancel & Close"){
-exit(PluginName+" has stopped because no Region of Interest (ROI) Selection was provided.");
-}
-}else {SelectionPass=1;}
-} while(SelectionPass!=1) // end of ensure a Selection
-}// end of if Current Selection
-} // end of else Sample WAS actually defined earlier prompt to adjust
-}// end of if Process is NOT global so it is individual then prompt
-// From now we should have a ROI Selection
-setBatchMode("hide");
-selectWindow("RegionOfInterest");
-roiManager("Add");
-NbROI=roiManager("count");
-run("Select None");
-roiManager("Select", NbROI-1);
-roiManager("Rename", "Region_Of_Interest");
-roiManager("Set Color", "magenta");
-roiManager("Set Line Width", 10);
-run("Add Selection..."); // Add to Overlay
-run("Overlay Options...", "stroke=cyan width=10 fill=none apply");
-OutputROIImage=OutputImagePath+InputFileNameiNoExt+"_2_ROI_Overlay.tif";
-selectWindow("RegionOfInterest");
-saveAs("Tiff", OutputROIImage);
-close();
-} else { // ENd of if Manual ROI is selected
-//Do nothing
-} // end of If Manual ROI is NOT selected
-setForegroundColor(255, 255, 255);
-setBackgroundColor(0, 0, 0);// Set the foreground and background colors
-// if a ROI was defined Sample OR Manual then clear outside the last made ROI
-if(ROIMethodStatus[0]==1 || ROIMethodStatus[1]==1){
-setBatchMode("hide");
-setForegroundColor(255, 255, 255);
-setBackgroundColor(0, 0, 0);// Set the foreground and background colors
-selectWindow(InputFileNamei); // InputFileName has all the original channels and is cropped on the sample or on the ROI
-NbROI=roiManager("count");
-run("Select None");
-roiManager("Select", NbROI-1);
-run("Clear Outside");
-}
-setBatchMode("hide");
-selectWindow("SelectedChannels"); // SelectedChannels has only the Selected Channels and is cropped on the sample or on the ROI
-close();
-
-
-
-
-
-
-///////////////////////////////////////////// Duplicate and threshold the each selected channels
-for (ChI=0; ChI < ListSelectedCh.length; ChI++){
-setBatchMode("hide");
-SelectedChI=ListSelectedCh[ChI]; //This is the number of the selected channels >=1 it can be above 5 if user select only channel 2 and 7 for example.
-SelectedChIListPos=SelectedChI-1; // This is the position within the array of the SelectedChI
-NameSelectedChI=ListChNames[SelectedChIListPos]; // This is the Name of the Selected Channels
-LowerThresholdSelectedChI=ListChLowerThreshold[SelectedChIListPos]; // This is the LowerThreshold for the Channel I
-UpperThresholdSelectedChI=ListChUpperThreshold[SelectedChIListPos];// This is the UpperThreshold for the Channel I
-RemoveNoiseStatusSelectedChI=ListChRemoveNoiseStatus[SelectedChIListPos]; // This is 1 or 0 if we apply or not Remove Noise function
-WatershedStatusSelectedChI=ListChWatershedStatus[SelectedChIListPos];// This is 1 or 0 if we apply or not Watershed function
-MinParticleDiameterSelectedChI=ListChMinParticleDiameter[SelectedChIListPos]; // This is the particle diameter in Unit^2 for ChI
-MaxParticleDiameterSelectedChI=ListChMaxParticleDiameter[SelectedChIListPos]; // This is the  percentage of variation allowed around the particle diameterfor ChI
-MinParticleCircularitySelectedChI=ListChMinParticleCircularity[SelectedChIListPos]; // This is the particle diameter in Unit^2 for ChI
-MaxParticleCircularitySelectedChI=ListChMaxParticleCircularity[SelectedChIListPos]; // This is the particle diameter in Unit^2 for ChI
-
-selectWindow(InputFileNamei);
-run("Select None");
-run("Remove Overlay");
-call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
-run("Duplicate...", "duplicate title=&NameSelectedChI channels=&SelectedChI"); // Duplicate each channel to threshold
-selectWindow(NameSelectedChI);
-run("Grays");
-// This is to bring the threshold from the preferences but cause bugs in 16bits image
-// setThreshold(LowerThresholdSelectedChI,UpperThresholdSelectedChI);
-
-if(ProcessingMethod=="Global" && FileI>0){
-setBatchMode("hide");
-selectWindow(NameSelectedChI);
-// Threshold the Image
-setThreshold(LowerThresholdSelectedChI, UpperThresholdSelectedChI);
-run("Convert to Mask");
-// Apply the Image Enhancements
-if(RemoveNoiseStatusSelectedChI==1 && WatershedStatusSelectedChI==0){
-run("Open");
-} else if(RemoveNoiseStatusSelectedChI==0 && WatershedStatusSelectedChI==1){
-run("Watershed");
-} else if(RemoveNoiseStatusSelectedChI==1 && WatershedStatusSelectedChI==1){
-run("Open");
-run("Watershed");
-}
-// Calculate the Particle Area
-MinParticleAreaSelectedChI=PI*MinParticleDiameterSelectedChI*MinParticleDiameterSelectedChI;
-MaxParticleAreaSelectedChI=PI*MaxParticleDiameterSelectedChI*MaxParticleDiameterSelectedChI;
-// Convert the circularity percentage into a decimal
-MinParticleCircularitySelectedChIDecimal = 0.01*MinParticleCircularitySelectedChI;
-MaxParticleCircularitySelectedChIDecimal = 0.01*MaxParticleCircularitySelectedChI;
-// Analyze Particle for saving as an Overlay
-selectWindow(NameSelectedChI);
-run("Select None");
-run("Remove Overlay");
-run("Analyze Particles...", "size=&MinParticleAreaSelectedChI-&MaxParticleAreaSelectedChI circularity=&MinParticleCircularitySelectedChIDecimal-&MaxParticleCircularitySelectedChIDecimal show=[Overlay Masks] in_situ");
-run("Overlay Options...", "stroke=magenta width=1 fill=cyan apply show");
-run("Labels...", "color=blue font=10 show bold");
-
-} else { // If processing is not Global
-// These lines are if you want to bring up threshold values from previous files It causes issues with 16bits images
-// setThreshold(LowerThresholdSelectedChI,UpperThresholdSelectedChI);
-selectWindow(NameSelectedChI);
-setBatchMode("show");
-selectWindow(NameSelectedChI);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-setAutoThreshold("Default dark");
-run("Threshold...");
-setTool("zoom");
-waitForUser(PluginName+" Information", "Adjust the Threshold to identify your staining for "+NameSelectedChI+"."
-+"\nWhen done, press OK.");
-setBatchMode("hide");
-getThreshold(LowerThresholdSelectedChI, UpperThresholdSelectedChI);
-// Update the List of Threshold
-ListChLowerThreshold[SelectedChIListPos]=LowerThresholdSelectedChI;
-ListChUpperThreshold[SelectedChIListPos]=UpperThresholdSelectedChI;
-selectWindow(NameSelectedChI);
-run("Convert to Mask");
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-selectWindow(NameSelectedChI);
-run("Duplicate...", "title=RemoveNoise duplicate");
-run("Open");
-selectWindow(NameSelectedChI);
-run("Duplicate...", "title=Watershed duplicate");
-run("Watershed");
-selectWindow(NameSelectedChI);
-run("Duplicate...", "title=RemoveNoise_AND_Watershed duplicate");
-run("Open");
-run("Watershed");
-ImageEnhancementName="Image Enhancement Options for "+NameSelectedChI;
-run("Concatenate...", "  title=&ImageEnhancementName image1=&NameSelectedChI image2=RemoveNoise image3=Watershed image4=RemoveNoise_AND_Watershed image5=[-- None --]");
-selectWindow(ImageEnhancementName);
-// This set up the slice of the previously choosen options
-if(RemoveNoiseStatusSelectedChI==1 && WatershedStatusSelectedChI==0){
-setSlice(2);
-} else if(RemoveNoiseStatusSelectedChI==0 && WatershedStatusSelectedChI==1){
-setSlice(3);
-} else if(RemoveNoiseStatusSelectedChI==1 && WatershedStatusSelectedChI==1){
-setSlice(4);
-} else {
-setSlice(1);
-}
-resetThreshold();
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");
-}
-setTool("zoom");
-selectWindow(ImageEnhancementName);
-resetThreshold();
-setBatchMode("show");
-selectWindow(ImageEnhancementName);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
-waitForUser(PluginName+" Information", "Select the optimal Image for "+NameSelectedChI+".\nYou may Zoom for a better view.\nSlice 1: Original\nSlice 2: Noise Removed\nSlice 3: Watershed\nSlice 4: Noise Removed & Wateshed"
-+"\nWhen done, press OK.");
-setBatchMode("hide");
-selectWindow(ImageEnhancementName);
-getDimensions(ImageWidthEnhancement, ImageHeightEnhancement, NbChannelsEnhancement, NbSlicesEnhancement, NbFramesEnhancement); // Get dimensions of the Image
-Stack.getPosition(CurrentChannelEnhancement, CurrentSliceEnhancement, CurrentFrameEnhancement);
-// Delete the other Slices
-SubStackString=""+"channels=1-"+NbChannelsEnhancement+" slices="+CurrentSliceEnhancement+" frames="+CurrentFrameEnhancement;
-selectWindow(ImageEnhancementName);
-run("Select None");
-run("Make Substack...", SubStackString);
-rename(NameSelectedChI);
-selectWindow(ImageEnhancementName);
-close();
-if(CurrentSliceEnhancement==2){
-RemoveNoiseStatusSelectedChI=1;
-WatershedStatusSelectedChI=0;
-}else if(CurrentSliceEnhancement==3){
-RemoveNoiseStatusSelectedChI=0;
-WatershedStatusSelectedChI=1;
-}else if(CurrentSliceEnhancement==4){
-RemoveNoiseStatusSelectedChI=1;
-WatershedStatusSelectedChI=1;
-} else {
-RemoveNoiseStatusSelectedChI=0;
-WatershedStatusSelectedChI=0;
-}
-// Update the Enhancement Status
-ListChRemoveNoiseStatus[SelectedChIListPos]=RemoveNoiseStatusSelectedChI;
-ListChWatershedStatus[SelectedChIListPos]=WatershedStatusSelectedChI;
-
-
-// From Now we have selected the Enhancement option for Selected Ch and have a binary Image
-
-do {
-SelectionPass=0;
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-setTool("wand");//Select wand tool
-selectWindow(NameSelectedChI);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-setBatchMode("show");
-selectWindow(NameSelectedChI);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
-waitForUser(PluginName+" Information", "Select the Largest Cell you would like to count for "+NameSelectedChI+"."
-+"\nWhen done, press OK.");
-CurrentSelection=selectionType();
-
-if(CurrentSelection<0 || CurrentSelection>5){
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Sorry but no selection has been detected."
-+"\nUse a Selection Tool to Select the Largest Cell\nyou would like to count for "+NameSelectedChI+".");
-UserChoiceArray=newArray("Try Again", "Cancel & Close");
-Dialog.setInsets(0, 80, 0);
-Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if (UserChoice=="Cancel & Close"){
-exit(PluginName+" has stopped because no selection was provided for "+NameSelectedChI+".");
-}
-}else {SelectionPass=1;}
-} while(SelectionPass!=1)
-
-setBatchMode("hide");
-// Once a selection is Made get the area of the selection
-run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
-//run("Clear Results");
-
-run("Measure");
-ParticleAreaChIMeasured=getResult("Area", nResults-1);
-//run("Clear Results");
-IJ.deleteRows(nResults-1,nResults-1);
-selectWindow(NameSelectedChI);
-run("Select None");
-// From the area calculate the diameter of the Particle
-ParticleDiameterChIMeasured=round(2*sqrt(ParticleAreaChIMeasured/PI));
-// Set up the Min and Max Particle diameter and circularity
-MinParticleDiameterSelectedChI=0;
-MaxParticleDiameterSelectedChI=ParticleDiameterChIMeasured;
-MinParticleCircularitySelectedChI=0;
-MaxParticleCircularitySelectedChI=100;
-
-// Prompt for Parameter adjustments
-do{
-// Calculate the Min and Max ParticleArea from the Diameter
-MinParticleAreaSelectedChI=PI*MinParticleDiameterSelectedChI*MinParticleDiameterSelectedChI;
-MaxParticleAreaSelectedChI=PI*MaxParticleDiameterSelectedChI*MaxParticleDiameterSelectedChI;
-// Convert the circularity percentage into a decimal
-MinParticleCircularitySelectedChIDecimal=0.01*MinParticleCircularitySelectedChI;
-MaxParticleCircularitySelectedChIDecimal=0.01*MaxParticleCircularitySelectedChI;
-
-// Do a first analysis particle and save it as OverlayMask
-selectWindow(NameSelectedChI);
-run("Select None");// Remove any selection
-run("Remove Overlay");
-run("Analyze Particles...", "size=&MinParticleAreaSelectedChI-&MaxParticleAreaSelectedChI circularity=&MinParticleCircularitySelectedChIDecimal-&MaxParticleCircularitySelectedChIDecimal show=[Overlay Masks] in_situ");
-run("Overlay Options...", "stroke=magenta width=1 fill=cyan apply show");
-run("Labels...", "color=blue font=10 show bold");
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-setTool("zoom");
-selectWindow(NameSelectedChI);
-setBatchMode("show");
-selectWindow(NameSelectedChI);
-setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-waitForUser(PluginName+" Information","Look at the Cell Detection (Cyan Overlay).\nYou may Zoom for a better view.\nCell Detection Parameters will appear when OK is pressed.");
-
-do{
-DialogPass=0;
-ParticleDetectionPass=0;
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Adjust the Cell Detection Parameters for "+NameSelectedChI+" and Try Again.");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("or Move to Next.");
-Dialog.setInsets(0, 0, 0);
-Dialog.addNumber("Min Cell Diameter for "+NameSelectedChI+" :", MinParticleDiameterSelectedChI, 0, 10, RescaledUnit)
-Dialog.setInsets(0, 0, 0);
-Dialog.addNumber("Max Cell Diameter for "+NameSelectedChI+" :", MaxParticleDiameterSelectedChI, 0, 10, RescaledUnit)
-Dialog.setInsets(0, 0, 0);
-Dialog.addSlider("Min Cell Circularity for "+NameSelectedChI+" :", 0, 100, MinParticleCircularitySelectedChI);
-Dialog.setInsets(0, 0, 0);
-Dialog.addSlider("Max Cell Circularity for "+NameSelectedChI+" :", 0, 100, MaxParticleCircularitySelectedChI);
-Dialog.setInsets(0, 0, 0);
-UserChoiceDetectionArray=newArray("Try Again", "Move to Next");
-Dialog.setInsets(0, 150, 0);
-Dialog.addRadioButtonGroup("", UserChoiceDetectionArray, 2, 1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
-
-MinParticleDiameterSelectedChI=Dialog.getNumber();
-MaxParticleDiameterSelectedChI=Dialog.getNumber();
-MinParticleCircularitySelectedChI=Dialog.getNumber();
-MaxParticleCircularitySelectedChI=Dialog.getNumber();
-UserChoiceDetection=Dialog.getRadioButton();
-// Reorder Particle Diameter if smaller is larger
-if(MinParticleDiameterSelectedChI>MaxParticleDiameterSelectedChI){
-ParticleDiameterTemporary=MaxParticleDiameterSelectedChI;
-MaxParticleDiameterSelectedChI=MinParticleDiameterSelectedChI;
-MinParticleDiameterSelectedChI=ParticleDiameterTemporary;
-}
-// Reorder Particle Circularity if smaller is larger
-if(MinParticleCircularitySelectedChI>MaxParticleCircularitySelectedChI){
-ParticleCircularityTemporary=MinParticleCircularitySelectedChI;
-MaxParticleCircularitySelectedChI=MinParticleCircularitySelectedChI;
-MinParticleCircularitySelectedChI=ParticleCircularityTemporary;
-}
-
-// Ensure Particle Diameter entered are numeric and positive
-if(isNaN(MinParticleDiameterSelectedChI)||isNaN(MaxParticleDiameterSelectedChI)|| MinParticleDiameterSelectedChI<0){
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-if(isNaN(MinParticleDiameterSelectedChI)){
-Dialog.addMessage("Sorry but the Min Particle Diameter must be a number.");
-}else if (isNaN(MaxParticleDiameterSelectedChI)) {
-Dialog.addMessage("Sorry but the Max Particle Diameter must be a number.");
-} else {
-Dialog.addMessage("Sorry but the Min Particle Diameter can't be smaller than 0.");
-}
-Dialog.setInsets(0, 0, 0);
-UserChoiceArray=newArray("Try Again", "Cancel & Close");
-Dialog.setInsets(0, 50, 0);
-Dialog.addRadioButtonGroup("", UserChoiceArray, 2, 1, "Try Again");
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
-Dialog.show();
-UserChoice=Dialog.getRadioButton();
-if (UserChoice=="Cancel & Close"){
-if(isNaN(MinParticleDiameterSelectedChI)){
-exit(PluginName+ " Information:\nThe function "+ MacroName+" has stopped because the Min Particle Diameter for "+NameSelectedChI+" wasn't numeric");
-}else if (isNaN(MaxParticleDiameterSelectedChI)) {
-exit(PluginName+ " Information:\nThe function "+ MacroName+" has stopped because the Max Particle Diameter for "+NameSelectedChI+" wasn't numeric");
-} else {
-exit(PluginName+ " Information:\nThe function "+ MacroName+" has stopped because the Min Particle Diameter for "+NameSelectedChI+" was smaller than 0.");
-}
-} else if(UserChoice=="Try Again"){
-if(isNaN(MinParticleDiameterSelectedChI)|| MinParticleDiameterSelectedChI<0){
-MinParticleDiameterSelectedChI=0;
-} else if (isNaN(MaxParticleDiameterSelectedChI)){
-MaxParticleDiameterSelectedChI=100;
-}
-} // End of if user try Again
-} else{ // end of if particle is NaN
-DialogPass=1;
-} // End of else dialog pass
-} while(DialogPass!=1) // End of Do Dialog box
-if(UserChoiceDetection=="Move to Next"){
-ParticleDetectionPass=1;
-} // End of UserCHoice detection
-} while(ParticleDetectionPass!=1) // End of Do loop Analyze particle
-
-
-// Update the list of Ch Particle Diameter and Circularity
-ListChMinParticleDiameter[SelectedChIListPos]=MinParticleDiameterSelectedChI; // This is the particle diameter in Unit^2 for ChI
-ListChMaxParticleDiameter[SelectedChIListPos]=MaxParticleDiameterSelectedChI;
-ListChMinParticleCircularity[SelectedChIListPos]=MinParticleCircularitySelectedChI;
-ListChMaxParticleCircularity[SelectedChIListPos]=MaxParticleCircularitySelectedChI;
-} // End of If process is Individual
-
-// Now we have the Particle detected we can save it as an Overlay
-setBatchMode("hide");
-ChNb=ChI+1;
-selectWindow(NameSelectedChI);
-OutputParticleImageChI=OutputImagePath+InputFileNameiNoExt+"_Ch"+ChNb+"_"+NameSelectedChI+"_CellCount_Overlay.tif";
-saveAs("Tiff", OutputParticleImageChI);
-rename(NameSelectedChI);
-
-// Print the parameter into the text file
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Lower Threshold"+CellSeparator+LowerThresholdSelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Upper Threshold"+CellSeparator+UpperThresholdSelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Min Particle Diameter ("+RescaledUnit+")"+CellSeparator+MinParticleDiameterSelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Max Particle Diameter ("+RescaledUnit+")"+CellSeparator+MaxParticleDiameterSelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Min Particle Area ("+RescaledUnit+"^2)"+CellSeparator+MinParticleAreaSelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Max Particle Area ("+RescaledUnit+"^2)"+CellSeparator+MaxParticleAreaSelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Min Particle Circularity (0-100)"+CellSeparator+MinParticleCircularitySelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Max Particle Circularity (0-100)"+CellSeparator+MaxParticleCircularitySelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Remove Noise Option"+CellSeparator+RemoveNoiseStatusSelectedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Watershed Option"+CellSeparator+WatershedStatusSelectedChI+LineSeparator);
-
-
-// ReAnalyze particle on Selected ChI to have the DATA this time
-selectWindow(NameSelectedChI);
-run("Select None");
-run("Remove Overlay");
-if(FirstResult=="true"){
-run("Clear Results");
-setResult("Area",nResults,0);     // Add a blank results line and column just in case the analysis particle is gives an empty results
-NbOfParticles=0;
-FirstResult="false";
-}
-
-run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
-selectWindow(NameSelectedChI);
-
-run("Analyze Particles...", "size=&MinParticleAreaSelectedChI-&MaxParticleAreaSelectedChI circularity=&MinParticleCircularitySelectedChIDecimal-&MaxParticleCircularitySelectedChIDecimal show=Masks display summarize in_situ");
-selectWindow("Results");
-//Add the Label and Channel Names to the Results
-
-if(NbOfParticles<nResults){
-for(i=NbOfParticles;i<nResults;i++){
-setResult("Label", i, InputFileNameiNoExt);
-setResult("Channel", i, NameSelectedChI);
-}
-NbOfParticles=nResults;
-}
-selectWindow("Results");
-updateResults();
-selectWindow("Summary");
-setLocation(ToolbarPosX+ToolbarSizeX, ToolbarPosY);
-
-// Create a selection add to the roi Manager
-selectWindow(NameSelectedChI); // This is the Mask after the particle detection
-run("Create Selection");
-// Make Sure the selection is not empty
-getSelectionBounds(SelectionPosX, SelectionPosY, SelectionWidth, SelectionHeight);
-getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames); // Get dimensions of the Image
-// If the selection is empty ImageJ will use X=0 Y=0 Width=Height=1 or Width=Height=MaxImageHeight
-if(SelectionPosX==0 && SelectionPosY==0 && ((SelectionWidth==1 && SelectionHeight==1) || (SelectionWidth==ImageWidth && SelectionHeight==ImageHeight) )){
-run("Select None");
-makeRectangle(0, 0, 1, 1);
-}
-roiManager("Add");
-NbROI=roiManager("count");
-roiManager("Select", NbROI-1);
-roiManager("Rename", NameSelectedChI);
-roiManager("Set Color", "magenta");
-roiManager("Set Line Width", 10);
-// Do not close each individual channels because we will use it for combination
-}// end for ChI
-////////////////////////////////////////////// End Duplicate and threshold the Staining channels
-setBatchMode("hide");
-if(ProcessingMethod=="Global" && FileI>0){
-//  do nothing
-} else { //update the Preferences
-for(i=0;i<ListChSelectionStatus.length;i++){
-if(i==0){
-ListChLowerThresholdString=""+ListChLowerThreshold[i];
-ListChUpperThresholdString=""+ListChUpperThreshold[i];
-ListChMinParticleDiameterString=""+ListChMinParticleDiameter[i];
-ListChMaxParticleDiameterString=""+ListChMaxParticleDiameter[i];
-ListChMinParticleCircularityString=""+ListChMinParticleCircularity[i];
-ListChMaxParticleCircularityString=""+ListChMaxParticleCircularity[i];
-ListChRemoveNoiseStatusString=""+ListChRemoveNoiseStatus[i];
-ListChWatershedStatusString=""+ListChWatershedStatus[i];
-}else{
-ListChLowerThresholdString=ListChLowerThresholdString+","+ListChLowerThreshold[i];
-ListChUpperThresholdString=ListChUpperThresholdString+","+ListChUpperThreshold[i];
-ListChMinParticleDiameterString=ListChMinParticleDiameterString+","+ListChMinParticleDiameter[i];
-ListChMaxParticleDiameterString=ListChMaxParticleDiameterString+","+ListChMaxParticleDiameter[i];
-ListChMinParticleCircularityString=ListChMinParticleCircularityString+","+ListChMinParticleCircularity[i];
-ListChMaxParticleCircularityString=ListChMaxParticleCircularityString+","+ListChMaxParticleCircularity[i];
-ListChRemoveNoiseStatusString=ListChRemoveNoiseStatusString+","+ListChRemoveNoiseStatus[i];
-ListChWatershedStatusString=ListChWatershedStatusString+","+ListChWatershedStatus[i];
-}
-} // end of for i
-
-// Save the parameters in the Preferences
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChLowerThreshold",ListChLowerThresholdString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChUpperThreshold",ListChUpperThresholdString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChMinParticleDiameter",ListChMinParticleDiameterString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChMaxParticleDiameter",ListChMaxParticleDiameterString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChMinParticleCircularity",ListChMinParticleCircularityString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChMaxParticleCircularity",ListChMaxParticleCircularityString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChRemoveNoiseStatus",ListChRemoveNoiseStatusString);
-call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChWatershedStatus",ListChWatershedStatusString);
-}// end of if not global then save the parameters
-
-
-
-
-
-
-
-setBatchMode("hide");
-///////////////////////// Combine 2 channels
-///////////////////////// Combine 2 channels
-if(ListSelectedCh.length>1){
-for (ChIA=0; ChIA < ListSelectedCh.length-1; ChIA++){
-for (ChIB=ChIA+1; ChIB < ListSelectedCh.length; ChIB++){
-SelectedChIA=ListSelectedCh[ChIA]; //This is the number of the selected channels >=1 it can be above 5 if user select only channel 2 and 7 for example.
-SelectedChIAListPos=SelectedChIA-1; // This is the position within the array of the SelectedChIA
-NameSelectedChIA=ListChNames[SelectedChIAListPos]; // This is the Name of the Selected Channels
-LowerThresholdSelectedChIA=ListChLowerThreshold[SelectedChIAListPos]; // This is the LowerThreshold for the Channel I
-UpperThresholdSelectedChIA=ListChUpperThreshold[SelectedChIAListPos];// This is the UpperThreshold for the Channel I
-RemoveNoiseStatusSelectedChIA=ListChRemoveNoiseStatus[SelectedChIAListPos]; // This is 1 or 0 if we apply or not Remove Noise function
-WatershedStatusSelectedChIA=ListChWatershedStatus[SelectedChIAListPos];// This is 1 or 0 if we apply or not Watershed function
-MinParticleDiameterSelectedChIA=ListChMinParticleDiameter[SelectedChIAListPos]; // This is the particle diameter in Unit^2 for ChIA
-MaxParticleDiameterSelectedChIA=ListChMaxParticleDiameter[SelectedChIAListPos]; // This is the  percentage of variation allowed around the particle diameterfor ChIA
-MinParticleCircularitySelectedChIA=ListChMinParticleCircularity[SelectedChIAListPos]; // This is the particle diameter in Unit^2 for ChIA
-MaxParticleCircularitySelectedChIA=ListChMaxParticleCircularity[SelectedChIAListPos]; // This is the particle diameter in Unit^2 for ChI
-
-SelectedChIB=ListSelectedCh[ChIB]; //This is the number of the selected channels >=1 it can be above 5 if user select only channel 2 and 7 for example.
-SelectedChIBListPos=SelectedChIB-1; // This is the position within the array of the SelectedChIB
-NameSelectedChIB=ListChNames[SelectedChIBListPos]; // This is the Name of the Selected Channels
-LowerThresholdSelectedChIB=ListChLowerThreshold[SelectedChIBListPos]; // This is the LowerThreshold for the Channel I
-UpperThresholdSelectedChIB=ListChUpperThreshold[SelectedChIBListPos];// This is the UpperThreshold for the Channel I
-RemoveNoiseStatusSelectedChIB=ListChRemoveNoiseStatus[SelectedChIBListPos]; // This is 1 or 0 if we apply or not Remove Noise function
-WatershedStatusSelectedChIB=ListChWatershedStatus[SelectedChIBListPos];// This is 1 or 0 if we apply or not Watershed function
-MinParticleDiameterSelectedChIB=ListChMinParticleDiameter[SelectedChIBListPos]; // This is the particle diameter in Unit^2 for ChIB
-MaxParticleDiameterSelectedChIB=ListChMaxParticleDiameter[SelectedChIBListPos]; // This is the  percentage of variation allowed around the particle diameterfor ChIB
-MinParticleCircularitySelectedChIB=ListChMinParticleCircularity[SelectedChIBListPos]; // This is the particle diameter in Unit^2 for ChIB
-MaxParticleCircularitySelectedChIB=ListChMaxParticleCircularity[SelectedChIBListPos]; // This is the particle diameter in Unit^2 for ChI
-
-CombinedParticleDiameterArray=newArray(MinParticleDiameterSelectedChIA, MaxParticleDiameterSelectedChIA,MinParticleDiameterSelectedChIB, MaxParticleDiameterSelectedChIB);
-CombinedParticleCircularityArray=newArray(MinParticleCircularitySelectedChIA, MaxParticleCircularitySelectedChIA,MinParticleCircularitySelectedChIB, MaxParticleCircularitySelectedChIB);
-CombinedChNameI=""+NameSelectedChIA+"x"+NameSelectedChIB;
-CombinedChNbI="_Ch"+ChIA+1+"xCh"+ChIB+1+"_";
-OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.txt";
-OutputParticleImageCombinedChI=OutputImagePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_Overlay.tif";
-
-Array.getStatistics(CombinedParticleDiameterArray, MinParticleDiameterCombinedChI, MaxParticleDiameterCombinedChI, MeanParticleDiameterCombinedChI, StDevParticleDiameterCombinedChI);
-MinParticleAreaCombinedChI=PI*MinParticleDiameterCombinedChI*MinParticleDiameterCombinedChI;
-MaxParticleAreaCombinedChI=PI*MaxParticleDiameterCombinedChI*MaxParticleDiameterCombinedChI;
-
-Array.getStatistics(CombinedParticleCircularityArray, MinParticleCircularityCombinedChI, MaxParticleCircularityCombinedChI, MeanParticleCircularityCombinedChI, StDevParticleCircularityCombinedChI);
-MinParticleCircularityCombinedChIDecimal=MinParticleCircularityCombinedChI/100;
-MaxParticleCircularityCombinedChIDecimal=MaxParticleCircularityCombinedChI/100;
-
-selectWindow(NameSelectedChIA);
-run("Select None");
-run("Duplicate...", "title=CombinedChImage duplicate");
-selectWindow("CombinedChImage");
-imageCalculator("AND","CombinedChImage", NameSelectedChIB);
-selectWindow("CombinedChImage");
-rename(CombinedChNameI);
-
-selectWindow(CombinedChNameI);
-run("Select None");// Remove any selection
-run("Remove Overlay");
-selectWindow(CombinedChNameI);
-run("Duplicate...", "title=CombinedChImageForROI duplicate");
-selectWindow("CombinedChImageForROI");
-run("Analyze Particles...", "size=&MinParticleAreaCombinedChI-&MaxParticleAreaCombinedChI circularity=&MinParticleCircularityCombinedChIDecimal-&MaxParticleCircularityCombinedChIDecimal show=Masks in_situ");
-selectWindow("CombinedChImageForROI");
-run("Create Selection");
-
-getSelectionBounds(SelectionPosX, SelectionPosY, SelectionWidth, SelectionHeight);
-getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames); // Get dimensions of the Image
-// If the selection is empty ImageJ will use X=0 Y=0 Width=Height=1 or Width=Height=MaxImageHeight
-if(SelectionPosX==0 && SelectionPosY==0 && ((SelectionWidth==1 && SelectionHeight==1) || (SelectionWidth==ImageWidth && SelectionHeight==ImageHeight) )){
-run("Select None");
-makeRectangle(0, 0, 1, 1);
-}
-roiManager("Add");
-NbROI=roiManager("count");
-roiManager("Select", NbROI-1);
-roiManager("Rename", CombinedChNameI);
-roiManager("Set Color", "magenta");
-roiManager("Set Line Width", 10);
-selectWindow("CombinedChImageForROI");
-close();
-
-// Run again the analyze Particle for the Detailed results and the overlay
-run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
-selectWindow(CombinedChNameI);
-run("Analyze Particles...", "size=&MinParticleAreaCombinedChI-&MaxParticleAreaCombinedChI circularity=&MinParticleCircularityCombinedChIDecimal-&MaxParticleCircularityCombinedChIDecimal show=[Overlay Masks] display summarize in_situ");
-selectWindow("Results");
-//Add the Label and Channel Names to the Results
-if(NbOfParticles<nResults){
-for(i=NbOfParticles;i<nResults;i++){
-setResult("Label", i, InputFileNameiNoExt);
-setResult("Channel", i, CombinedChNameI);
-}
-NbOfParticles=nResults;
-}
-
-selectWindow("Results");
-updateResults();
-selectWindow(CombinedChNameI);
-run("Overlay Options...", "stroke=magenta width=1 fill=cyan apply show");
-run("Labels...", "color=blue font=10 show bold");
-
-
-selectWindow(CombinedChNameI);
-saveAs("Tiff", OutputParticleImageCombinedChI);
-close();
-
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Min Particle Diameter ("+RescaledUnit+")"+CellSeparator+MinParticleDiameterCombinedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Max Particle Diameter ("+RescaledUnit+")"+CellSeparator+MaxParticleDiameterCombinedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Min Particle Area ("+RescaledUnit+"^2)"+CellSeparator+MinParticleAreaCombinedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Max Particle Area ("+RescaledUnit+"^2)"+CellSeparator+MaxParticleAreaCombinedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Min Particle Circularity (0-100)"+CellSeparator+MinParticleCircularityCombinedChI+LineSeparator);
-print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Max Particle Circularity (0-100)"+CellSeparator+MaxParticleCircularityCombinedChI+LineSeparator);
-}// end for ChIB
-}// for ChIA
-} // End of if more than 1 selected channel
-
-///////////////////////// Close the individual Channels
-///////////////////////// Close the individual Channels
-///////////////////////// Close the individual Channels
-///////////////////////// Close the individual Channels
-///////////////////////// Close the individual Channels
-///////////////////////// Close the individual Channels
-for(ChI=0; ChI<ListSelectedCh.length; ChI++){
-SelectedChI=ListSelectedCh[ChI];
-SelectedChIListPos=SelectedChI-1;
-NameSelectedChI=ListChNames[SelectedChIListPos];
-selectWindow(NameSelectedChI);
-close();
-}///////////////////////// End of Close the Channels
-
-
-////////// Get the Values of the whole Staining for each Channel and add it to the Measurements Textwindow
-for (ChI=0; ChI<ListSelectedCh.length; ChI++){
-SelectedChI=ListSelectedCh[ChI];
-SelectedChIListPos=SelectedChI-1;
-NameSelectedChI=ListChNames[SelectedChIListPos];
-
-if(ChI==0){
-run("Text Window...", "name=MeasurementData width=50 height=6 menu");
-setLocation(ToolbarPosX+ToolbarSizeX+Spacer, ToolbarPosY);
-List.setMeasurements; // For the first time add the header to MeasurementData
-MeasurementsHeader=List.getList;
-MeasurementsHeader=replace(MeasurementsHeader,"=.*\n",",");
-print("[MeasurementData]", "Filename"+CellSeparator+"Measurement Category"+CellSeparator+"Channel"+CellSeparator+"ROI"+CellSeparator+MeasurementsHeader+LineSeparator);
-}
-
-NbROI=roiManager("count");
-selectWindow("Original");
-if(ListSelectedCh.length>1){
-Stack.setChannel(SelectedChI);
-}
-for (ROIn=0; ROIn<NbROI; ROIn++){
-roiManager("Select", ROIn);
-ROINameI=call("ij.plugin.frame.RoiManager.getName", ROIn);
-List.setMeasurements;
-MeasurementsChI=List.getList;
-MeasurementsChI=replace(MeasurementsChI,"%Area=",""); // Remove the measurements Area
-MeasurementsChI=replace(MeasurementsChI,"\n.*=",",");
-MeasurementsChI=replace(MeasurementsChI,"\n","");
-print("[MeasurementData]", InputFileNameiNoExt+CellSeparator+"Staining Measurements"+CellSeparator+NameSelectedChI+CellSeparator+ROINameI+CellSeparator+MeasurementsChI+LineSeparator);
-}//for each ChannelROI
-}// end for ChI
-///////////////////////// Get the Values of the whole Staining for each Channel and add it to the Measurements Textwindow
-
-
-///////////////////////// Save the ROI
-selectWindow(InputFileNamei);
-roiManager("Deselect");
-run("Select None");
-OutputPathROI=OutputImagePath+InputFileNameiNoExt+"_ROI.zip";
-roiManager("Save", OutputPathROI);
-roiManager("reset");
-///////////////////////// Save the ROI
-
-///////////////////////// Close the original files
-selectWindow(InputFileNamei);
-close();
-selectWindow("Original");
-close();
-///////////////////////// Close the original file
-
-
-OutputSummaryCountDataPath=OutputDirPath+InputFileNameiNoExt+"_SummaryResults.txt";
-selectWindow("Summary");
-saveAs("Text", OutputSummaryCountDataPath);
-selectWindow(InputFileNameiNoExt+"_SummaryResults.txt");
-run("Close");
-
-
-OutputMeasurementDataPath=OutputMeasurementPath+InputFileNameiNoExt+"_Measurements.txt";
-selectWindow("MeasurementData");
-saveAs("Text", OutputMeasurementDataPath);
-selectWindow(InputFileNameiNoExt+"_Measurements.txt");
-run("Close");
-
-///////////////////////// Save the text files with the data
-OutputParameterDataPath=OutputParameterPath+InputFileNameiNoExt+"_Parameters.txt";
-selectWindow("ParameterData");
-saveAs("Text", OutputParameterDataPath);
-run("Close");
-
-
-
-
-OutputDetailedResultsPath=OutputTablePath+InputFileNameiNoExt+"_CellCount_DetailedResult.txt";
-selectWindow("Results");
-saveAs("Text", OutputDetailedResultsPath);
-run("Clear Results");
-run("Close");
-
-
-///////////////////////// Update the progress bar
-showProgress(FileI, InputFileList.length);
-
-
-
-} ///////////////////////// End for FileI loop
-
-
-
-///////////////////////// Close Utility windows
-if(isOpen("Threshold")){
-selectWindow("Threshold");
-run("Close");}
-
-if(isOpen("Results")){
-run("Clear Results");
-selectWindow("Results");
-run("Close");}
-
-if(isOpen("ROI Manager")){
-roiManager("reset");
-selectWindow("ROI Manager");
-run("Close");}
-///////////////////////// Close Utility windows
-
-
-
-/////////////////////// Initial Dialog Box
-Dialog.create(PluginName+" Information");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage(NbFile+" "+ FileExt+ " Files in the folder:\n"+InputDirName+"\nhave been processed successfully.");
-Dialog.setInsets(0, 0, 0);
-Dialog.addMessage("Files are saved in the following folder:\n"+OutputDirName+".");
-Dialog.setInsets(0, 0, 0);
-Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-Dialog.show();
+// Start of the loop going through the list of files in the input folder selected above
+for (FileI = 0; FileI < InputFileList.length; FileI++){
+  setBatchMode(true);
+  InputFileNameI=InputFileList[FileI];
+  BasenameArray=split(InputFileNameI,".");
+  InputFileNameINoExt=BasenameArray[0];
+  InputFilePathI = InputDirPath+InputFileNameI;
+  open(InputFilePathI);
+  // Save the Scale
+  getPixelSize(PixelUnit, PixelWidth, PixelHeight, PixelDepth);
+  ImageScale=1/PixelWidth;
+  // Remove the scale to have coordinates in pixels
+  run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
+  getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
+  if(ImageSlices>1 && ImageFrames>1){
+    MessageError="Sorry but the File:\n\"" +InputFileNameI+"\"\ has "+ImageSlices+" slices and "+ImageFrames+" frames.";
+    MessageFix=MacroName+" can't process Files with more than 3 dimensions (X, Y and Channels).";
+    "Process a specific Slice/Frame", "Process the Maximum Intensity Projection", "Cancel & Close"
+    ErrorResponseArray=newArray("Process a specific Slice/Frame", "Process the Maximum Intensity Projection","Ignore this File", "Cancel and Close");
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File:\n\"" +InputFileNameI+"\"\nhad more than 3 dimensions (X, Y and Channels).";
+    setBatchMode("show");
+    selectWindow(InputFileNameI);
+    setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+    if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+      CleanExit(MessageQuit);
+    } else if (UserResponseErrorDialog=="Ignore this File") {
+      // Move to the Next File
+    } else if (UserResponseErrorDialog=="Process the Maximum Intensity Projection"){
+      setBatchMode("hide");
+      selectWindow(InputFileNameI);
+      if(ImageSlices>1 && ImageFrames>1){
+        run("Grouped Z Project...", "projection=[Max Intensity] all");
+      }else{
+        run("Z Project...", "projection=[Max Intensity]");
+      }
+      selectWindow(InputFileNameI);
+      close();
+      selectWindow("MAX_"+InputFileNameI);
+      rename(InputFileNameI);
+    } else if (UserResponseErrorDialog=="Process a specific Slice/Frame"){
+      setBatchMode("show");
+      selectWindow(InputFileNameI);
+      setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+      call("ij.gui.WaitForUserDialog.setNextLocation", ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
+      waitForUser(PluginName+" Information", "Move to the Slice/Frame you would like to process."
+      +"\nWhen done, press OK.");
+      setBatchMode("hide");
+      selectWindow(InputFileNameI);
+      getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
+      Stack.getPosition(CurrentChannel, CurrentSlice, CurrentFrame);
+      SubStackString=""+"channels=1-"+ImageChannels+" slices="+CurrentSlice+" frames="+CurrentFrame;
+      run("Make Substack...", SubStackString);
+      selectWindow(InputFileNameI);
+      close();
+      selectWindow(InputFileNameINoExt+"-1.tif");
+      rename(InputFileNameI);
+    }// end of process user response
+  }// End of Check Input File dimensions
+
+  // Select the Channels and indicate the Channel Names
+  do{
+    if(ProcessingMethod=="Global" && FileI>0){
+      SelectChannelPass=1;
+      setBatchMode("hide");
+    } else {
+      setBatchMode("show");
+      selectWindow(InputFileNameI);
+      setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+      SelectChannel(InputFileNameI, 1, 7);
+    }
+  } while(SelectChannelPass!=1)
+
+  setBatchMode("hide");
+  waitForUser("TOTO");
+
+
+  // Save the ListChName, ListChStatus, ROI Methods in preferences and Create List of SelectCh and Dropped Channels
+  if(ProcessingMethod=="Global" && FileI>0){
+  } else {
+    //////////////////////////////// Recreate the Strings to be saved in the Preferences
+    ROIMethodStatusString=""+ROIMethodStatus[0]+","+ROIMethodStatus[1];
+    for(i=0;i<ListChSelectionStatus.length;i++){
+      if(i==0){
+        ListChSelectionStatusString=""+ListChSelectionStatus[i];
+        ListChNameString=""+ListChName[i];
+      }else{
+        ListChSelectionStatusString=ListChSelectionStatusString+","+ListChSelectionStatus[i];
+        ListChNameString=ListChNameString+","+ListChName[i];
+      }
+    }
+    //////////////////////////////// Save the parameters in the Preferences
+    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ROIMethodStatus",ROIMethodStatusString);
+    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChSelectionStatus",ListChSelectionStatusString);
+    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChName",ListChNameString);
+
+    //////////////////////////////// Create a new array with only the selected Ch
+    NbDroppedCh=NbChannels-NbSelectedCh;
+    ListSelectedCh=newArray(NbSelectedCh); // This is the List of Channels that are selected
+    if(NbDroppedCh!=0){
+      ListDroppedCh=newArray(NbDroppedCh);
+    }
+    // Populate the two arrays
+    SelectedChI=0;
+    DroppedChI=0;
+    for(ChI=0; ChI < NbChannels; ChI++){
+      if(ListChSelectionStatus[ChI]==1){
+        ListSelectedCh[SelectedChI]=ChI+1; //We add 1 for making a list of Ch number from 1 to 5 and not 0 to 4
+        SelectedChI++;
+      } else {
+        ListDroppedCh[DroppedChI]=ChI+1;
+        DroppedChI++;
+      }
+    }// End of For ChI populate the ListofSelect Ch or DroppedCH
+  }// End of Else Process is individual
+
+
+  setBatchMode("hide");
+  // Duplicate the Opened Image and save it as an Original it will be used at the end to get the Measurements
+  selectWindow(InputFileNamei); //  This is the image we are using as a source for other things it will be rescaled to have a nice um unit
+  call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+  run("Duplicate...", "title=Original duplicate");// This is exactly the original picture
+  selectWindow("Original");
+  setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+
+
+
+  // Get the Initial Scale of the Image and Adjust it to get some understand values
+  setBatchMode("hide");
+  selectWindow(InputFileNamei);
+  getPixelSize(Unit, PixelWidth, PixelHeight, PixelDepth);
+
+  run("Text Window...", "name=ParameterData width=50 height=6 menu");
+  setLocation(ToolbarPosX+ToolbarSizeX+Spacer, ToolbarPosY);
+  // Write the Header for the parameterdata
+  print("[ParameterData]", "Filename"+CellSeparator+"ROI"+CellSeparator+"Parameter"+CellSeparator+"Value"+LineSeparator);
+  print("[ParameterData]", "All Files"+CellSeparator+"All ROIs"+CellSeparator+"Processing Method"+CellSeparator+ProcessingMethod+LineSeparator);
+
+
+
+  // Write the Initial Scale in the Parameter file
+  if(Unit=="pixels"){ // if the scale is not defined
+    print("[ParameterData]",InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Scale"+CellSeparator+"Not Defined"+LineSeparator);
+    RescaledUnit="pixels";
+  } else { // if the scale is defined make sure it is
+    InitialScale=1/PixelWidth;
+    print("[ParameterData]",InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Resolution (pixels per "+Unit+")"+CellSeparator+InitialScale+LineSeparator);
+
+    // Format the Initial Scale to make sure the known distance is 1
+    selectWindow(InputFileNamei);
+    run("Set Scale...", "distance in pixels=&InitialScale known=1 pixel=1");
+
+    // Change the Unit until New Scale is <1 (While>1)
+    if (InitialScale>1){ // Then rescale the image
+      ScalingFactor=0;
+      NewScale=InitialScale;
+      while(NewScale>1){
+        NewScale=NewScale/10;
+        ScalingFactor++;
+      }// end of while
+
+      // Calculate the new Unit
+      NewUnit="10^-"+ScalingFactor+" "+Unit;
+      // Calculate the New Known distance
+      NewKnownDistance=pow(10,ScalingFactor);
+
+      // Rescale the Image
+      selectWindow(InputFileNamei);
+      run("Set Scale...", "known=&NewKnownDistance unit=&NewUnit");
+      selectWindow(InputFileNamei);
+      // Get the Rescaled dimensions
+      getPixelSize(RescaledUnit, RescaledPixelWidth, RescaledPixelHeight, RescaledPixelDepth);
+      FinalScale=1/RescaledPixelWidth;
+      print("[ParameterData]",InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Rescaled Resolution (pixel per "+RescaledUnit+")"+CellSeparator+FinalScale+LineSeparator);
+    } // end of rescale the image
+  }// End of if scale is defined initially
+
+  // Get the dimension of the image in pixel and the area
+  selectWindow(InputFileNamei);
+  ImageTotalWidth=getWidth();
+  ImageTotalHeight=getHeight();
+  ImageTotalArea=ImageTotalWidth*ImageTotalHeight;
+  print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Image Total Width (pixel)"+CellSeparator+ImageTotalWidth+LineSeparator);
+  print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Image Total Height (pixel)"+CellSeparator+ImageTotalHeight+LineSeparator);
+  print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Image Total Area (pixel^2)"+CellSeparator+ImageTotalArea+LineSeparator);
+
+
+  // Duplicate InputFIleNamei and Remove the Unused Channels and call it SelectedChannels
+  setBatchMode("hide");
+  selectWindow(InputFileNamei);
+  call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+  run("Duplicate...", "title=SelectedChannels duplicate");// This is the sample
+  selectWindow("SelectedChannels");
+  setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+  if(NbChannels>1 && NbSelectedCh<NbChannels ){
+    selectWindow("SelectedChannels");
+    for (DroppedChI=ListDroppedCh.length-1; DroppedChI>=0; DroppedChI--){
+      DroppedChIListPos=(ListDroppedCh[DroppedChI]);
+      setSlice(DroppedChIListPos);
+      run("Delete Slice", "delete=channel");
+    }
+  }
+  if(NbSelectedCh==1){
+    // Work to identify the sample
+    selectWindow("SelectedChannels");
+    run("Grays");
+  }
+
+
+  // Work to identify the sample
+  if(ROIMethodStatus[0]==1){
+    setBatchMode("hide");
+    selectWindow("SelectedChannels");
+    setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+    call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+    run("Duplicate...", "title=Sample duplicate");// This is the sample
+    selectWindow("Sample");
+    setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+    // Flatten The Sample Image if more than 1 Channel
+    if(NbSelectedCh>1){
+      call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+      run("Z Project...", "title=MIP projection=[Max Intensity]");
+      setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+      selectWindow("Sample");
+      close();
+      selectWindow("MAX_Sample");
+      rename("Sample");
+      run("Grays");
+      // This is the Maximum Intensity projection of the image used to detect the sample contour
+    } else{ // If only 1 Channels then convert to gray
+      run("Grays");
+    }
+    // From here we have a gray Sample 1 Ch
+
+    if(ProcessingMethod=="Global" && FileI>0){ // If process is Global
+      setBatchMode("hide");
+      selectWindow("Sample");
+      setThreshold(LowerSampleThreshold, UpperSampleThreshold);
+      run("Convert to Mask");
+    }else{
+
+      selectWindow("Sample");// We convert the Sample to binary for a mask
+      setBatchMode("show");
+      setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+      // These lines are if you want to bring up threshold values from previous files It causes issues with 16bits images
+      // setThreshold(LowerSampleThreshold,UpperSampleThreshold);
+      setAutoThreshold("Default dark");
+      run("Threshold...");
+      call("ij.gui.ImageWindow.setNextLocation", ToolbarPosX,ToolbarPosY+ToolbarSizeY+Spacer);
+      waitForUser(PluginName+" Information", "Adjust the Threshold to identify all your SAMPLE."
+      +"\nWhen done, press OK.");
+      getThreshold(LowerSampleThreshold, UpperSampleThreshold);
+
+      setBatchMode("hide");
+      selectWindow("Sample");// We convert the Sample to binary for a mask
+      setThreshold(LowerSampleThreshold, UpperSampleThreshold);
+      run("Convert to Mask");
+      if(isOpen("Threshold")){
+        selectWindow("Threshold");
+        run("Close");}
+      } // end of else if process is individual
+      // From Here Sample Image has been Thresholded
+      setBatchMode("hide");
+      /////////////////////// Process the binary Mask to cover all the tissue
+      run("Options...", "iterations=5 count=1 do=Open");
+      run("Options...", "iterations=5 count=1 do=Fill Holes");
+      run("Options...", "iterations=5 count=1 do=Dilate");
+      run("Options...", "iterations=5 count=1 do=Fill Holes");
+      run("Options...", "iterations=1 count=1 do=Nothing");
+
+      // Create a selection to be added to the ROI
+      selectWindow("Sample");
+      run("Create Selection");
+      // Get the dimension of the selection
+      getSelectionBounds(SelectionPosX, SelectionPosY, SelectionWidth, SelectionHeight);
+      getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames); // Get dimensions of the Image
+      // If the selection is empty ImageJ will use X=0 Y=0 Width=Height=1 or Width=Height=MaxImageHeight
+      // Make sure the Selection is not a default ImageJ
+      if(SelectionPosX==0 && SelectionPosY==0 && ((SelectionWidth==1 && SelectionHeight==1) || (SelectionWidth==ImageWidth && SelectionHeight==ImageHeight) )){
+        // if it is a default selection
+        if(ProcessingMethod=="Global" && FileI>0){ // If MEthod is global just select all
+          selectWindow("Sample");
+          run("Select None");
+          run("Select All");// If it is then select all
+        } else { // If method is individual then prompt the user
+          setBatchMode("hide");
+          call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
+          selectWindow("Sample"); // Close the sample because it is empty
+          close();
+          // Recreate a Sample but do not Threhsold this time
+          selectWindow("SelectedChannels");
+          call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+          run("Duplicate...", "title=Sample duplicate");// This is the sample
+          selectWindow("Sample");
+          setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+          // Delete the Unselected Channels
+          selectWindow("Sample");
+          if(NbSelectedCh>1){
+            call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+            run("Z Project...", "title=MIP projection=[Max Intensity]");
+            setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+            selectWindow("Sample");
+            close();
+            selectWindow("MAX_Sample");
+            rename("Sample");
+            run("Grays");
+            // This is the Maximum Intensity projection of the image used to detect the sample contour
+          } else{
+            run("Grays");
+          }
+
+          selectWindow("Sample");
+          setBatchMode("show");
+          selectWindow("Sample");
+          setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+
+          do {
+            SelectionPass=0;
+            if(isOpen("Threshold")){
+              selectWindow("Threshold");
+              run("Close");}
+              selectWindow("Sample");
+              run("Select None");
+              setTool("freehand");
+              call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
+              waitForUser(PluginName+" Information", "The Sample could not be detected automatically.\nPlease use a Selection Tool to Select the Sample Area.\nWhen done press OK.");
+              CurrentSelection=selectionType();
+              // Ensure a selection is provided
+              if(CurrentSelection<0){
+                Dialog.create(PluginName+" Information");
+                Dialog.setInsets(0, 0, 0);
+                Dialog.addMessage("Sorry but no selection has been detected."
+                +"\nUse a Selection Tool to Select the Sample Area.");
+                UserChoiceArray=newArray("Try Again", "Cancel & Close");
+                Dialog.setInsets(0, 80, 0);
+                Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Try Again");
+                Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
+                Dialog.show();
+                UserChoice=Dialog.getRadioButton();
+                if (UserChoice=="Cancel & Close"){
+                  exit(PluginName+" has stopped because no Sample Selection was provided.");
+                }
+              }else {SelectionPass=1;}
+            } while(SelectionPass!=1)
+          } // if no sample area could be identified automatically and Method is not global then Prompt to draw a Sample Area
+        }// End of if Threshold Sample gave an empty image and
+        setBatchMode("hide");
+        // Write the Threshold Values in the preferences Only if Sample was Selected
+        call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".LowerSampleThreshold",LowerSampleThreshold);
+        call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".UpperSampleThreshold",UpperSampleThreshold);
+
+        // Save the Selection into the ROI manager
+        roiManager("reset");
+        selectWindow("Sample");
+        roiManager("Add");
+        roiManager("Select", 0);
+        roiManager("Rename", "Sample");
+        roiManager("Set Color", "magenta");
+        roiManager("Set Line Width", 10);
+        selectWindow("Sample"); // We have the ROI of the sample in the ROI manager so we can close the window
+        close();
+
+        // Duplicate the SelectedChannels Image to Save the Sample as Overlay
+        selectWindow("SelectedChannels");
+        call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+        run("Duplicate...", "title=Sample duplicate");// This is the sample
+        selectWindow("Sample");
+        setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+        roiManager("Select", 0);
+        run("Add Selection..."); // Add to Overlay
+        run("Overlay Options...", "stroke=cyan width=10 fill=none apply");
+        OutputSampleImage=OutputImagePath+InputFileNameiNoExt+"_1_Sample_Overlay.tif";
+        selectWindow("Sample");
+        saveAs("Tiff", OutputSampleImage);
+        close();
+
+
+      } else { // End of if Sample should be detected. so if sample is NOT detected
+        LowerSampleThreshold="No Sample detection"; // To be written in the parameters
+        UpperSampleThreshold="No Sample detection";
+      }// End of IF Sample is Not detected
+
+      // Print Parameters data
+      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Lower Sample Threshold"+CellSeparator+LowerSampleThreshold+LineSeparator);
+      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+"Whole Image"+CellSeparator+"Upper Sample Threshold"+CellSeparator+UpperSampleThreshold+LineSeparator);
+
+
+      //Work on the Manual ROI
+      if(ROIMethodStatus[1]==1){
+        setBatchMode("hide");
+        selectWindow("SelectedChannels");
+        call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+        run("Duplicate...", "title=RegionOfInterest duplicate");// This is the sample
+        selectWindow("RegionOfInterest");
+        setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+
+        if(ProcessingMethod=="Global" && FileI>0){ // If process is global then Use the Sample as a ROI
+          setBatchMode("hide");
+          if(ROIMethodStatus[0]==0){ // If sample was not defined earlier
+            selectWindow("RegionOfInterest");
+            run("Select None");
+            run("Select All");
+          } else { // If sample was defined earlier
+            // Use the previous ROI and copy it
+            selectWindow("RegionOfInterest");
+            NbROI=roiManager("count");
+            run("Select None");
+            roiManager("Select", NbROI-1);
+          } // End of if sample was not defined earlier
+        } else { // end of if process is global so if process is individual
+          if(ROIMethodStatus[0]==0){ // If sample was not defined earlier then prompt to draw a selection
+            if(isOpen("Threshold")){
+              selectWindow("Threshold");
+              run("Close");}
+              selectWindow("RegionOfInterest");
+              run("Select None"); // deselect any pre selection
+              selectWindow("RegionOfInterest");
+              setBatchMode("show");
+              selectWindow("RegionOfInterest");
+              setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+              setTool("freehand");
+              waitForUser(PluginName+" Information", "Please, use a Selection Tool to Select the Region of Interest (ROI).\nWhen done press OK.");
+              CurrentSelection=selectionType();
+              if(CurrentSelection<0){
+                do {
+                  SelectionPass=0;
+                  if(isOpen("Threshold")){
+                    selectWindow("Threshold");
+                    run("Close");}
+                    selectWindow("RegionOfInterest");
+                    run("Select None");
+                    setTool("freehand");
+                    call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
+                    waitForUser(PluginName+" Information", "The Region of Interest (ROI) could not be detected.\nPlease use a Selection Tool to Select the Region of Interest (ROI).\nWhen done press OK.");
+                    CurrentSelection=selectionType();
+                    // Ensure a selection is provided
+                    if(CurrentSelection<0){
+                      Dialog.create(PluginName+" Information");
+                      Dialog.setInsets(0, 0, 0);
+                      Dialog.addMessage("Sorry but no selection has been detected."
+                      +"\nUse a Selection Tool to Select the Region of Interest (ROI).");
+                      UserChoiceArray=newArray("Try Again", "Cancel & Close");
+                      Dialog.setInsets(0, 80, 0);
+                      Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Try Again");
+                      Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
+                      Dialog.show();
+                      UserChoice=Dialog.getRadioButton();
+                      if (UserChoice=="Cancel & Close"){
+                        exit(PluginName+" has stopped because no Region of Interest (ROI) Selection was provided.");
+                      }
+                    }else {SelectionPass=1;}
+                  } while(SelectionPass!=1) // end of ensure a Selection
+                }
+              } else { // end of if sample was not defined earlier so Sample WAS actually then prompt to ADJUST the previous selection
+                if(isOpen("Threshold")){
+                  selectWindow("Threshold");
+                  run("Close");}
+                  selectWindow("RegionOfInterest");
+                  setBatchMode("show");
+                  selectWindow("RegionOfInterest");
+                  setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+                  selectWindow("RegionOfInterest");
+                  NbROI=roiManager("count");
+                  run("Select None");
+                  roiManager("Select", NbROI-1);
+                  setTool("freehand");
+                  call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
+                  waitForUser(PluginName+" Information", "If necessary, Adjust the Current Region of Interest (ROI).\nUse\nShift+Click & Drag to ADD\nor\nOption+Click & Drag to SUBTRACT to the Current Selection\nWhen done press OK.");
+                  CurrentSelection=selectionType();
+
+                  if(CurrentSelection<0){
+                    do {
+                      SelectionPass=0;
+                      if(isOpen("Threshold")){
+                        selectWindow("Threshold");
+                        run("Close");}
+                        selectWindow("RegionOfInterest");
+                        run("Select None");
+                        setTool("freehand");
+                        call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
+                        waitForUser(PluginName+" Information", "The Region of Interest (ROI) could not be detected.\nPlease use a Selection Tool to Select the Region of Interest (ROI).\nWhen done press OK.");
+                        CurrentSelection=selectionType();
+                        // Ensure a selection is provided
+                        if(CurrentSelection<0){
+                          Dialog.create(PluginName+" Information");
+                          Dialog.setInsets(0, 0, 0);
+                          Dialog.addMessage("Sorry but no Selection has been detected."
+                          +"\nUse a Selection Tool to Select the Region of Interest (ROI).");
+                          UserChoiceArray=newArray("Try Again", "Cancel & Close");
+                          Dialog.setInsets(0, 80, 0);
+                          Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Try Again");
+                          Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
+                          Dialog.show();
+                          UserChoice=Dialog.getRadioButton();
+                          if (UserChoice=="Cancel & Close"){
+                            exit(PluginName+" has stopped because no Region of Interest (ROI) Selection was provided.");
+                          }
+                        }else {SelectionPass=1;}
+                      } while(SelectionPass!=1) // end of ensure a Selection
+                    }// end of if Current Selection
+                  } // end of else Sample WAS actually defined earlier prompt to adjust
+                }// end of if Process is NOT global so it is individual then prompt
+                // From now we should have a ROI Selection
+                setBatchMode("hide");
+                selectWindow("RegionOfInterest");
+                roiManager("Add");
+                NbROI=roiManager("count");
+                run("Select None");
+                roiManager("Select", NbROI-1);
+                roiManager("Rename", "Region_Of_Interest");
+                roiManager("Set Color", "magenta");
+                roiManager("Set Line Width", 10);
+                run("Add Selection..."); // Add to Overlay
+                run("Overlay Options...", "stroke=cyan width=10 fill=none apply");
+                OutputROIImage=OutputImagePath+InputFileNameiNoExt+"_2_ROI_Overlay.tif";
+                selectWindow("RegionOfInterest");
+                saveAs("Tiff", OutputROIImage);
+                close();
+              } else { // ENd of if Manual ROI is selected
+                //Do nothing
+              } // end of If Manual ROI is NOT selected
+              setForegroundColor(255, 255, 255);
+              setBackgroundColor(0, 0, 0);// Set the foreground and background colors
+              // if a ROI was defined Sample OR Manual then clear outside the last made ROI
+              if(ROIMethodStatus[0]==1 || ROIMethodStatus[1]==1){
+                setBatchMode("hide");
+                setForegroundColor(255, 255, 255);
+                setBackgroundColor(0, 0, 0);// Set the foreground and background colors
+                selectWindow(InputFileNamei); // InputFileName has all the original channels and is cropped on the sample or on the ROI
+                NbROI=roiManager("count");
+                run("Select None");
+                roiManager("Select", NbROI-1);
+                run("Clear Outside");
+              }
+              setBatchMode("hide");
+              selectWindow("SelectedChannels"); // SelectedChannels has only the Selected Channels and is cropped on the sample or on the ROI
+              close();
+
+
+
+
+
+
+              ///////////////////////////////////////////// Duplicate and threshold the each selected channels
+              for (ChI=0; ChI < ListSelectedCh.length; ChI++){
+                setBatchMode("hide");
+                SelectedChI=ListSelectedCh[ChI]; //This is the number of the selected channels >=1 it can be above 5 if user select only channel 2 and 7 for example.
+                SelectedChIListPos=SelectedChI-1; // This is the position within the array of the SelectedChI
+                NameSelectedChI=ListChName[SelectedChIListPos]; // This is the Name of the Selected Channels
+                LowerThresholdSelectedChI=ListChLowerThreshold[SelectedChIListPos]; // This is the LowerThreshold for the Channel I
+                UpperThresholdSelectedChI=ListChUpperThreshold[SelectedChIListPos];// This is the UpperThreshold for the Channel I
+                RemoveNoiseStatusSelectedChI=ListChRemoveNoiseStatus[SelectedChIListPos]; // This is 1 or 0 if we apply or not Remove Noise function
+                WatershedStatusSelectedChI=ListChWatershedStatus[SelectedChIListPos];// This is 1 or 0 if we apply or not Watershed function
+                MinParticleDiameterSelectedChI=ListChMinParticleDiameter[SelectedChIListPos]; // This is the particle diameter in Unit^2 for ChI
+                MaxParticleDiameterSelectedChI=ListChMaxParticleDiameter[SelectedChIListPos]; // This is the  percentage of variation allowed around the particle diameterfor ChI
+                MinParticleCircularitySelectedChI=ListChMinParticleCircularity[SelectedChIListPos]; // This is the particle diameter in Unit^2 for ChI
+                MaxParticleCircularitySelectedChI=ListChMaxParticleCircularity[SelectedChIListPos]; // This is the particle diameter in Unit^2 for ChI
+
+                selectWindow(InputFileNamei);
+                run("Select None");
+                run("Remove Overlay");
+                call("ij.gui.ImageWindow.setNextLocation", IJPosX,IJPosY+IJSizeY+Spacer)
+                run("Duplicate...", "duplicate title=&NameSelectedChI channels=&SelectedChI"); // Duplicate each channel to threshold
+                selectWindow(NameSelectedChI);
+                run("Grays");
+                // This is to bring the threshold from the preferences but cause bugs in 16bits image
+                // setThreshold(LowerThresholdSelectedChI,UpperThresholdSelectedChI);
+
+                if(ProcessingMethod=="Global" && FileI>0){
+                  setBatchMode("hide");
+                  selectWindow(NameSelectedChI);
+                  // Threshold the Image
+                  setThreshold(LowerThresholdSelectedChI, UpperThresholdSelectedChI);
+                  run("Convert to Mask");
+                  // Apply the Image Enhancements
+                  if(RemoveNoiseStatusSelectedChI==1 && WatershedStatusSelectedChI==0){
+                    run("Open");
+                  } else if(RemoveNoiseStatusSelectedChI==0 && WatershedStatusSelectedChI==1){
+                    run("Watershed");
+                  } else if(RemoveNoiseStatusSelectedChI==1 && WatershedStatusSelectedChI==1){
+                    run("Open");
+                    run("Watershed");
+                  }
+                  // Calculate the Particle Area
+                  MinParticleAreaSelectedChI=PI*MinParticleDiameterSelectedChI*MinParticleDiameterSelectedChI;
+                  MaxParticleAreaSelectedChI=PI*MaxParticleDiameterSelectedChI*MaxParticleDiameterSelectedChI;
+                  // Convert the circularity percentage into a decimal
+                  MinParticleCircularitySelectedChIDecimal = 0.01*MinParticleCircularitySelectedChI;
+                  MaxParticleCircularitySelectedChIDecimal = 0.01*MaxParticleCircularitySelectedChI;
+                  // Analyze Particle for saving as an Overlay
+                  selectWindow(NameSelectedChI);
+                  run("Select None");
+                  run("Remove Overlay");
+                  run("Analyze Particles...", "size=&MinParticleAreaSelectedChI-&MaxParticleAreaSelectedChI circularity=&MinParticleCircularitySelectedChIDecimal-&MaxParticleCircularitySelectedChIDecimal show=[Overlay Masks] in_situ");
+                  run("Overlay Options...", "stroke=magenta width=1 fill=cyan apply show");
+                  run("Labels...", "color=blue font=10 show bold");
+
+                } else { // If processing is not Global
+                  // These lines are if you want to bring up threshold values from previous files It causes issues with 16bits images
+                  // setThreshold(LowerThresholdSelectedChI,UpperThresholdSelectedChI);
+                  selectWindow(NameSelectedChI);
+                  setBatchMode("show");
+                  selectWindow(NameSelectedChI);
+                  setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+                  setAutoThreshold("Default dark");
+                  run("Threshold...");
+                  setTool("zoom");
+                  waitForUser(PluginName+" Information", "Adjust the Threshold to identify your staining for "+NameSelectedChI+"."
+                  +"\nWhen done, press OK.");
+                  setBatchMode("hide");
+                  getThreshold(LowerThresholdSelectedChI, UpperThresholdSelectedChI);
+                  // Update the List of Threshold
+                  ListChLowerThreshold[SelectedChIListPos]=LowerThresholdSelectedChI;
+                  ListChUpperThreshold[SelectedChIListPos]=UpperThresholdSelectedChI;
+                  selectWindow(NameSelectedChI);
+                  run("Convert to Mask");
+                  if(isOpen("Threshold")){
+                    selectWindow("Threshold");
+                    run("Close");}
+                    selectWindow(NameSelectedChI);
+                    run("Duplicate...", "title=RemoveNoise duplicate");
+                    run("Open");
+                    selectWindow(NameSelectedChI);
+                    run("Duplicate...", "title=Watershed duplicate");
+                    run("Watershed");
+                    selectWindow(NameSelectedChI);
+                    run("Duplicate...", "title=RemoveNoise_AND_Watershed duplicate");
+                    run("Open");
+                    run("Watershed");
+                    ImageEnhancementName="Image Enhancement Options for "+NameSelectedChI;
+                    run("Concatenate...", "  title=&ImageEnhancementName image1=&NameSelectedChI image2=RemoveNoise image3=Watershed image4=RemoveNoise_AND_Watershed image5=[-- None --]");
+                    selectWindow(ImageEnhancementName);
+                    // This set up the slice of the previously choosen options
+                    if(RemoveNoiseStatusSelectedChI==1 && WatershedStatusSelectedChI==0){
+                      setSlice(2);
+                    } else if(RemoveNoiseStatusSelectedChI==0 && WatershedStatusSelectedChI==1){
+                      setSlice(3);
+                    } else if(RemoveNoiseStatusSelectedChI==1 && WatershedStatusSelectedChI==1){
+                      setSlice(4);
+                    } else {
+                      setSlice(1);
+                    }
+                    resetThreshold();
+                    if(isOpen("Threshold")){
+                      selectWindow("Threshold");
+                      run("Close");
+                    }
+                    setTool("zoom");
+                    selectWindow(ImageEnhancementName);
+                    resetThreshold();
+                    setBatchMode("show");
+                    selectWindow(ImageEnhancementName);
+                    setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+                    call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
+                    waitForUser(PluginName+" Information", "Select the optimal Image for "+NameSelectedChI+".\nYou may Zoom for a better view.\nSlice 1: Original\nSlice 2: Noise Removed\nSlice 3: Watershed\nSlice 4: Noise Removed & Wateshed"
+                    +"\nWhen done, press OK.");
+                    setBatchMode("hide");
+                    selectWindow(ImageEnhancementName);
+                    getDimensions(ImageWidthEnhancement, ImageHeightEnhancement, NbChannelsEnhancement, NbSlicesEnhancement, NbFramesEnhancement); // Get dimensions of the Image
+                    Stack.getPosition(CurrentChannelEnhancement, CurrentSliceEnhancement, CurrentFrameEnhancement);
+                    // Delete the other Slices
+                    SubStackString=""+"channels=1-"+NbChannelsEnhancement+" slices="+CurrentSliceEnhancement+" frames="+CurrentFrameEnhancement;
+                    selectWindow(ImageEnhancementName);
+                    run("Select None");
+                    run("Make Substack...", SubStackString);
+                    rename(NameSelectedChI);
+                    selectWindow(ImageEnhancementName);
+                    close();
+                    if(CurrentSliceEnhancement==2){
+                      RemoveNoiseStatusSelectedChI=1;
+                      WatershedStatusSelectedChI=0;
+                    }else if(CurrentSliceEnhancement==3){
+                      RemoveNoiseStatusSelectedChI=0;
+                      WatershedStatusSelectedChI=1;
+                    }else if(CurrentSliceEnhancement==4){
+                      RemoveNoiseStatusSelectedChI=1;
+                      WatershedStatusSelectedChI=1;
+                    } else {
+                      RemoveNoiseStatusSelectedChI=0;
+                      WatershedStatusSelectedChI=0;
+                    }
+                    // Update the Enhancement Status
+                    ListChRemoveNoiseStatus[SelectedChIListPos]=RemoveNoiseStatusSelectedChI;
+                    ListChWatershedStatus[SelectedChIListPos]=WatershedStatusSelectedChI;
+
+
+                    // From Now we have selected the Enhancement option for Selected Ch and have a binary Image
+
+                    do {
+                      SelectionPass=0;
+                      if(isOpen("Threshold")){
+                        selectWindow("Threshold");
+                        run("Close");}
+                        setTool("wand");//Select wand tool
+                        selectWindow(NameSelectedChI);
+                        setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+                        setBatchMode("show");
+                        selectWindow(NameSelectedChI);
+                        setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+                        call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
+                        waitForUser(PluginName+" Information", "Select the Largest Cell you would like to count for "+NameSelectedChI+"."
+                        +"\nWhen done, press OK.");
+                        CurrentSelection=selectionType();
+
+                        if(CurrentSelection<0 || CurrentSelection>5){
+                          Dialog.create(PluginName+" Information");
+                          Dialog.setInsets(0, 0, 0);
+                          Dialog.addMessage("Sorry but no selection has been detected."
+                          +"\nUse a Selection Tool to Select the Largest Cell\nyou would like to count for "+NameSelectedChI+".");
+                          UserChoiceArray=newArray("Try Again", "Cancel & Close");
+                          Dialog.setInsets(0, 80, 0);
+                          Dialog.addRadioButtonGroup("", UserChoiceArray, 2,1, "Try Again");
+                          Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
+                          Dialog.show();
+                          UserChoice=Dialog.getRadioButton();
+                          if (UserChoice=="Cancel & Close"){
+                            exit(PluginName+" has stopped because no selection was provided for "+NameSelectedChI+".");
+                          }
+                        }else {SelectionPass=1;}
+                      } while(SelectionPass!=1)
+
+                      setBatchMode("hide");
+                      // Once a selection is Made get the area of the selection
+                      run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
+                      //run("Clear Results");
+
+                      run("Measure");
+                      ParticleAreaChIMeasured=getResult("Area", nResults-1);
+                      //run("Clear Results");
+                      IJ.deleteRows(nResults-1,nResults-1);
+                      selectWindow(NameSelectedChI);
+                      run("Select None");
+                      // From the area calculate the diameter of the Particle
+                      ParticleDiameterChIMeasured=round(2*sqrt(ParticleAreaChIMeasured/PI));
+                      // Set up the Min and Max Particle diameter and circularity
+                      MinParticleDiameterSelectedChI=0;
+                      MaxParticleDiameterSelectedChI=ParticleDiameterChIMeasured;
+                      MinParticleCircularitySelectedChI=0;
+                      MaxParticleCircularitySelectedChI=100;
+
+                      // Prompt for Parameter adjustments
+                      do{
+                        // Calculate the Min and Max ParticleArea from the Diameter
+                        MinParticleAreaSelectedChI=PI*MinParticleDiameterSelectedChI*MinParticleDiameterSelectedChI;
+                        MaxParticleAreaSelectedChI=PI*MaxParticleDiameterSelectedChI*MaxParticleDiameterSelectedChI;
+                        // Convert the circularity percentage into a decimal
+                        MinParticleCircularitySelectedChIDecimal=0.01*MinParticleCircularitySelectedChI;
+                        MaxParticleCircularitySelectedChIDecimal=0.01*MaxParticleCircularitySelectedChI;
+
+                        // Do a first analysis particle and save it as OverlayMask
+                        selectWindow(NameSelectedChI);
+                        run("Select None");// Remove any selection
+                        run("Remove Overlay");
+                        run("Analyze Particles...", "size=&MinParticleAreaSelectedChI-&MaxParticleAreaSelectedChI circularity=&MinParticleCircularitySelectedChIDecimal-&MaxParticleCircularitySelectedChIDecimal show=[Overlay Masks] in_situ");
+                        run("Overlay Options...", "stroke=magenta width=1 fill=cyan apply show");
+                        run("Labels...", "color=blue font=10 show bold");
+                        if(isOpen("Threshold")){
+                          selectWindow("Threshold");
+                          run("Close");}
+                          setTool("zoom");
+                          selectWindow(NameSelectedChI);
+                          setBatchMode("show");
+                          selectWindow(NameSelectedChI);
+                          setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+                          waitForUser(PluginName+" Information","Look at the Cell Detection (Cyan Overlay).\nYou may Zoom for a better view.\nCell Detection Parameters will appear when OK is pressed.");
+
+                          do{
+                            DialogPass=0;
+                            ParticleDetectionPass=0;
+                            Dialog.create(PluginName+" Information");
+                            Dialog.setInsets(0, 0, 0);
+                            Dialog.addMessage("Adjust the Cell Detection Parameters for "+NameSelectedChI+" and Try Again.");
+                            Dialog.setInsets(0, 0, 0);
+                            Dialog.addMessage("or Move to Next.");
+                            Dialog.setInsets(0, 0, 0);
+                            Dialog.addNumber("Min Cell Diameter for "+NameSelectedChI+" :", MinParticleDiameterSelectedChI, 0, 10, RescaledUnit)
+                            Dialog.setInsets(0, 0, 0);
+                            Dialog.addNumber("Max Cell Diameter for "+NameSelectedChI+" :", MaxParticleDiameterSelectedChI, 0, 10, RescaledUnit)
+                            Dialog.setInsets(0, 0, 0);
+                            Dialog.addSlider("Min Cell Circularity for "+NameSelectedChI+" :", 0, 100, MinParticleCircularitySelectedChI);
+                            Dialog.setInsets(0, 0, 0);
+                            Dialog.addSlider("Max Cell Circularity for "+NameSelectedChI+" :", 0, 100, MaxParticleCircularitySelectedChI);
+                            Dialog.setInsets(0, 0, 0);
+                            UserChoiceDetectionArray=newArray("Try Again", "Move to Next");
+                            Dialog.setInsets(0, 150, 0);
+                            Dialog.addRadioButtonGroup("", UserChoiceDetectionArray, 2, 1, "Try Again");
+                            Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
+                            Dialog.show();
+
+                            MinParticleDiameterSelectedChI=Dialog.getNumber();
+                            MaxParticleDiameterSelectedChI=Dialog.getNumber();
+                            MinParticleCircularitySelectedChI=Dialog.getNumber();
+                            MaxParticleCircularitySelectedChI=Dialog.getNumber();
+                            UserChoiceDetection=Dialog.getRadioButton();
+                            // Reorder Particle Diameter if smaller is larger
+                            if(MinParticleDiameterSelectedChI>MaxParticleDiameterSelectedChI){
+                              ParticleDiameterTemporary=MaxParticleDiameterSelectedChI;
+                              MaxParticleDiameterSelectedChI=MinParticleDiameterSelectedChI;
+                              MinParticleDiameterSelectedChI=ParticleDiameterTemporary;
+                            }
+                            // Reorder Particle Circularity if smaller is larger
+                            if(MinParticleCircularitySelectedChI>MaxParticleCircularitySelectedChI){
+                              ParticleCircularityTemporary=MinParticleCircularitySelectedChI;
+                              MaxParticleCircularitySelectedChI=MinParticleCircularitySelectedChI;
+                              MinParticleCircularitySelectedChI=ParticleCircularityTemporary;
+                            }
+
+                            // Ensure Particle Diameter entered are numeric and positive
+                            if(isNaN(MinParticleDiameterSelectedChI)||isNaN(MaxParticleDiameterSelectedChI)|| MinParticleDiameterSelectedChI<0){
+                              Dialog.create(PluginName+" Information");
+                              Dialog.setInsets(0, 0, 0);
+                              if(isNaN(MinParticleDiameterSelectedChI)){
+                                Dialog.addMessage("Sorry but the Min Particle Diameter must be a number.");
+                              }else if (isNaN(MaxParticleDiameterSelectedChI)) {
+                                Dialog.addMessage("Sorry but the Max Particle Diameter must be a number.");
+                              } else {
+                                Dialog.addMessage("Sorry but the Min Particle Diameter can't be smaller than 0.");
+                              }
+                              Dialog.setInsets(0, 0, 0);
+                              UserChoiceArray=newArray("Try Again", "Cancel & Close");
+                              Dialog.setInsets(0, 50, 0);
+                              Dialog.addRadioButtonGroup("", UserChoiceArray, 2, 1, "Try Again");
+                              Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
+                              Dialog.show();
+                              UserChoice=Dialog.getRadioButton();
+                              if (UserChoice=="Cancel & Close"){
+                                if(isNaN(MinParticleDiameterSelectedChI)){
+                                  exit(PluginName+ " Information:\nThe function "+ MacroName+" has stopped because the Min Particle Diameter for "+NameSelectedChI+" wasn't numeric");
+                                }else if (isNaN(MaxParticleDiameterSelectedChI)) {
+                                  exit(PluginName+ " Information:\nThe function "+ MacroName+" has stopped because the Max Particle Diameter for "+NameSelectedChI+" wasn't numeric");
+                                } else {
+                                  exit(PluginName+ " Information:\nThe function "+ MacroName+" has stopped because the Min Particle Diameter for "+NameSelectedChI+" was smaller than 0.");
+                                }
+                              } else if(UserChoice=="Try Again"){
+                                if(isNaN(MinParticleDiameterSelectedChI)|| MinParticleDiameterSelectedChI<0){
+                                  MinParticleDiameterSelectedChI=0;
+                                } else if (isNaN(MaxParticleDiameterSelectedChI)){
+                                  MaxParticleDiameterSelectedChI=100;
+                                }
+                              } // End of if user try Again
+                            } else{ // end of if particle is NaN
+                              DialogPass=1;
+                            } // End of else dialog pass
+                          } while(DialogPass!=1) // End of Do Dialog box
+                          if(UserChoiceDetection=="Move to Next"){
+                            ParticleDetectionPass=1;
+                          } // End of UserCHoice detection
+                        } while(ParticleDetectionPass!=1) // End of Do loop Analyze particle
+
+
+                        // Update the list of Ch Particle Diameter and Circularity
+                        ListChMinParticleDiameter[SelectedChIListPos]=MinParticleDiameterSelectedChI; // This is the particle diameter in Unit^2 for ChI
+                        ListChMaxParticleDiameter[SelectedChIListPos]=MaxParticleDiameterSelectedChI;
+                        ListChMinParticleCircularity[SelectedChIListPos]=MinParticleCircularitySelectedChI;
+                        ListChMaxParticleCircularity[SelectedChIListPos]=MaxParticleCircularitySelectedChI;
+                      } // End of If process is Individual
+
+                      // Now we have the Particle detected we can save it as an Overlay
+                      setBatchMode("hide");
+                      ChNb=ChI+1;
+                      selectWindow(NameSelectedChI);
+                      OutputParticleImageChI=OutputImagePath+InputFileNameiNoExt+"_Ch"+ChNb+"_"+NameSelectedChI+"_CellCount_Overlay.tif";
+                      saveAs("Tiff", OutputParticleImageChI);
+                      rename(NameSelectedChI);
+
+                      // Print the parameter into the text file
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Lower Threshold"+CellSeparator+LowerThresholdSelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Upper Threshold"+CellSeparator+UpperThresholdSelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Min Particle Diameter ("+RescaledUnit+")"+CellSeparator+MinParticleDiameterSelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Max Particle Diameter ("+RescaledUnit+")"+CellSeparator+MaxParticleDiameterSelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Min Particle Area ("+RescaledUnit+"^2)"+CellSeparator+MinParticleAreaSelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Max Particle Area ("+RescaledUnit+"^2)"+CellSeparator+MaxParticleAreaSelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Min Particle Circularity (0-100)"+CellSeparator+MinParticleCircularitySelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Max Particle Circularity (0-100)"+CellSeparator+MaxParticleCircularitySelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Remove Noise Option"+CellSeparator+RemoveNoiseStatusSelectedChI+LineSeparator);
+                      print("[ParameterData]", InputFileNameiNoExt+CellSeparator+NameSelectedChI+CellSeparator+"Watershed Option"+CellSeparator+WatershedStatusSelectedChI+LineSeparator);
+
+
+                      // ReAnalyze particle on Selected ChI to have the DATA this time
+                      selectWindow(NameSelectedChI);
+                      run("Select None");
+                      run("Remove Overlay");
+                      if(FirstResult=="true"){
+                        run("Clear Results");
+                        setResult("Area",nResults,0);     // Add a blank results line and column just in case the analysis particle is gives an empty results
+                        NbOfParticles=0;
+                        FirstResult="false";
+                      }
+
+                      run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
+                      selectWindow(NameSelectedChI);
+
+                      run("Analyze Particles...", "size=&MinParticleAreaSelectedChI-&MaxParticleAreaSelectedChI circularity=&MinParticleCircularitySelectedChIDecimal-&MaxParticleCircularitySelectedChIDecimal show=Masks display summarize in_situ");
+                      selectWindow("Results");
+                      //Add the Label and Channel Names to the Results
+
+                      if(NbOfParticles<nResults){
+                        for(i=NbOfParticles;i<nResults;i++){
+                          setResult("Label", i, InputFileNameiNoExt);
+                          setResult("Channel", i, NameSelectedChI);
+                        }
+                        NbOfParticles=nResults;
+                      }
+                      selectWindow("Results");
+                      updateResults();
+                      selectWindow("Summary");
+                      setLocation(ToolbarPosX+ToolbarSizeX, ToolbarPosY);
+
+                      // Create a selection add to the roi Manager
+                      selectWindow(NameSelectedChI); // This is the Mask after the particle detection
+                      run("Create Selection");
+                      // Make Sure the selection is not empty
+                      getSelectionBounds(SelectionPosX, SelectionPosY, SelectionWidth, SelectionHeight);
+                      getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames); // Get dimensions of the Image
+                      // If the selection is empty ImageJ will use X=0 Y=0 Width=Height=1 or Width=Height=MaxImageHeight
+                      if(SelectionPosX==0 && SelectionPosY==0 && ((SelectionWidth==1 && SelectionHeight==1) || (SelectionWidth==ImageWidth && SelectionHeight==ImageHeight) )){
+                        run("Select None");
+                        makeRectangle(0, 0, 1, 1);
+                      }
+                      roiManager("Add");
+                      NbROI=roiManager("count");
+                      roiManager("Select", NbROI-1);
+                      roiManager("Rename", NameSelectedChI);
+                      roiManager("Set Color", "magenta");
+                      roiManager("Set Line Width", 10);
+                      // Do not close each individual channels because we will use it for combination
+                    }// end for ChI
+                    ////////////////////////////////////////////// End Duplicate and threshold the Staining channels
+                    setBatchMode("hide");
+                    if(ProcessingMethod=="Global" && FileI>0){
+                      //  do nothing
+                    } else { //update the Preferences
+                      for(i=0;i<ListChSelectionStatus.length;i++){
+                        if(i==0){
+                          ListChLowerThresholdString=""+ListChLowerThreshold[i];
+                          ListChUpperThresholdString=""+ListChUpperThreshold[i];
+                          ListChMinParticleDiameterString=""+ListChMinParticleDiameter[i];
+                          ListChMaxParticleDiameterString=""+ListChMaxParticleDiameter[i];
+                          ListChMinParticleCircularityString=""+ListChMinParticleCircularity[i];
+                          ListChMaxParticleCircularityString=""+ListChMaxParticleCircularity[i];
+                          ListChRemoveNoiseStatusString=""+ListChRemoveNoiseStatus[i];
+                          ListChWatershedStatusString=""+ListChWatershedStatus[i];
+                        }else{
+                          ListChLowerThresholdString=ListChLowerThresholdString+","+ListChLowerThreshold[i];
+                          ListChUpperThresholdString=ListChUpperThresholdString+","+ListChUpperThreshold[i];
+                          ListChMinParticleDiameterString=ListChMinParticleDiameterString+","+ListChMinParticleDiameter[i];
+                          ListChMaxParticleDiameterString=ListChMaxParticleDiameterString+","+ListChMaxParticleDiameter[i];
+                          ListChMinParticleCircularityString=ListChMinParticleCircularityString+","+ListChMinParticleCircularity[i];
+                          ListChMaxParticleCircularityString=ListChMaxParticleCircularityString+","+ListChMaxParticleCircularity[i];
+                          ListChRemoveNoiseStatusString=ListChRemoveNoiseStatusString+","+ListChRemoveNoiseStatus[i];
+                          ListChWatershedStatusString=ListChWatershedStatusString+","+ListChWatershedStatus[i];
+                        }
+                      } // end of for i
+
+                      // Save the parameters in the Preferences
+                      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChLowerThreshold",ListChLowerThresholdString);
+                      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChUpperThreshold",ListChUpperThresholdString);
+                      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChMinParticleDiameter",ListChMinParticleDiameterString);
+                      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChMaxParticleDiameter",ListChMaxParticleDiameterString);
+                      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChMinParticleCircularity",ListChMinParticleCircularityString);
+                      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChMaxParticleCircularity",ListChMaxParticleCircularityString);
+                      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChRemoveNoiseStatus",ListChRemoveNoiseStatusString);
+                      call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ListChWatershedStatus",ListChWatershedStatusString);
+                    }// end of if not global then save the parameters
+
+
+
+
+
+
+
+                    setBatchMode("hide");
+                    ///////////////////////// Combine 2 channels
+                    ///////////////////////// Combine 2 channels
+                    if(ListSelectedCh.length>1){
+                      for (ChIA=0; ChIA < ListSelectedCh.length-1; ChIA++){
+                        for (ChIB=ChIA+1; ChIB < ListSelectedCh.length; ChIB++){
+                          SelectedChIA=ListSelectedCh[ChIA]; //This is the number of the selected channels >=1 it can be above 5 if user select only channel 2 and 7 for example.
+                          SelectedChIAListPos=SelectedChIA-1; // This is the position within the array of the SelectedChIA
+                          NameSelectedChIA=ListChName[SelectedChIAListPos]; // This is the Name of the Selected Channels
+                          LowerThresholdSelectedChIA=ListChLowerThreshold[SelectedChIAListPos]; // This is the LowerThreshold for the Channel I
+                          UpperThresholdSelectedChIA=ListChUpperThreshold[SelectedChIAListPos];// This is the UpperThreshold for the Channel I
+                          RemoveNoiseStatusSelectedChIA=ListChRemoveNoiseStatus[SelectedChIAListPos]; // This is 1 or 0 if we apply or not Remove Noise function
+                          WatershedStatusSelectedChIA=ListChWatershedStatus[SelectedChIAListPos];// This is 1 or 0 if we apply or not Watershed function
+                          MinParticleDiameterSelectedChIA=ListChMinParticleDiameter[SelectedChIAListPos]; // This is the particle diameter in Unit^2 for ChIA
+                          MaxParticleDiameterSelectedChIA=ListChMaxParticleDiameter[SelectedChIAListPos]; // This is the  percentage of variation allowed around the particle diameterfor ChIA
+                          MinParticleCircularitySelectedChIA=ListChMinParticleCircularity[SelectedChIAListPos]; // This is the particle diameter in Unit^2 for ChIA
+                          MaxParticleCircularitySelectedChIA=ListChMaxParticleCircularity[SelectedChIAListPos]; // This is the particle diameter in Unit^2 for ChI
+
+                          SelectedChIB=ListSelectedCh[ChIB]; //This is the number of the selected channels >=1 it can be above 5 if user select only channel 2 and 7 for example.
+                          SelectedChIBListPos=SelectedChIB-1; // This is the position within the array of the SelectedChIB
+                          NameSelectedChIB=ListChName[SelectedChIBListPos]; // This is the Name of the Selected Channels
+                          LowerThresholdSelectedChIB=ListChLowerThreshold[SelectedChIBListPos]; // This is the LowerThreshold for the Channel I
+                          UpperThresholdSelectedChIB=ListChUpperThreshold[SelectedChIBListPos];// This is the UpperThreshold for the Channel I
+                          RemoveNoiseStatusSelectedChIB=ListChRemoveNoiseStatus[SelectedChIBListPos]; // This is 1 or 0 if we apply or not Remove Noise function
+                          WatershedStatusSelectedChIB=ListChWatershedStatus[SelectedChIBListPos];// This is 1 or 0 if we apply or not Watershed function
+                          MinParticleDiameterSelectedChIB=ListChMinParticleDiameter[SelectedChIBListPos]; // This is the particle diameter in Unit^2 for ChIB
+                          MaxParticleDiameterSelectedChIB=ListChMaxParticleDiameter[SelectedChIBListPos]; // This is the  percentage of variation allowed around the particle diameterfor ChIB
+                          MinParticleCircularitySelectedChIB=ListChMinParticleCircularity[SelectedChIBListPos]; // This is the particle diameter in Unit^2 for ChIB
+                          MaxParticleCircularitySelectedChIB=ListChMaxParticleCircularity[SelectedChIBListPos]; // This is the particle diameter in Unit^2 for ChI
+
+                          CombinedParticleDiameterArray=newArray(MinParticleDiameterSelectedChIA, MaxParticleDiameterSelectedChIA,MinParticleDiameterSelectedChIB, MaxParticleDiameterSelectedChIB);
+                          CombinedParticleCircularityArray=newArray(MinParticleCircularitySelectedChIA, MaxParticleCircularitySelectedChIA,MinParticleCircularitySelectedChIB, MaxParticleCircularitySelectedChIB);
+                          CombinedChNameI=""+NameSelectedChIA+"x"+NameSelectedChIB;
+                          CombinedChNbI="_Ch"+ChIA+1+"xCh"+ChIB+1+"_";
+                          OutputResultsPathCombinedChI=OutputTablePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_DetailedResult.txt";
+                          OutputParticleImageCombinedChI=OutputImagePath+InputFileNameiNoExt+CombinedChNbI+CombinedChNameI+"_CellCount_Overlay.tif";
+
+                          Array.getStatistics(CombinedParticleDiameterArray, MinParticleDiameterCombinedChI, MaxParticleDiameterCombinedChI, MeanParticleDiameterCombinedChI, StDevParticleDiameterCombinedChI);
+                          MinParticleAreaCombinedChI=PI*MinParticleDiameterCombinedChI*MinParticleDiameterCombinedChI;
+                          MaxParticleAreaCombinedChI=PI*MaxParticleDiameterCombinedChI*MaxParticleDiameterCombinedChI;
+
+                          Array.getStatistics(CombinedParticleCircularityArray, MinParticleCircularityCombinedChI, MaxParticleCircularityCombinedChI, MeanParticleCircularityCombinedChI, StDevParticleCircularityCombinedChI);
+                          MinParticleCircularityCombinedChIDecimal=MinParticleCircularityCombinedChI/100;
+                          MaxParticleCircularityCombinedChIDecimal=MaxParticleCircularityCombinedChI/100;
+
+                          selectWindow(NameSelectedChIA);
+                          run("Select None");
+                          run("Duplicate...", "title=CombinedChImage duplicate");
+                          selectWindow("CombinedChImage");
+                          imageCalculator("AND","CombinedChImage", NameSelectedChIB);
+                          selectWindow("CombinedChImage");
+                          rename(CombinedChNameI);
+
+                          selectWindow(CombinedChNameI);
+                          run("Select None");// Remove any selection
+                          run("Remove Overlay");
+                          selectWindow(CombinedChNameI);
+                          run("Duplicate...", "title=CombinedChImageForROI duplicate");
+                          selectWindow("CombinedChImageForROI");
+                          run("Analyze Particles...", "size=&MinParticleAreaCombinedChI-&MaxParticleAreaCombinedChI circularity=&MinParticleCircularityCombinedChIDecimal-&MaxParticleCircularityCombinedChIDecimal show=Masks in_situ");
+                          selectWindow("CombinedChImageForROI");
+                          run("Create Selection");
+
+                          getSelectionBounds(SelectionPosX, SelectionPosY, SelectionWidth, SelectionHeight);
+                          getDimensions(ImageWidth, ImageHeight, NbChannels, NbSlices, NbFrames); // Get dimensions of the Image
+                          // If the selection is empty ImageJ will use X=0 Y=0 Width=Height=1 or Width=Height=MaxImageHeight
+                          if(SelectionPosX==0 && SelectionPosY==0 && ((SelectionWidth==1 && SelectionHeight==1) || (SelectionWidth==ImageWidth && SelectionHeight==ImageHeight) )){
+                            run("Select None");
+                            makeRectangle(0, 0, 1, 1);
+                          }
+                          roiManager("Add");
+                          NbROI=roiManager("count");
+                          roiManager("Select", NbROI-1);
+                          roiManager("Rename", CombinedChNameI);
+                          roiManager("Set Color", "magenta");
+                          roiManager("Set Line Width", 10);
+                          selectWindow("CombinedChImageForROI");
+                          close();
+
+                          // Run again the analyze Particle for the Detailed results and the overlay
+                          run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
+                          selectWindow(CombinedChNameI);
+                          run("Analyze Particles...", "size=&MinParticleAreaCombinedChI-&MaxParticleAreaCombinedChI circularity=&MinParticleCircularityCombinedChIDecimal-&MaxParticleCircularityCombinedChIDecimal show=[Overlay Masks] display summarize in_situ");
+                          selectWindow("Results");
+                          //Add the Label and Channel Names to the Results
+                          if(NbOfParticles<nResults){
+                            for(i=NbOfParticles;i<nResults;i++){
+                              setResult("Label", i, InputFileNameiNoExt);
+                              setResult("Channel", i, CombinedChNameI);
+                            }
+                            NbOfParticles=nResults;
+                          }
+
+                          selectWindow("Results");
+                          updateResults();
+                          selectWindow(CombinedChNameI);
+                          run("Overlay Options...", "stroke=magenta width=1 fill=cyan apply show");
+                          run("Labels...", "color=blue font=10 show bold");
+
+
+                          selectWindow(CombinedChNameI);
+                          saveAs("Tiff", OutputParticleImageCombinedChI);
+                          close();
+
+                          print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Min Particle Diameter ("+RescaledUnit+")"+CellSeparator+MinParticleDiameterCombinedChI+LineSeparator);
+                          print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Max Particle Diameter ("+RescaledUnit+")"+CellSeparator+MaxParticleDiameterCombinedChI+LineSeparator);
+                          print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Min Particle Area ("+RescaledUnit+"^2)"+CellSeparator+MinParticleAreaCombinedChI+LineSeparator);
+                          print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Max Particle Area ("+RescaledUnit+"^2)"+CellSeparator+MaxParticleAreaCombinedChI+LineSeparator);
+                          print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Min Particle Circularity (0-100)"+CellSeparator+MinParticleCircularityCombinedChI+LineSeparator);
+                          print("[ParameterData]", InputFileNameiNoExt+CellSeparator+CombinedChNameI+CellSeparator+"Max Particle Circularity (0-100)"+CellSeparator+MaxParticleCircularityCombinedChI+LineSeparator);
+                        }// end for ChIB
+                      }// for ChIA
+                    } // End of if more than 1 selected channel
+
+                    ///////////////////////// Close the individual Channels
+                    ///////////////////////// Close the individual Channels
+                    ///////////////////////// Close the individual Channels
+                    ///////////////////////// Close the individual Channels
+                    ///////////////////////// Close the individual Channels
+                    ///////////////////////// Close the individual Channels
+                    for(ChI=0; ChI<ListSelectedCh.length; ChI++){
+                      SelectedChI=ListSelectedCh[ChI];
+                      SelectedChIListPos=SelectedChI-1;
+                      NameSelectedChI=ListChName[SelectedChIListPos];
+                      selectWindow(NameSelectedChI);
+                      close();
+                    }///////////////////////// End of Close the Channels
+
+
+                    ////////// Get the Values of the whole Staining for each Channel and add it to the Measurements Textwindow
+                    for (ChI=0; ChI<ListSelectedCh.length; ChI++){
+                      SelectedChI=ListSelectedCh[ChI];
+                      SelectedChIListPos=SelectedChI-1;
+                      NameSelectedChI=ListChName[SelectedChIListPos];
+
+                      if(ChI==0){
+                        run("Text Window...", "name=MeasurementData width=50 height=6 menu");
+                        setLocation(ToolbarPosX+ToolbarSizeX+Spacer, ToolbarPosY);
+                        List.setMeasurements; // For the first time add the header to MeasurementData
+                        MeasurementsHeader=List.getList;
+                        MeasurementsHeader=replace(MeasurementsHeader,"=.*\n",",");
+                        print("[MeasurementData]", "Filename"+CellSeparator+"Measurement Category"+CellSeparator+"Channel"+CellSeparator+"ROI"+CellSeparator+MeasurementsHeader+LineSeparator);
+                      }
+
+                      NbROI=roiManager("count");
+                      selectWindow("Original");
+                      if(ListSelectedCh.length>1){
+                        Stack.setChannel(SelectedChI);
+                      }
+                      for (ROIn=0; ROIn<NbROI; ROIn++){
+                        roiManager("Select", ROIn);
+                        ROINameI=call("ij.plugin.frame.RoiManager.getName", ROIn);
+                        List.setMeasurements;
+                        MeasurementsChI=List.getList;
+                        MeasurementsChI=replace(MeasurementsChI,"%Area=",""); // Remove the measurements Area
+                        MeasurementsChI=replace(MeasurementsChI,"\n.*=",",");
+                        MeasurementsChI=replace(MeasurementsChI,"\n","");
+                        print("[MeasurementData]", InputFileNameiNoExt+CellSeparator+"Staining Measurements"+CellSeparator+NameSelectedChI+CellSeparator+ROINameI+CellSeparator+MeasurementsChI+LineSeparator);
+                      }//for each ChannelROI
+                    }// end for ChI
+                    ///////////////////////// Get the Values of the whole Staining for each Channel and add it to the Measurements Textwindow
+
+
+                    ///////////////////////// Save the ROI
+                    selectWindow(InputFileNamei);
+                    roiManager("Deselect");
+                    run("Select None");
+                    OutputPathROI=OutputImagePath+InputFileNameiNoExt+"_ROI.zip";
+                    roiManager("Save", OutputPathROI);
+                    roiManager("reset");
+                    ///////////////////////// Save the ROI
+
+                    ///////////////////////// Close the original files
+                    selectWindow(InputFileNamei);
+                    close();
+                    selectWindow("Original");
+                    close();
+                    ///////////////////////// Close the original file
+
+
+                    OutputSummaryCountDataPath=OutputDirPath+InputFileNameiNoExt+"_SummaryResults.txt";
+                    selectWindow("Summary");
+                    saveAs("Text", OutputSummaryCountDataPath);
+                    selectWindow(InputFileNameiNoExt+"_SummaryResults.txt");
+                    run("Close");
+
+
+                    OutputMeasurementDataPath=OutputMeasurementPath+InputFileNameiNoExt+"_Measurements.txt";
+                    selectWindow("MeasurementData");
+                    saveAs("Text", OutputMeasurementDataPath);
+                    selectWindow(InputFileNameiNoExt+"_Measurements.txt");
+                    run("Close");
+
+                    ///////////////////////// Save the text files with the data
+                    OutputParameterDataPath=OutputParameterPath+InputFileNameiNoExt+"_Parameters.txt";
+                    selectWindow("ParameterData");
+                    saveAs("Text", OutputParameterDataPath);
+                    run("Close");
+
+
+
+
+                    OutputDetailedResultsPath=OutputTablePath+InputFileNameiNoExt+"_CellCount_DetailedResult.txt";
+                    selectWindow("Results");
+                    saveAs("Text", OutputDetailedResultsPath);
+                    run("Clear Results");
+                    run("Close");
+
+
+                    ///////////////////////// Update the progress bar
+                    showProgress(FileI, InputFileList.length);
+
+
+
+                  } ///////////////////////// End for FileI loop
+                  CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);

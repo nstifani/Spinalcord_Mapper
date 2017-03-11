@@ -160,10 +160,10 @@ function SelectInputDir(MinNbFile, FileExt){
   }
   NbFileWithCorrectExt=InputCorrectExtFileList.length;
   if(NbFileWithCorrectExt<MinNbFile){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
-    MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
+    MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ndoes not contain at least "+MinNbFile+" "+FileExt+" File.";
     MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
     ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File.";
     ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
 
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
@@ -178,7 +178,7 @@ function SelectInputDir(MinNbFile, FileExt){
         MessageError="Sorry but the "+FileExt+" File:\n\""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\" in its filename.";
         MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
         ErrorResponseArray=newArray("Select Another Folder", "Ignore This File", "Cancel and Close");
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
         ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
         if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
           CleanExit(MessageQuit);
@@ -196,10 +196,10 @@ function SelectInputDir(MinNbFile, FileExt){
     // Make sure InpuFileList is > MinNbFile
     NbFile=InputFileList.length;
     if(NbFile<MinNbFile && ErrorDialogPass!=1){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
-      MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File with no more than one \".\" in its filename.";
+      MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ndoes not contain at least "+MinNbFile+" "+FileExt+" File with no more than one \".\" in its filename.";
       MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File with one unique \".\" used for the file extension.";
       ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
       ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
         CleanExit(MessageQuit);
@@ -373,7 +373,7 @@ function SelectionPrompt(SelectionName, SelectionInfo){
       run("Point Tool...", "type=Hybrid color=White size=Large label show counter=0"); // Set the Point tool as yellow Medium Circle
       doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
     }
-    call("ij.gui.WaitForUserDialog.setNextLocation", ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer)
+    call("ij.gui.WaitForUserDialog.setNextLocation", ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
       waitForUser(PluginName+" Information", "Draw a "+SelectionName+" selection.\n"
     +SelectionInfo+
     "\nWhen done, press OK.");

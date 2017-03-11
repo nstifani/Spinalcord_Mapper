@@ -174,7 +174,7 @@ if(BasenameArray.length!=2){// if there is more than one . in the file name abor
 BaseNameError=1;
 MessageError="Sorry but the "+FileExt+" File:\n\""+InputList[ItemI]+"\"\ncontains more than one \".\" in its filename.";
 MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
-MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputList[ItemI]+"\" contains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputList[ItemI]+"\"\ncontains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
 } else {
 NbFile++; // Increment the nb of files with the correct extension
 }
@@ -183,9 +183,9 @@ NbFile++; // Increment the nb of files with the correct extension
 
 // This is the Value switch if the InputDir is passing the Min Nb of File criteria
 if (NbFile<MinNbFile){
-MessageError="Sorry but the Folder: \"" +InputDirName+"\" does not contain at least "+MinNbFile+" "+FileExt+" File.";
+MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ndoes not contain at least "+MinNbFile+" "+FileExt+" File.";
 MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
-MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder: \"" +InputDirName+"\" did not contain at least "+MinNbFile+" "+FileExt+" File.";
+MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File.";
 }
 if(NbFile<MinNbFile || BaseNameError==1){ // If filenames have more than 1 "." or if there is not enough file with the correct extension display an error
 ErrorDialog(MessageError, MessageFix, MessageQuit);
