@@ -308,7 +308,6 @@ function ProcessMethodPrompt (){
   ProcessMethod = Dialog.getRadioButton;
   ProcessMethodPromptPass=1;
   call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ProcessingMethod", ProcessMethod);
-  /////////////////////// Initial Dialog Box
 } // End of function
 
 // Function to transform

@@ -595,6 +595,52 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Add new Coordinates to overlay
   makeSelection("point",Array_X_Transformed, Array_Y_Transformed);
   run("Add Selection..."); // Add the selection to the overlay
+
+    // Crop the Image around the center to include the furthest registration point
+    ImageWidth=getWidth();
+    ImageHeight=getHeight();
+    ImageCenterX=ImageWidth/2;
+    ImageCenterY=ImageHeight/2;
+
+    DistanceToCenterArray=newArray(0);
+
+    for(PointI=0; PointI<Array_X_Transformed.length; PointI++){
+      PosXPointI=Array_X_Transformed[PointI]-ImageCenterX;
+      PosYPointI=Array_Y_Transformed[PointI]-ImageCenterY;
+      DistanceToCenterArray=Append(DistanceToCenterArray, abs(PosXPointI));
+      DistanceToCenterArray=Append(DistanceToCenterArray, abs(PosYPointI));
+    }
+    Array.getStatistics(DistanceToCenterArray, MinDistance, MaxDistance, MeanDistance, StDevDistance);
+    FinalImageSize=2*(MaxDistance+MaxDistance*0.01); // Add 1% to the Max Distance
+    run("Canvas Size...", "width=&FinalImageSize height=&FinalImageSize position=Center zero");
+
+    Overlay.activateSelection(0); // Get the selection from the overlay
+    run("Clear Results");
+    // Invert Y Coordinates
+    run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
+    run("Measure");
+    if(nResults>6){
+      // Create Arrays to save the X and Y Coordinates values in Pixels
+      Array_FinalX=newArray(0);
+      Array_FinalY=newArray(0);
+      // Populate the Arrays
+      for (ResultI=0; ResultI<nResults; ResultI++){
+        X=getResult("X",ResultI);
+        Y=getResult("Y",ResultI); // Y coordinates are inverted
+        Array_FinalX=Append(Array_FinalX,X);
+        Array_FinalY=Append(Array_FinalY,Y);
+      }
+    } else {
+      MessageError="Sorry but at least 7 Registration Points should be provided.";
+      MessageFix=MacroName+" function requires at least 7 Registration Points.";
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 Registration Points were not provided.";
+      ErrorResponseArray=newArray("Cancel and Close");
+      ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+      if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+        CleanExit(MessageQuit);
+      }
+    }
+
   selectWindow(InputFileNameI);
   // Add the scale back
   run("Set Scale...", "distance=&ImageScale known=1 pixel=1 unit=&PixelUnit");
@@ -603,16 +649,14 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   ImageWidth=getWidth();
   ImageHeight=getHeight();
   close();
-  // Invert Y coordinates here
-
   File.append(InputFileNameINoExt+CellSeparator
-  +Array_X_Transformed[0]+CellSeparator+ImageHeight-Array_Y_Transformed[0]+CellSeparator
-  +Array_X_Transformed[1]+CellSeparator+ImageHeight-Array_Y_Transformed[1]+CellSeparator
-  +Array_X_Transformed[2]+CellSeparator+ImageHeight-Array_Y_Transformed[2]+CellSeparator
-  +Array_X_Transformed[3]+CellSeparator+ImageHeight-Array_Y_Transformed[3]+CellSeparator
-  +Array_X_Transformed[4]+CellSeparator+ImageHeight-Array_Y_Transformed[4]+CellSeparator
-  +Array_X_Transformed[5]+CellSeparator+ImageHeight-Array_Y_Transformed[5]+CellSeparator
-  +Array_X_Transformed[6]+CellSeparator+ImageHeight-Array_Y_Transformed[6]+CellSeparator
+  +Array_FinalX[0]+CellSeparator+Array_FinalY[0]+CellSeparator
+  +Array_FinalX[1]+CellSeparator+Array_FinalY[1]+CellSeparator
+  +Array_FinalX[2]+CellSeparator+Array_FinalY[2]+CellSeparator
+  +Array_FinalX[3]+CellSeparator+Array_FinalY[3]+CellSeparator
+  +Array_FinalX[4]+CellSeparator+Array_FinalY[4]+CellSeparator
+  +Array_FinalX[5]+CellSeparator+Array_FinalY[5]+CellSeparator
+  +Array_FinalX[6]+CellSeparator+Array_FinalY[6]+CellSeparator
   +ImageWidth+CellSeparator+ImageHeight+CellSeparator
   +ImageScale+CellSeparator+PixelUnit, TXTFilePath);
 
