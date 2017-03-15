@@ -1,10 +1,9 @@
 // Defines Global Variables
 var PluginName="Spinalcord Mapper";
-var MacroName="Alignment and Registration";
+var MacroName="Simple Registration";
 var FileExt="TIF";
 var MinNbFile=1;
-var FolderSuffix="Aligned and Registered";
-var SubDirArray=newArray("");
+var FolderSuffix="Registered";
 CellSeparator= "\t";
 LineSeparator="\n";
 
@@ -293,7 +292,6 @@ function CloseUtilityWindows(ListUtilityWindows){
 //////////End of Close UtilityWindows
 ////////////////////End of General Functions
 
-
 /////////////////////  Specific Function
 // This function Prompt for a specific type of selection and ensure a selection is made before moving next
 var SelectionPromptPass; // This is the switch when the selection pass the criteria
@@ -359,15 +357,15 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       run("Select None");
       SelectionPromptPass=0; // Set the Switch to 0
     }else if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]) {
-      CleanExit(MessageQuit);
-    }
+            CleanExit(MessageQuit);
+        }
 
   } else { // Else the current selection does not match the expected selection
     SelectionPromptPass=0;
     if(NbOfPoints==0){
       run("Select None");
 
-    }
+}
   }
 
   if(SelectionPromptPass==0){ // If the selection is not set prompt or does not correspond to the expected selection
@@ -403,8 +401,8 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       // Close results windows if it is open
       if(isOpen("Results")){
         run("Clear Results");
-        selectWindow("Results");        run("Close");
-
+        selectWindow("Results");
+        run("Close");
       }//end of if Results is open
       ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[0]){
@@ -420,21 +418,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     }// End of else Selection is good
   } // End of If selection does not pass prompt for a selection
 } // End of Function Get selection
-
-
-// Function to create subfolders within the newly create outputdirectory
-function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the desired subfolders
-  for(i=0;i<SubDirArray.length;i++){
-    SubDirPath=OutputDirPath+SubDirArray[i]+File.separator; // Because outpudirpath is unique and new the subfolders do not exist yet so no need to check if they are already present
-    File.makeDirectory(SubDirPath);
-  } // End of for
-} // End of CreateOutputSubDir function
-// NOTE:It is useful to create a string for the subdirectory paths
-// For each element in the subdirarray addMessage
-// Output[SubDirArrayElementN]Path=""+OutputDirPath+"[SubDirArrayElementN]"+File.separator;
-// Then you can use directly the string to save within a subdirectory
 ///////////////////// End Sepcific Function
-
 
 
 
@@ -442,24 +426,22 @@ InitialMessage=""+MacroName+" will :"
 +"\n- Prompt to select a Folder containing at least "+MinNbFile+" "+FileExt+" File to process"
 +"\n\nFor each "+FileExt+" File:"
 +"\n- Prompt for 7 registration points"
-+"\n- Center the Image on the first registration point"
-+"\n- Rotate the Image to have Registration Point #4 and #5 horizontal"
-+"\n- Save Images as TIF Files with the Registration Points as an overlay"
++"\n- Save the Images as TIF Files with the Registration Points as an Overlay"
 +"\n- Save the X and Y Registration Coordinates in a single TXT File";
 
 MessageDialog(InitialMessage); // Display the Intial Dialog
 
 do{
-  SelectInputDir(MinNbFile,FileExt); // Select the InputDirectory
+  SelectInputDir(MinNbFile, FileExt); // Select the InputDirectory
 }while(SelectInputDirPass!=1)
 
 CreateOutputDir(ParentDir, InputDirName, FolderSuffix); // Create output Directory
 
-// Write The Coordinates in a TXT file
-TXTFileName=""+InputDirName+"_"+"Registration_Coordinates";
-TXTFilePath=OutputDirPath+TXTFileName+".txt";
+//////////////////////////// Create an output TXT File
+TXTFileName = ""+InputDirName+"_"+"Registration Coordinates";
+TXTFilePath = OutputDirPath+TXTFileName+".txt";
 TXTFile = File.open(TXTFilePath);
-// Write the header
+// Write the header of the TXT
 print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"+CellSeparator
 +"DE_R_X_Pixels"+CellSeparator+"DE_R_Y_Pixels"+CellSeparator
 +"LE_R_X_Pixels"+CellSeparator+"LE_R_Y_Pixels"+CellSeparator
@@ -472,20 +454,15 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"
 File.close(TXTFile);
 //////////////////////////// End of Create an output TXT File
 
-
-
-
-var NbOfPoints;
-
+  var NbOfPoints;
 // Start of the loop going through the list of files in the input folder selected above
 for (FileI = 0; FileI < InputFileList.length; FileI++){
   setBatchMode(true);
-  InputFileNameI=InputFileList[FileI];
+  InputFileNameI = InputFileList[FileI];
   BasenameArray=split(InputFileNameI,".");
   InputFileNameINoExt=BasenameArray[0];
   InputFilePathI = InputDirPath+InputFileNameI;
   open(InputFilePathI);
-
   // Save the Scale
   getPixelSize(PixelUnit, PixelWidth, PixelHeight, PixelDepth);
   ImageScale=1/PixelWidth;
@@ -493,9 +470,10 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
 
-  Overlay.activateSelection(0); // Get the selection from the overlay
-  run("Clear Results");
-  run("Measure");
+
+    Overlay.activateSelection(0); // Get the selection from the overlay
+    run("Clear Results");
+    run("Measure");
 
   setBatchMode("hide");
   // Create Arrays to save the X and Y Coordinates values in Pixels
@@ -504,159 +482,34 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Populate the Arrays
   for (ResultI=0; ResultI<nResults; ResultI++){
     X=getResult("X",ResultI);
-    Y=getResult("Y",ResultI); // Y coordinates are inverted
-    Y=ImageHeight-Y; // Restore Y coordinates
-    Array_X=Append(Array_X,round(X));
-    Array_Y=Append(Array_Y,round(Y));
+    Y=getResult("Y",ResultI);
+    Array_X=Append(Array_X,X);
+    Array_Y=Append(Array_Y,Y);
   }
   if(isOpen("Results")){
     run("Clear Results");
-    selectWindow("Results");    run("Close");
-
+    selectWindow("Results");
+    run("Close");
   } //end of if Results is open
-
-  // Resize Canvas to ensure no data loss
-  // Get the Dimension of the Initial Image
-  ImageCenterX_Ini=(ImageWidth/2);
-  ImageCenterY_Ini=(ImageHeight/2);
-  // Get the position of the futur center of the Image (Central canal)
-  CC_PosX_Ini=Array_X[0];
-  CC_PosY_Ini=Array_Y[0];
-
-  // Calculate the Translation Vectors to center the CC into the Image
-  Translate_X = (ImageCenterX_Ini - CC_PosX_Ini);
-  Translate_Y = (ImageCenterY_Ini - (CC_PosY_Ini));
-  // Resize the Canvas so no loss of data
-  ImageWidth_Resized=ImageWidth+2*abs(Translate_X); // Double the Translation data because the resizing is both way but translation only one way
-  ImageHeight_Resized=ImageHeight+2*abs(Translate_Y);
-  // Scale the Canvas just to avoid data loss
-  run("Canvas Size...", "width=&ImageWidth_Resized height=&ImageHeight_Resized position=Center zero");// Resize the Image
-  // Center on Central canal into Image Center
-  run("Translate...", "x=&Translate_X y=&Translate_Y interpolation=None"); // Translate now it is safe
-  // Calculate rotation angle which is the slope between the two ventral points
-  RotationAngle_Radian=atan2((Array_Y[3]-Array_Y[4]),(Array_X[3]-Array_X[4]));
-  RotationAngle_Degrees=((-RotationAngle_Radian)*180/PI); //negative because non inverted Y coordinates
-  // Rotate the Image
-  run("Rotate... ", "angle=&RotationAngle_Degrees grid=1 interpolation=None fill enlarge");// Rotation is clockwise if angle is >0 Angle is in degree
-  // Refresh the Image dimension after rotation
-  // Rotation Resize the image
-  getDimensions(ImageWidth_Rotated, ImageHeight_Rotated, ImageChannels_Rotated, ImageSlices_Rotated, ImageFrames_Rotated);
-  // Calculate the resizing due to the rotation
-  Rotational_Translational_Width=(ImageWidth_Rotated-ImageWidth_Resized)/2;
-  Rotational_Translational_Height=(ImageHeight_Rotated-ImageHeight_Resized)/2;
-  // Refresh  the Image Dimension
-  ImageRotated_Center_X=ImageWidth_Rotated/2;
-  ImageRotated_Center_Y=ImageHeight_Rotated/2;
-
-  // Calculate new Coordinates
-  Array_X_Transformed=newArray(0);
-  Array_Y_Transformed=newArray(0);
-
-  for(PointI=0; PointI<Array_X.length; PointI++){
-    // Get coordinates in X and Y
-    Coordinates_X_Ini=(Array_X[PointI]);
-    Coordinates_Y_Ini=(Array_Y[PointI]);
-
-    // Calculate coordinates in new Image after transalation
-    Coordinates_X_Translated=Coordinates_X_Ini+abs(Translate_X)+Translate_X+Rotational_Translational_Width;
-    Coordinates_Y_Translated=Coordinates_Y_Ini+abs(Translate_Y)+Translate_Y+Rotational_Translational_Height;
-
-    // Center coordinates on Rotation Center
-    Coordinates_X_Centered=Coordinates_X_Translated - ImageRotated_Center_X;
-    Coordinates_Y_Centered=Coordinates_Y_Translated - ImageRotated_Center_Y;
-
-    // Convert to polar Coordinates
-    VectorLength=sqrt(Coordinates_X_Centered*Coordinates_X_Centered+Coordinates_Y_Centered*Coordinates_Y_Centered);
-    if(Coordinates_X_Centered==0){
-      VectorAngleRad=0;
-    } else{
-      VectorAngleRad=atan(Coordinates_Y_Centered/Coordinates_X_Centered);
-    }
-    // Rotate the Vector
-    VectorAngleRad_Transformed=VectorAngleRad-RotationAngle_Radian;
-    // Convert Back to Cartesian Coordinates
-    Coordinates_X_Transformed=VectorLength*cos(VectorAngleRad_Transformed);
-    Coordinates_Y_Transformed=VectorLength*sin(VectorAngleRad_Transformed);
-
-    if(Coordinates_X_Centered<0 ){
-      Coordinates_X_Transformed= -Coordinates_X_Transformed;
-      Coordinates_Y_Transformed= -Coordinates_Y_Transformed;
-    }
-
-    Coordinates_X_Transformed_Centered= (Coordinates_X_Transformed + ImageRotated_Center_X);
-    Coordinates_Y_Transformed_Centered= (Coordinates_Y_Transformed + ImageRotated_Center_Y);
-    Array_X_Transformed=Append(Array_X_Transformed,Coordinates_X_Transformed_Centered);
-    Array_Y_Transformed=Append(Array_Y_Transformed,Coordinates_Y_Transformed_Centered);
-  }// end of for point I
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
   run("Remove Overlay"); // Reset the overlay
-  // Add new Coordinates to overlay
-  makeSelection("point",Array_X_Transformed, Array_Y_Transformed);
   run("Add Selection..."); // Add the selection to the overlay
-
-    // Crop the Image around the center to include the furthest registration point
-    ImageWidth=getWidth();
-    ImageHeight=getHeight();
-    ImageCenterX=ImageWidth/2;
-    ImageCenterY=ImageHeight/2;
-
-    DistanceToCenterArray=newArray(0);
-
-    for(PointI=0; PointI<Array_X_Transformed.length; PointI++){
-      PosXPointI=Array_X_Transformed[PointI]-ImageCenterX;
-      PosYPointI=Array_Y_Transformed[PointI]-ImageCenterY;
-      DistanceToCenterArray=Append(DistanceToCenterArray, abs(PosXPointI));
-      DistanceToCenterArray=Append(DistanceToCenterArray, abs(PosYPointI));
-    }
-    Array.getStatistics(DistanceToCenterArray, MinDistance, MaxDistance, MeanDistance, StDevDistance);
-    FinalImageSize=2*(MaxDistance+MaxDistance*0.01); // Add 1% to the Max Distance
-    run("Canvas Size...", "width=&FinalImageSize height=&FinalImageSize position=Center zero");
-
-    Overlay.activateSelection(0); // Get the selection from the overlay
-    run("Clear Results");
-    // Invert Y Coordinates
-    run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
-    run("Measure");
-    if(nResults>6){
-      // Create Arrays to save the X and Y Coordinates values in Pixels
-      Array_FinalX=newArray(0);
-      Array_FinalY=newArray(0);
-      // Populate the Arrays
-      for (ResultI=0; ResultI<nResults; ResultI++){
-        X=getResult("X",ResultI);
-        Y=getResult("Y",ResultI); // Y coordinates are inverted
-        Array_FinalX=Append(Array_FinalX,X);
-        Array_FinalY=Append(Array_FinalY,Y);
-      }
-    } else {
-      MessageError="Sorry but at least 7 Registration Points should be provided.";
-      MessageFix=MacroName+" function requires at least 7 Registration Points.";
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 Registration Points were not provided.";
-      ErrorResponseArray=newArray("Cancel and Close");
-      ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
-      if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-        CleanExit(MessageQuit);
-      }
-    }
-
   selectWindow(InputFileNameI);
   // Add the scale back
   run("Set Scale...", "distance=&ImageScale known=1 pixel=1 unit=&PixelUnit");
   saveAs("Tif", OutputDirPath+InputFileNameI);
-  // Refresh the Image Width and Height
-  ImageWidth=getWidth();
-  ImageHeight=getHeight();
   close();
+  // InvertY Coordinates here
   File.append(InputFileNameINoExt+CellSeparator
-  +Array_FinalX[0]+CellSeparator+Array_FinalY[0]+CellSeparator
-  +Array_FinalX[1]+CellSeparator+Array_FinalY[1]+CellSeparator
-  +Array_FinalX[2]+CellSeparator+Array_FinalY[2]+CellSeparator
-  +Array_FinalX[3]+CellSeparator+Array_FinalY[3]+CellSeparator
-  +Array_FinalX[4]+CellSeparator+Array_FinalY[4]+CellSeparator
-  +Array_FinalX[5]+CellSeparator+Array_FinalY[5]+CellSeparator
-  +Array_FinalX[6]+CellSeparator+Array_FinalY[6]+CellSeparator
+  +Array_X[0]+CellSeparator+Array_Y[0]+CellSeparator
+  +Array_X[1]+CellSeparator+Array_Y[1]+CellSeparator
+  +Array_X[2]+CellSeparator+Array_Y[2]+CellSeparator
+  +Array_X[3]+CellSeparator+Array_Y[3]+CellSeparator
+  +Array_X[4]+CellSeparator+Array_Y[4]+CellSeparator
+  +Array_X[5]+CellSeparator+Array_Y[5]+CellSeparator
+  +Array_X[6]+CellSeparator+Array_Y[6]+CellSeparator
   +ImageWidth+CellSeparator+ImageHeight+CellSeparator
   +ImageScale+CellSeparator+PixelUnit, TXTFilePath);
 
@@ -665,10 +518,11 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Close results windows if it is open
   if(isOpen("Results")){
     run("Clear Results");
-    selectWindow("Results");    run("Close");
-
-  }//end of if Results is open
-}/////////////////////End of for Filei loop
+    selectWindow("Results");
+    run("Close");
+  } //end of if Results is open
+} /////////////////////End of for Filei loop
 
 // Close the TXT File
+
 CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);

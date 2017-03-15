@@ -577,6 +577,15 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Remove the scale to have coordinates in pixels
   run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
+  ROIFilePathI=InputDirPath+InputFileNameINoExt+".zip";
+  if(File.exists(ROIFilePathI)){
+    run("Remove Overlay");
+    run("Select None");
+    roiManager("reset"); // Reset the ROI Manager
+    roiManager("Open", ROIFilePathI);
+    roiManager("Select", 0);
+    run("Add Selection..."); // Add ROI to Overlay
+  }
   do {
     SelectionPromptWithByPass("multipoint","Point and Click on the Cells of Interest.");
   }while(SelectionPromptWithByPassPass!=1)
