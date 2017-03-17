@@ -363,6 +363,7 @@ function GetImageInfo (InputFileList){
 // This function Prompt to Select the Channels to Process
 var SelectChannelPass; // Switch for dialog
 var NbSelectedCh;
+var ListChSelectionStatus;
 function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
   SelectChannelPass=0;
   NbSelectedChPass=0;
@@ -373,13 +374,13 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
   ListChSelectionStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChSelectionStatusString", "0,0,0,0,0,0,0"); // List of status for 5 channels. 1=selected; 0=ignored.
   ListChNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChNameString", "Ch1,Ch2,Ch3,Ch4,Ch5,Ch6,Ch7"); // List of name of 5 channels.
-  ROIMethodStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ROIMethodStatusString", "0,0"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
+  AutoSampleDetection=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".AutoSampleDetection", 1); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
+  ManualSampleDetection=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ManualSampleDetection", 1); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
   ListChSelectionStatus=split(ListChSelectionStatusString,",");
   ListChName=split(ListChNameString,",");
-  ROIMethodStatus=split(ROIMethodStatusString,",");
   ListChNameCurrentImage=Array.trim(ListChName, ImageChannels);
   ListChSelectionStatusCurrentImage=Array.trim(ListChSelectionStatus, ImageChannels);
-  ROIMethodOptions=newArray("Detect Sample","Manually Select ROI"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
+  SampleDetectionOptions=newArray("Auto Sample Detection","Manual Sample Detection"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
 
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(5, 0, 0);
@@ -392,9 +393,9 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
     Dialog.addString("Ch "+ChI+1+":", ListChNameCurrentImage[ChI], 10);
   }
   Dialog.setInsets(20, 10, 0);
-  Dialog.addMessage("ROI Methods:");
+  Dialog.addMessage("Sample Detection Methods:");
   Dialog.setInsets(5, 10, 0);
-  Dialog.addCheckboxGroup(2,1,ROIMethodOptions,ROIMethodStatus);
+  Dialog.addCheckboxGroup(2,1,SampleDetectionOptions,newArray(AutoSampleDetection, ManualSampleDetection));
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+Spacer+15);
   Dialog.show();
 
@@ -405,10 +406,10 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
   }// End of geet the selection status and channel names
 
   // Get ROI Method
-  ROIMethodStatus[0]=Dialog.getCheckbox();
-  ROIMethodStatus[1]=Dialog.getCheckbox();
-  ROIMethodStatusString=""+ROIMethodStatus[0]+","+ROIMethodStatus[1];
-  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ROIMethodStatusString",ROIMethodStatusString);
+  AutoSampleDetection=Dialog.getCheckbox();
+  ManualSampleDetection=Dialog.getCheckbox();
+  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".AutoSampleDetection",AutoSampleDetection);
+  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ManualSampleDetection",ManualSampleDetection);
 
   // Get the Nb of Selected Channels
   NbSelectedCh=0;
@@ -519,32 +520,32 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
 } //////////////////// end of function Select Channels
 
 // Function to TransformROI
-var TransformROIPromptPass;
-var TransformROI;
+var AutoSampleTransformationPromptPass;
+var AutoSampleTransformationArray=newArray(0);
 var NbIteration;
-function TransformROIPrompt (){
-  TransformROIPromptPass=0;
-  TransformROI = call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".TransformROI", "None");
+function AutoSampleTransformationPrompt (){
+  AutoSampleTransformationPromptPass=0;
+  AutoSampleTransformation = call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".AutoSampleTransformation", "None");
   NbIteration = call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".NbIteration", 1);
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("Select the Binary Transformation and the Number of Iterations to apply to the ROI:");
-  TransformROIArray = newArray("None","Open (Erode & Dilate)", "Close (Dilate & Erode)", "Dilate","Erode", "Fill Holes");
+  Dialog.addMessage("Select the Transformation and the Number of Iterations to apply to the Sample Detection:");
+  AutoSampleTransformationArray = newArray("None","Open (Erode & Dilate)", "Close (Dilate & Erode)", "Dilate","Erode", "Fill Holes");
   Dialog.setInsets(0, 0, 0);
-  Dialog.addRadioButtonGroup("", TransformROIArray, 3, 2, TransformROI);
+  Dialog.addRadioButtonGroup("", AutoSampleTransformationArray, 3, 2, AutoSampleTransformation);
   Dialog.setInsets(0, 0, 0);
   Dialog.addSlider("Number Iterations:",1,20, NbIteration);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
   Dialog.show();
-  TransformROI = Dialog.getRadioButton;
-  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".TransformROI", TransformROI);
+  AutoSampleTransformation = Dialog.getRadioButton;
+  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".AutoSampleTransformation", AutoSampleTransformation);
 
-  if(TransformROI==TransformROIArray[0]){
-    TransformROI="Nothing";
-  }else if(TransformROI==TransformROIArray[1]){
-    TransformROI="Open";
-  }else if(TransformROI==TransformROIArray[2]){
-    TransformROI="Close";
+  if(AutoSampleTransformation==AutoSampleTransformationArray[0]){
+    AutoSampleTransformation="Nothing";
+  }else if(AutoSampleTransformation==AutoSampleTransformationArray[1]){
+    AutoSampleTransformation="Open";
+  }else if(AutoSampleTransformation==AutoSampleTransformationArray[2]){
+    AutoSampleTransformation="Close";
   }
   NbIteration=Dialog.getNumber();
   NbIteration=round(NbIteration);
@@ -567,20 +568,26 @@ function TransformROIPrompt (){
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
       CleanExit(MessageQuit);
     } else {
-      TransformROIPromptPass=0;
+      AutoSampleTransformationPromptPass=0;
       NbIteration=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".NbIteration", NbIteration);
     }
   } else {
-    TransformROIPromptPass=1;
+    AutoSampleTransformationPromptPass=1;
     call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".NbIteration", NbIteration);
   }
+  AutoSampleTransformationArray=Append(AutoSampleTransformationPrompt, AutoSampleTransformation+"\t"+NbIteration)
 } // End of function
 
 // Function to apply the TransformROI
-function TransformROI(ImageName,TransformROI, NbIteration){
-  setBatchMode("hide");
-  selectWindow(ImageName);
-  run("Options...", "iterations=&NbIteration count=1 do=&TransformROI");
+function TransformSample(ImageName,AutoSampleTransformationArray){
+  for (I=0; I<AutoSampleTransformationArray.length; I++){
+TranformationNbIterationArray=split(AutoSampleTransformationArray[I],"\t");
+TransformationI=TranformationNbIterationArray[0];
+NbIterationI=TranformationNbIterationArray[1];
+setBatchMode("hide");
+selectWindow(ImageName);
+run("Options...", "iterations=&NbIterationI count=1 do=&TransformationI");
+}
 }
 
 var TryAgainMovePromptPass;
@@ -906,54 +913,45 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
 
 ////////////////////End of Functions
 
-
-
-
-
-
-
-
-
-
 ////////////////////End of Specific Functions
 
 
 
 /////////////////////// Get or Set previous default values saved in the preferences file
-ProcessingMethod=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethod", "Global");// This is a coefficient used to compute the minimum and maximum particle diameter for each channel
-
-ROIMethodStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ROIMethodStatusString", "0,0"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
-ImageEnhancementOptionsString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ImageEnhancementOptionsString", "Remove Noise,Use Watershed"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
-
-LowerSampleThreshold=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".LowerSampleThreshold", "0"); // Sample Threshold Values. First one is Lower Threshold, Second one is UpperThrehsold
-UpperSampleThreshold=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".UpperSampleThreshold", "0");
-
-ListChSelectionStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChSelectionStatusString", "1,1,1,1,1,1,1"); // List of status for 5 channels. 1=selected; 0=ignored.
-ListChNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChNameString", "Ch1,Ch2,Ch3,Ch4,Ch5,Ch6,Ch7"); // List of name of 5 channels.
-ListChMinParticleDiameterString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMinParticleDiameterString", "0,0,0,0,0,0,0"); // List of particle diameter for the 5 channels.
-ListChMaxParticleDiameterString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMaxParticleDiameterString", "100,100,100,100,100,100,100"); // List of particle diameter for the 5 channels.
-ListChMinParticleCircularityString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMinParticleCircularityString", "0,0,0,0,0,0,0"); // List of particle diameter for the 5 channels.
-ListChMaxParticleCircularityString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMaxParticleCircularityString", "100,100,100,100,100,100,100"); // List of particle diameter for the 5 channels.
-
-ListChLowerThresholdString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChLowerThresholdString", "0,0,0,0,0,0,0"); // List of lower threshold for the 5 channels.
-ListChUpperThresholdString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChUpperThresholdString", "255,255,255,255,255,255,255"); // List of upper threshold for the 5 channels.
-ListChRemoveNoiseStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChRemoveNoiseStatusString", "0,0,0,0,0,0,0");// Status of Remove Noise for each channel 1=selected; 0=ignored.
-ListChWatershedStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChWatershedStatusString", "0,0,0,0,0,0,0");// Status of Watershed for each channelds. 1=selected; 0=ignored.
-
-
-/////////////////////// Split the String from the preference file into Vectors
-ROIMethodStatus=split(ROIMethodStatusString,",");
-ImageEnhancementOptions=split(ImageEnhancementOptionsString,",");
-ListChSelectionStatus=split(ListChSelectionStatusString,",");
-ListChName=split(ListChNameString,",");
-ListChMinParticleDiameter=split(ListChMinParticleDiameterString,",");
-ListChMaxParticleDiameter=split(ListChMinParticleDiameterString,",");
-ListChMinParticleCircularity=split(ListChMinParticleCircularityString,",");
-ListChMaxParticleCircularity=split(ListChMaxParticleCircularityString,",");
-ListChLowerThreshold=split(ListChLowerThresholdString,",");
-ListChUpperThreshold=split(ListChUpperThresholdString,",");
-ListChRemoveNoiseStatus=split(ListChRemoveNoiseStatusString,",");
-ListChWatershedStatus=split(ListChWatershedStatusString,",");
+// ProcessingMethod=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethod", "Global");// This is a coefficient used to compute the minimum and maximum particle diameter for each channel
+//
+// ROIMethodStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ROIMethodStatusString", "0,0"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
+// ImageEnhancementOptionsString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ImageEnhancementOptionsString", "Remove Noise,Use Watershed"); // Status of ROI detection methods. First one is Sample detection. Second one is manual selection of ROI. 1=selected; 0=ignored.
+//
+// LowerSampleThreshold=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".LowerSampleThreshold", "0"); // Sample Threshold Values. First one is Lower Threshold, Second one is UpperThrehsold
+// UpperSampleThreshold=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".UpperSampleThreshold", "0");
+//
+// ListChSelectionStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChSelectionStatusString", "1,1,1,1,1,1,1"); // List of status for 5 channels. 1=selected; 0=ignored.
+// ListChNameString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChNameString", "Ch1,Ch2,Ch3,Ch4,Ch5,Ch6,Ch7"); // List of name of 5 channels.
+// ListChMinParticleDiameterString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMinParticleDiameterString", "0,0,0,0,0,0,0"); // List of particle diameter for the 5 channels.
+// ListChMaxParticleDiameterString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMaxParticleDiameterString", "100,100,100,100,100,100,100"); // List of particle diameter for the 5 channels.
+// ListChMinParticleCircularityString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMinParticleCircularityString", "0,0,0,0,0,0,0"); // List of particle diameter for the 5 channels.
+// ListChMaxParticleCircularityString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChMaxParticleCircularityString", "100,100,100,100,100,100,100"); // List of particle diameter for the 5 channels.
+//
+// ListChLowerThresholdString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChLowerThresholdString", "0,0,0,0,0,0,0"); // List of lower threshold for the 5 channels.
+// ListChUpperThresholdString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChUpperThresholdString", "255,255,255,255,255,255,255"); // List of upper threshold for the 5 channels.
+// ListChRemoveNoiseStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChRemoveNoiseStatusString", "0,0,0,0,0,0,0");// Status of Remove Noise for each channel 1=selected; 0=ignored.
+// ListChWatershedStatusString=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ListChWatershedStatusString", "0,0,0,0,0,0,0");// Status of Watershed for each channelds. 1=selected; 0=ignored.
+//
+//
+// /////////////////////// Split the String from the preference file into Vectors
+// ROIMethodStatus=split(ROIMethodStatusString,",");
+// ImageEnhancementOptions=split(ImageEnhancementOptionsString,",");
+// ListChSelectionStatus=split(ListChSelectionStatusString,",");
+// ListChName=split(ListChNameString,",");
+// ListChMinParticleDiameter=split(ListChMinParticleDiameterString,",");
+// ListChMaxParticleDiameter=split(ListChMinParticleDiameterString,",");
+// ListChMinParticleCircularity=split(ListChMinParticleCircularityString,",");
+// ListChMaxParticleCircularity=split(ListChMaxParticleCircularityString,",");
+// ListChLowerThreshold=split(ListChLowerThresholdString,",");
+// ListChUpperThreshold=split(ListChUpperThresholdString,",");
+// ListChRemoveNoiseStatus=split(ListChRemoveNoiseStatusString,",");
+// ListChWatershedStatus=split(ListChWatershedStatusString,",");
 
 InitialMessage=""+MacroName+" will :"
 +"\n- Prompt to select a folder containing TIF images to be quantified"
@@ -1135,7 +1133,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   rename("SelectedChannels");
 
   // Work to identify the sample if Auto detect Sample is ON
-  if(ROIMethodStatus[0]==1){
+  if(AutoSampleDetection==1){
     selectWindow("SelectedChannels");
     run("Duplicate...", "title=Sample duplicate");// This is the sample
     selectWindow("Sample");
@@ -1177,11 +1175,11 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     // From Here Sample Image has been Thresholded
     /////////////////////// Process the binary Mask to cover all the tissue
     do{
-      TransformROIPrompt();
-      TransformROI("Sample", TransformROI, NbIteration);
+      AutoSampleTransformationPrompt();
+      TransformSample("Sample", TransformROI, NbIteration);
       TryAgainMovePrompt("Sample");
     } while(TryAgainMovePromptPass!=1)
-    TransformROI("Sample","Nothing", 1);
+    TransformSample("Sample","Nothing", 1);
 
     // Create a selection to be added to the ROI
     selectWindow("Sample");

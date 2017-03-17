@@ -266,7 +266,7 @@ function CleanExit(MessageQuit){
     selectWindow(ImageN);    run("Close");
 
   }
-Dialog.create(PluginName+" Information");
+  Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageQuit);
   Dialog.setInsets(0, 0, 0);
@@ -279,14 +279,14 @@ Dialog.create(PluginName+" Information");
 
 //////////Close UtilityWindows
 function CloseUtilityWindows(ListUtilityWindows){
-// Typically  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  // Typically  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
   for(WindowI=0; WindowI<ListUtilityWindows.length; WindowI++){
     UtilityWindowI=ListUtilityWindows[WindowI];
     if(isOpen(UtilityWindowI)){
       if(UtilityWindowI=="Results"){        run("Clear Results");       }
       if(UtilityWindowI=="ROI Manager"){       roiManager("reset");      }
-        selectWindow(UtilityWindowI); run("Close");
-      }
+      selectWindow(UtilityWindowI); run("Close");
+    }
   }
 }
 //////////End of Close UtilityWindows
@@ -357,15 +357,15 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       run("Select None");
       SelectionPromptPass=0; // Set the Switch to 0
     }else if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]) {
-            CleanExit(MessageQuit);
-        }
+      CleanExit(MessageQuit);
+    }
 
   } else { // Else the current selection does not match the expected selection
     SelectionPromptPass=0;
     if(NbOfPoints==0){
       run("Select None");
 
-}
+    }
   }
 
   if(SelectionPromptPass==0){ // If the selection is not set prompt or does not correspond to the expected selection
@@ -380,7 +380,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     //   doCommand("Point Tool..."); // Bring the non-modal Point Tool at front in a separate thread
     // }
     call("ij.gui.WaitForUserDialog.setNextLocation", ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-      waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
+    waitForUser(PluginName+" Information", "Draw a "+SelectionTypeName+" selection.\n"
     +SelectionInfo+
     "\nWhen done, press OK.");
     CurrentSelection=selectionType();
@@ -454,7 +454,7 @@ print(TXTFile, "File_ID"+CellSeparator+"CC_X_Pixels"+CellSeparator+"CC_Y_Pixels"
 File.close(TXTFile);
 //////////////////////////// End of Create an output TXT File
 
-  var NbOfPoints;
+var NbOfPoints;
 // Start of the loop going through the list of files in the input folder selected above
 for (FileI = 0; FileI < InputFileList.length; FileI++){
   setBatchMode(true);
@@ -491,8 +491,8 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       ErrorResponseArray=newArray("Adjust the Current "+SelectionTypeName+" Selection", "Create a New "+SelectionTypeName+" Selection","Cancel and Close");
       MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because 7 points were not provided.";
       setBatchMode("show");
-            setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-          run("Hide Overlay");
+      setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
+      run("Hide Overlay");
       // Close results windows if it is open
       if(isOpen("Results")){
         run("Clear Results");
