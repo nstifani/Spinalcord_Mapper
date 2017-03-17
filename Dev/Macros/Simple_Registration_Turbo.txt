@@ -399,11 +399,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       setBatchMode("show");
 
       // Close results windows if it is open
-      if(isOpen("Results")){
-        run("Clear Results");
-        selectWindow("Results");
-        run("Close");
-      }//end of if Results is open
+      if(isOpen("Results")){        run("Clear Results");        selectWindow("Results");        run("Close");      }//end of if Results is open
       ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[0]){
         run("Select None");
@@ -480,11 +476,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     Array_X=Append(Array_X,X);
     Array_Y=Append(Array_Y,Y);
   }
-  if(isOpen("Results")){
-    run("Clear Results");
-    selectWindow("Results");
-    run("Close");
-  } //end of if Results is open
+  if(isOpen("Results")){    run("Clear Results");    selectWindow("Results");    run("Close");  } //end of if Results is open
 
   // Add selection to overlay and save the File
   selectWindow(InputFileNameI);
@@ -510,11 +502,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   // Update the progress bar
   showProgress(FileI, InputFileList.length);
   // Close results windows if it is open
-  if(isOpen("Results")){
-    run("Clear Results");
-    selectWindow("Results");
-    run("Close");
-  } //end of if Results is open
+  if(isOpen("Results")){    run("Clear Results");    selectWindow("Results");    run("Close");  } //end of if Results is open
 } /////////////////////End of for Filei loop
 
 // Close the TXT File
