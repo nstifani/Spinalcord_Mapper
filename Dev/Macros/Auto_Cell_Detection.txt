@@ -9,6 +9,8 @@ CellSeparator= "\t";
 LineSeparator="\n";
 //var CounterArray=newArray(0); // This is an array containing the Counter Nb
 
+
+
 /////////////// Header, Set Preferences, Options and Housekeeping
 // Select All measurements, Invert Y, and use 9 decimals
 run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
@@ -84,12 +86,15 @@ BCPosY=ROIManagerPosY;
 call("ij.Prefs.set", "b&c.loc", BCPosX+" , "+BCPosY);
 //////////////// Header and Housekeeping
 
+
+
 //////////////// General Functions
 // Function to Append to an array
 function Append(ArrayI, Value) {
   ArrayJ = newArray(ArrayI.length+1);
-  for (ValueI=0; ValueI<ArrayI.length; ValueI++)
+  for (ValueI=0; ValueI<ArrayI.length; ValueI++){
   ArrayJ[ValueI] = ArrayI[ValueI];
+}
   ArrayJ[ArrayI.length] = Value;
   return ArrayJ;
 }
@@ -232,7 +237,6 @@ function CreateOutputDir(ParentDir, InputDirName, FolderSuffix){ // Folder suffi
 ////// Close Function
 function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName){
   beep();
-
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
@@ -263,7 +267,6 @@ function CleanExit(MessageQuit){
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
     selectWindow(ImageN);    run("Close");
-
   }
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
@@ -296,6 +299,8 @@ function CloseUtilityWindows(ListUtilityWindows){
 
 
 /////////Specific Functions
+
+/// Prompt for Global or Individual Procesing Method
 var ProcessingMethodPass; // Switch for Processing Method
 var ProcessingMethod;
 function ProcessingMethodPrompt (){
@@ -310,7 +315,7 @@ function ProcessingMethodPrompt (){
   ProcessingMethod = Dialog.getRadioButton;
   ProcessingMethodPass=1;
   call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ProcessingMethod", ProcessingMethod);
-} // End of Prompt Processing Method function
+} /////// End of Prompt Processing Method function
 
 
 ///////// Function to create subfolders within the newly create outputdirectory
@@ -326,6 +331,7 @@ function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the des
 // Then you can use directly the string to save within a subdirectory
 
 ////////////////Function to get Image Info and Save it into arrays
+//// Required to see if Global Method can be applied to the select directory
 var GetImageInfoPass;
 var DimensionArray;
 var NbChannelArray;
@@ -333,7 +339,7 @@ var NbSliceArray;
 var NbFrameArray;
 function GetImageInfo (InputFileList){
   GetImageInfoPass=0;
-  setBatchMode(true);
+  //setBatchMode(true);
   /////// Open the arrays to store parameters and measurement data
   DimensionArray=newArray(0);
   NbChannelArray=newArray(0);
@@ -361,14 +367,18 @@ function GetImageInfo (InputFileList){
 
 
 // This function Prompt to Select the Channels to Process
+// Also prompt for Sample detection method
 var SelectChannelPass; // Switch for dialog
 var NbSelectedCh;
 var ListChSelectionStatus;
+var AutoSampleDetection;
+var ManualSampleDetection;
+
 function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
   SelectChannelPass=0;
   NbSelectedChPass=0;
   ChNamePass=0;
-  setBatchMode("show");
+  //setBatchMode("show");
   selectWindow(InputFileNameI);
   setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
   getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
@@ -519,36 +529,36 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
   }
 } //////////////////// end of function Select Channels
 
-// Function to TransformROI
-var AutoSampleTransformationPromptPass;
-var AutoSampleTransformationArray=newArray(0);
+
+
+// Function to TransformSample
+var SampleTransformationPromptPass;
+var SampleTransformation;
 var NbIteration;
-function AutoSampleTransformationPrompt (){
-  AutoSampleTransformationPromptPass=0;
-  AutoSampleTransformation = call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".AutoSampleTransformation", "None");
-  NbIteration = call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".NbIteration", 1);
+
+function SampleTransformationPrompt (SampleTransformation, NbIteration){
+  SampleTransformationPromptPass=0;
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
-  Dialog.addMessage("Select the Transformation and the Number of Iterations to apply to the Sample Detection:");
-  AutoSampleTransformationArray = newArray("None","Open (Erode & Dilate)", "Close (Dilate & Erode)", "Dilate","Erode", "Fill Holes");
+  Dialog.addMessage("Select the Transformation and the Number of Iterations to apply to the Sample.");
+  SampleTransformationOptions = newArray("None","Open (Erode & Dilate)", "Close (Dilate & Erode)", "Dilate","Erode", "Fill Holes");
   Dialog.setInsets(0, 0, 0);
-  Dialog.addRadioButtonGroup("", AutoSampleTransformationArray, 3, 2, AutoSampleTransformation);
+  Dialog.addRadioButtonGroup("", SampleTransformationOptions, 3, 2, SampleTransformation);
   Dialog.setInsets(0, 0, 0);
   Dialog.addSlider("Number Iterations:",1,20, NbIteration);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
   Dialog.show();
-  AutoSampleTransformation = Dialog.getRadioButton;
-  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".AutoSampleTransformation", AutoSampleTransformation);
+  var SampleTransformation = Dialog.getRadioButton;
 
-  if(AutoSampleTransformation==AutoSampleTransformationArray[0]){
-    AutoSampleTransformation="Nothing";
-  }else if(AutoSampleTransformation==AutoSampleTransformationArray[1]){
-    AutoSampleTransformation="Open";
-  }else if(AutoSampleTransformation==AutoSampleTransformationArray[2]){
-    AutoSampleTransformation="Close";
+  if(SampleTransformation==SampleTransformationOptions[0]){
+    SampleTransformation="Nothing";
+  }else if(SampleTransformation==SampleTransformationOptions[1]){
+    SampleTransformation="Open";
+  }else if(SampleTransformation==SampleTransformationOptions[2]){
+    SampleTransformation="Close";
   }
   NbIteration=Dialog.getNumber();
-  NbIteration=round(NbIteration);
+  var NbIteration=round(NbIteration);
 
   if(isNaN(NbIteration)==1 || NbIteration<1 || NbIteration>50){ // Make sure the NbSelectedCh is a valid integer or display an error
     if(isNaN(NbIteration)==1){
@@ -568,34 +578,41 @@ function AutoSampleTransformationPrompt (){
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
       CleanExit(MessageQuit);
     } else {
-      AutoSampleTransformationPromptPass=0;
-      NbIteration=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".NbIteration", NbIteration);
+      SampleTransformationPromptPass=0;
     }
   } else {
-    AutoSampleTransformationPromptPass=1;
-    call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".NbIteration", NbIteration);
-  }
-  AutoSampleTransformationArray=Append(AutoSampleTransformationPrompt, AutoSampleTransformation+"\t"+NbIteration)
-} // End of function
+    SampleTransformationPromptPass=1;
+    }
+  } // End of function
 
-// Function to apply the TransformROI
-function TransformSample(ImageName,AutoSampleTransformationArray){
-  for (I=0; I<AutoSampleTransformationArray.length; I++){
-TranformationNbIterationArray=split(AutoSampleTransformationArray[I],"\t");
-TransformationI=TranformationNbIterationArray[0];
-NbIterationI=TranformationNbIterationArray[1];
-setBatchMode("hide");
+function TransformSampleMultiple (ImageName, SampleTransformationArray){
+  for (I=0; I<SampleTransformationArray.length; I++){
+SampleTransformationNbIterationI=split(SampleTransformationArray[I],",");
+SampleTransformationI=SampleTransformationNbIterationI[0];
+NbIterationI=SampleTransformationNbIterationI[1];
+//setBatchMode("show");
 selectWindow(ImageName);
-run("Options...", "iterations=&NbIterationI count=1 do=&TransformationI");
+run("Options...", "iterations=&NbIterationI count=1 do=&SampleTransformationI");
 }
+}
+
+
+function TransformSampleUnique (ImageName, SampleTransformation, NbIteration){
+setBatchMode(false);
+selectWindow(ImageName);
+print(SampleTransformation);
+print(NbIteration);
+waitForUser("BEFORE");
+run("Options...", "iterations=&NbIteration count=1 do=&SampleTransformation");
+waitForUser("After");
 }
 
 var TryAgainMovePromptPass;
 function TryAgainMovePrompt(ImageName){
   selectWindow(ImageName);
-  setBatchMode("show");
+  //setBatchMode("show");
   setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-//  run("Scale to Fit");
+  run("Scale to Fit");
   run("View 100%");
   setTool("zoom");
   waitForUser(PluginName+" Information","Look at the Image.\nYou may Zoom for a better view.\nTry Again or Move to Next Options will appear when OK is pressed.");
@@ -661,7 +678,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
   }
 
   if(CurrentSelection==SelectionValue && NbOfPoints==0){ // If a correct Selection is present ask what to do
-    setBatchMode("show");
+    //setBatchMode("show");
     selectWindow(CurrentImageName);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
 
@@ -691,7 +708,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
   }
 
   if(SelectionPromptPass==0){ // If the selection is not set prompt or does not correspond to the expected selection
-    setBatchMode("show");
+    //setBatchMode("show");
     selectWindow(CurrentImageName);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
     run("Hide Overlay");
@@ -718,7 +735,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
         ErrorResponseArray=newArray("Create a "+SelectionTypeName+" selection", "Cancel and Close");
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionTypeName+".";
       }
-      setBatchMode("show");
+      //setBatchMode("show");
 
       // Close results windows if it is open
       if(isOpen("Results")){
@@ -735,7 +752,7 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       }
     } else {
       SelectionPromptPass=1;
-      setBatchMode("hide");
+      //setBatchMode("hide");
 
     }// End of else Selection is good
   } // End of If selection does not pass prompt for a selection
@@ -800,7 +817,7 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
   }
 
   if(CurrentSelection==SelectionValue){ // If a correct Selection is present ask what to do
-    setBatchMode("show");
+    //setBatchMode("show");
     selectWindow(CurrentImageName);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
     MessageError="A "+SelectionTypeName+" selection was detected.";
@@ -827,7 +844,7 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
   }
 
   if(SelectionPromptWithByPassPass==0){ // If the selection is not set prompt or does not correspond to the expected selection
-    setBatchMode("show");
+    //setBatchMode("show");
     selectWindow(CurrentImageName);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
     run("Hide Overlay");
@@ -889,7 +906,7 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
         ErrorResponseArray=newArray("Create a "+SelectionTypeName+" selection", "Cancel and Close");
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionTypeName+".";
         if(isOpen("Results")){ run("Clear Results"); selectWindow("Results"); run("Close"); }// Close results windows if it is open
-        setBatchMode("show");
+        //setBatchMode("show");
         ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
         if(UserResponseErrorDialog==ErrorResponseArray[0]){
           run("Select None");
@@ -901,7 +918,7 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
     } else {
       SelectionPromptWithByPassPass=1;
       SelectionPromptWithByPassByPass=0;
-      setBatchMode("hide");
+      //setBatchMode("hide");
 
     }// End of else Selection is good
   } // End of If selection does not pass prompt for a selection
@@ -1019,7 +1036,7 @@ OutputMeasurementPath=""+OutputDirPath+"Measurements"+File.separator;
 
 // Start of the loop going through the list of files in the input folder selected above
 for (FileI = 0; FileI < InputFileList.length; FileI++){
-  setBatchMode(true);
+  //setBatchMode(true);
   InputFileNameI=InputFileList[FileI];
   BasenameArray=split(InputFileNameI,".");
   InputFileNameINoExt=BasenameArray[0];
@@ -1037,7 +1054,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     "Process a specific Slice/Frame", "Process the Maximum Intensity Projection", "Cancel & Close"
     ErrorResponseArray=newArray("Process a specific Slice/Frame", "Process the Maximum Intensity Projection","Ignore this File", "Cancel and Close");
     MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File:\n\"" +InputFileNameI+"\"\nhad more than 3 dimensions (X, Y and Channels).";
-    setBatchMode("show");
+    //setBatchMode("show");
     selectWindow(InputFileNameI);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
     ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
@@ -1046,7 +1063,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     } else if (UserResponseErrorDialog=="Ignore this File") {
       // Move to the Next File
     } else if (UserResponseErrorDialog=="Process the Maximum Intensity Projection"){
-      setBatchMode("hide");
+      //setBatchMode("hide");
       selectWindow(InputFileNameI);
       if(ImageSlices>1 && ImageFrames>1){
         run("Grouped Z Project...", "projection=[Max Intensity] all");
@@ -1058,13 +1075,13 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       selectWindow("MAX_"+InputFileNameI);
       rename(InputFileNameI);
     } else if (UserResponseErrorDialog=="Process a specific Slice/Frame"){
-      setBatchMode("show");
+      //setBatchMode("show");
       selectWindow(InputFileNameI);
       setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
       call("ij.gui.WaitForUserDialog.setNextLocation", ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
       waitForUser(PluginName+" Information", "Move to the Slice/Frame you would like to process."
       +"\nWhen done, press OK.");
-      setBatchMode("hide");
+      //setBatchMode("hide");
       selectWindow(InputFileNameI);
       getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
       Stack.getPosition(CurrentChannel, CurrentSlice, CurrentFrame);
@@ -1081,9 +1098,9 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   do{
     if(ProcessingMethod=="Global" && FileI>0){
       SelectChannelPass=1;
-      setBatchMode("hide");
+      //setBatchMode("hide");
     } else {
-      setBatchMode("show");
+      //setBatchMode("show");
       selectWindow(InputFileNameI);
       setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
       SelectChannel(InputFileNameI, 1, 7);
@@ -1118,7 +1135,7 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
   File.append(InputFileNameINoExt+CellSeparator+"Whole Image"+CellSeparator+"Image Area (pixels^2)"+CellSeparator+ImageWidth*ImageHeight, ParameterTXTFilePath);
 
   // Duplicate InputFIleNamei and Remove the Unused Channels and call it SelectedChannels
-  setBatchMode("hide");
+  //setBatchMode("hide");
 
   for(SelectedChI=0; SelectedChI<ListSelectedCh.length; SelectedChI++){
     if(SelectedChI==0){
@@ -1151,13 +1168,13 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
     // From here we have a gray Sample 1 Ch
 
     if(ProcessingMethod=="Global" && FileI>0){ // If process is Global
-      setBatchMode("hide");
+      //setBatchMode("hide");
       selectWindow("Sample");
       setThreshold(LowerSampleThreshold, UpperSampleThreshold);
       run("Convert to Mask");
     }else{
       selectWindow("Sample");// We convert the Sample to binary for a mask
-      setBatchMode("show");
+      //setBatchMode("show");
       setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
       // These lines are if you want to bring up threshold values from previous files It causes issues with 16bits images
       // setThreshold(LowerSampleThreshold,UpperSampleThreshold);
@@ -1166,20 +1183,39 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       waitForUser(PluginName+" Information", "Adjust the Threshold to identify all your SAMPLE."
       +"\nWhen done, press OK.");
       getThreshold(LowerSampleThreshold, UpperSampleThreshold);
-      setBatchMode("hide");
+      //setBatchMode("hide");
       selectWindow("Sample");// We convert the Sample to binary for a mask
       setThreshold(LowerSampleThreshold, UpperSampleThreshold);
       run("Convert to Mask");
+      resetThreshold();
+      run("Scale to Fit");
+
       if(isOpen("Threshold")){selectWindow("Threshold");      run("Close");}
     } // end of else if process is individual
     // From Here Sample Image has been Thresholded
     /////////////////////// Process the binary Mask to cover all the tissue
+
+
+SampleTransformationString = call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".SampleTransformationString", "None,1");
+SampleTransformationArray=split(SampleTransformationString, "\t");
+SampleTransformationNbIteration=split(SampleTransformationArray[0],",");
+SampleTransformation=SampleTransformationNbIteration[0];
+NbIteration=SampleTransformationNbIteration[1];
+
+
     do{
-      AutoSampleTransformationPrompt();
-      TransformSample("Sample", TransformROI, NbIteration);
-      TryAgainMovePrompt("Sample");
+    SampleTransformationPrompt (SampleTransformation, NbIteration);
+    SampleTransformationNbIteration=SampleTransformation+","+NbIteration;
+    SampleTransformationArray=Append(SampleTransformationArray,SampleTransformationNbIteration);
+    TransformSampleUnique("Sample", SampleTransformation, NbIteration);
+    TryAgainMovePrompt("Sample");
     } while(TryAgainMovePromptPass!=1)
-    TransformSample("Sample","Nothing", 1);
+
+    SampleTransformationNbIteration="Nothing"+","+1;
+    SampleTransformationArray=Append(SampleTransformationArray,SampleTransformationNbIteration);
+    TransformSampleUnique("Sample", "Nothing", 1);
+
+waitForUser("TOTO");
 
     // Create a selection to be added to the ROI
     selectWindow("Sample");
@@ -1195,6 +1231,14 @@ run("Select All");// If it is then select all
     // Write the Threshold Values in the preferences Only if Sample was Selected
     call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".LowerSampleThreshold",LowerSampleThreshold);
     call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".UpperSampleThreshold",UpperSampleThreshold);
+    for(I=0; I<SampleTransformationArray.length; I++){
+      if(I==0){
+        SampleTransformationString=""+SampleTransformationArray[I];
+    } else {
+      SampleTransformationString=SampleTransformationString+"\t"+SampleTransformationArray[I];
+    }
+    }
+        call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".SampleTransformationString", SampleTransformationString);
 
     // Save the Selection into the ROI manager
     roiManager("reset");
@@ -1213,15 +1257,15 @@ run("Select All");// If it is then select all
   File.append(InputFileNameINoExt+CellSeparator+"Whole Image"+CellSeparator+"Upper Sample Threshold"+CellSeparator+UpperSampleThreshold, ParameterTXTFilePath);
 
   // Work on the Manual ROI
-  if(ROIMethodStatus[1]==1){
+  if(ManualSampleDetection==1){
     selectWindow("SelectedChannels");
     run("Duplicate...", "title=RegionOfInterest duplicate");// This is the sample
     selectWindow("RegionOfInterest");
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
 
     if(ProcessingMethod=="Global" && FileI>0){ // If process is global then Use the Sample as a ROI
-      setBatchMode("hide");
-      if(ROIMethodStatus[0]==0){ // If sample was not defined earlier
+      //setBatchMode("hide");
+      if(AutoSampleDetection==0){ // If sample was not defined earlier
         selectWindow("RegionOfInterest");
         run("Select None");
         run("Select All");
@@ -1233,14 +1277,11 @@ run("Select All");// If it is then select all
         roiManager("Select", NbROI-1);
       } // End of if sample was not defined earlier
     } else { // end of if process is global so if process is individual
-      if(ROIMethodStatus[0]==0){ // If sample was not defined earlier then prompt to draw a selection
+      if(AutoSampleDetection==0){ // If sample was not defined earlier then prompt to draw a selection
         selectWindow("RegionOfInterest");
         run("Select None"); // deselect any pre selection
         setTool("freehand");
-
-        toto
-
-        waitForUser(PluginName+" Information", "Please, use a Selection Tool to Select the Region of Interest (ROI).\nWhen done press OK.");
+    waitForUser(PluginName+" Information", "Please, use a Selection Tool to Select the Region of Interest (ROI).\nWhen done press OK.");
         CurrentSelection=selectionType();
         if(CurrentSelection<0){
           do {
@@ -1273,7 +1314,7 @@ run("Select All");// If it is then select all
       } else { // end of if sample was not defined earlier so Sample WAS actually then prompt to ADJUST the previous selection
         if(isOpen("Threshold")){                  selectWindow("Threshold");                  run("Close");}
         selectWindow("RegionOfInterest");
-        setBatchMode("show");
+        //setBatchMode("show");
         selectWindow("RegionOfInterest");
         setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
         selectWindow("RegionOfInterest");
@@ -1316,20 +1357,14 @@ run("Select All");// If it is then select all
       } // end of else Sample WAS actually defined earlier prompt to adjust
     }// end of if Process is NOT global so it is individual then prompt
     // From now we should have a ROI Selection
-    setBatchMode("hide");
+    //setBatchMode("hide");
     selectWindow("RegionOfInterest");
     roiManager("Add");
     NbROI=roiManager("count");
     run("Select None");
     roiManager("Select", NbROI-1);
-    roiManager("Rename", "Region_Of_Interest");
-    roiManager("Set Color", "magenta");
-    roiManager("Set Line Width", 10);
-    run("Add Selection..."); // Add to Overlay
-    run("Overlay Options...", "stroke=cyan width=10 fill=none apply");
-    OutputROIImage=OutputImagePath+InputFileNameINoExt+"_2_ROI_Overlay.tif";
+    roiManager("Rename", "Manual_Sample");
     selectWindow("RegionOfInterest");
-    saveAs("Tiff", OutputROIImage);
     close();
   } else { // ENd of if Manual ROI is selected
     //Do nothing
@@ -1337,8 +1372,8 @@ run("Select All");// If it is then select all
   setForegroundColor(255, 255, 255);
   setBackgroundColor(0, 0, 0);// Set the foreground and background colors
   // if a ROI was defined Sample OR Manual then clear outside the last made ROI
-  if(ROIMethodStatus[0]==1 || ROIMethodStatus[1]==1){
-    setBatchMode("hide");
+  if(AutoSampleDetection==1 || ManualSampleDetection==1){
+    //setBatchMode("hide");
     setForegroundColor(255, 255, 255);
     setBackgroundColor(0, 0, 0);// Set the foreground and background colors
     selectWindow(InputFileNameI); // InputFileName has all the original channels and is cropped on the sample or on the ROI
@@ -1347,18 +1382,18 @@ run("Select All");// If it is then select all
     roiManager("Select", NbROI-1);
     run("Clear Outside");
   }
-  setBatchMode("hide");
+  //setBatchMode("hide");
   selectWindow("SelectedChannels"); // SelectedChannels has only the Selected Channels and is cropped on the sample or on the ROI
   close();
 
 
 
 
-
+waitForUser("TATA");
 
   ///////////////////////////////////////////// Duplicate and threshold the each selected channels
   for (ChI=0; ChI < ListSelectedCh.length; ChI++){
-    setBatchMode("hide");
+    //setBatchMode("hide");
     SelectedChI=ListSelectedCh[ChI]; //This is the number of the selected channels >=1 it can be above 5 if user select only channel 2 and 7 for example.
     SelectedChIListPos=SelectedChI-1; // This is the position within the array of the SelectedChI
     NameSelectedChI=ListChName[SelectedChIListPos]; // This is the Name of the Selected Channels
@@ -1382,7 +1417,7 @@ run("Select All");// If it is then select all
     // setThreshold(LowerThresholdSelectedChI,UpperThresholdSelectedChI);
 
     if(ProcessingMethod=="Global" && FileI>0){
-      setBatchMode("hide");
+      //setBatchMode("hide");
       selectWindow(NameSelectedChI);
       // Threshold the Image
       setThreshold(LowerThresholdSelectedChI, UpperThresholdSelectedChI);
@@ -1414,7 +1449,7 @@ run("Select All");// If it is then select all
       // These lines are if you want to bring up threshold values from previous files It causes issues with 16bits images
       // setThreshold(LowerThresholdSelectedChI,UpperThresholdSelectedChI);
       selectWindow(NameSelectedChI);
-      setBatchMode("show");
+      //setBatchMode("show");
       selectWindow(NameSelectedChI);
       setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
       setAutoThreshold("Default dark");
@@ -1422,7 +1457,7 @@ run("Select All");// If it is then select all
       setTool("zoom");
       waitForUser(PluginName+" Information", "Adjust the Threshold to identify your staining for "+NameSelectedChI+"."
       +"\nWhen done, press OK.");
-      setBatchMode("hide");
+      //setBatchMode("hide");
       getThreshold(LowerThresholdSelectedChI, UpperThresholdSelectedChI);
       // Update the List of Threshold
       ListChLowerThreshold[SelectedChIListPos]=LowerThresholdSelectedChI;
@@ -1459,13 +1494,13 @@ run("Select All");// If it is then select all
     setTool("zoom");
     selectWindow(ImageEnhancementName);
     resetThreshold();
-    setBatchMode("show");
+    //setBatchMode("show");
     selectWindow(ImageEnhancementName);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
     call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
     waitForUser(PluginName+" Information", "Select the optimal Image for "+NameSelectedChI+".\nYou may Zoom for a better view.\nSlice 1: Original\nSlice 2: Noise Removed\nSlice 3: Watershed\nSlice 4: Noise Removed & Wateshed"
     +"\nWhen done, press OK.");
-    setBatchMode("hide");
+    //setBatchMode("hide");
     selectWindow(ImageEnhancementName);
     getDimensions(ImageWidthEnhancement, ImageHeightEnhancement, NbChannelsEnhancement, NbSlicesEnhancement, NbFramesEnhancement); // Get dimensions of the Image
     Stack.getPosition(CurrentChannelEnhancement, CurrentSliceEnhancement, CurrentFrameEnhancement);
@@ -1503,7 +1538,7 @@ run("Select All");// If it is then select all
       setTool("wand");//Select wand tool
       selectWindow(NameSelectedChI);
       setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-      setBatchMode("show");
+      //setBatchMode("show");
       selectWindow(NameSelectedChI);
       setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
       call("ij.gui.ImageWindow.setNextLocation", ThresholdPosX,ThresholdPosY+ThresholdSizeY+Spacer);
@@ -1528,7 +1563,7 @@ run("Select All");// If it is then select all
       }else {SelectionPass=1;}
     } while(SelectionPass!=1)
 
-    setBatchMode("hide");
+    //setBatchMode("hide");
     // Once a selection is Made get the area of the selection
     run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display invert redirect=None decimal=9");
     //run("Clear Results");
@@ -1566,7 +1601,7 @@ run("Select All");// If it is then select all
       if(isOpen("Threshold")){                          selectWindow("Threshold");                          run("Close");}
       setTool("zoom");
       selectWindow(NameSelectedChI);
-      setBatchMode("show");
+      //setBatchMode("show");
       selectWindow(NameSelectedChI);
       setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
       waitForUser(PluginName+" Information","Look at the Cell Detection (Cyan Overlay).\nYou may Zoom for a better view.\nCell Detection Parameters will appear when OK is pressed.");
@@ -1663,7 +1698,7 @@ run("Select All");// If it is then select all
   } // End of If process is Individual
 
   // Now we have the Particle detected we can save it as an Overlay
-  setBatchMode("hide");
+  //setBatchMode("hide");
   ChNb=ChI+1;
   selectWindow(NameSelectedChI);
   OutputParticleImageChI=OutputImagePath+InputFileNameINoExt+"_Ch"+ChNb+"_"+NameSelectedChI+"_CellCount_Overlay.tif";
@@ -1733,7 +1768,7 @@ run("Select All");// If it is then select all
   // Do not close each individual channels because we will use it for combination
 }// end for ChI
 ////////////////////////////////////////////// End Duplicate and threshold the Staining channels
-setBatchMode("hide");
+//setBatchMode("hide");
 if(ProcessingMethod=="Global" && FileI>0){
   //  do nothing
 } else { //update the Preferences
@@ -1776,7 +1811,7 @@ if(ProcessingMethod=="Global" && FileI>0){
 
 
 
-setBatchMode("hide");
+//setBatchMode("hide");
 ///////////////////////// Combine 2 channels
 ///////////////////////// Combine 2 channels
 if(ListSelectedCh.length>1){
