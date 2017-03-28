@@ -89,7 +89,7 @@ call("ij.Prefs.set", "b&c.loc", BCPosX+" , "+BCPosY);
 
 
 //////////////// General Functions
-// Function to Append to an array
+////////// Function to Append a value to an Array and return it
 function Append(ArrayI, Value) {
   ArrayJ = newArray(ArrayI.length+1);
   for (ValueI=0; ValueI<ArrayI.length; ValueI++){
@@ -98,43 +98,46 @@ function Append(ArrayI, Value) {
   ArrayJ[ArrayI.length] = Value;
   return ArrayJ;
 }
+////////// End of Function
 
-// Function to display a message
+////////// Function to display a message
 var MessageDialogPass;
-function MessageDialog(Message){
+function MessageDialog(Message, UtilityWindowsToCloseArray){
   MessageDialogPass=0;
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(Message);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
-  CloseUtilityWindows(ListUtilityWindows);
+  CloseUtilityWindows(UtilityWindowsToCloseArray);
   Dialog.show();
   MessageDialogPass=1;
 }
+////////// End of Function display a message
 
-// Function to display an error and propose to Fix it / Try again or to quit
+
+
+////////// Function to display an error and propose to Fix it
+////////// ErrorResponseArray is an array of options to respond to the error
+////////// UtilityWindowsToCloseArray is an array of utility windows to close=newArray("Threshold", "Results", "ROI Manager", "B&C");
 var ErrorDialogPass;
-var UserResponseErrorDialog;
-function ErrorDialog(MessageError, MessageFix, ErrorResponseArray){
+function ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray){
   ErrorDialogPass=0;
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageError);
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageFix);
-  Dialog.setInsets(0, 0, 0);
   Dialog.setInsets(0, 20, 0);
   Dialog.addRadioButtonGroup("", ErrorResponseArray, ErrorResponseArray.length, 1, ErrorResponseArray[0]);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
-  CloseUtilityWindows(ListUtilityWindows);
+  CloseUtilityWindows(UtilityWindowsToCloseArray);
   Dialog.show();
   UserResponseErrorDialog=Dialog.getRadioButton();
   return UserResponseErrorDialog;
 }
+////////// End of Function display an error
 
-// Function to select an Input Directory containing at least MinNbFile with the correct File Extension FileExt
+////////// Function Select an Input Directory
 var SelectInputDirPass; // Switch for the dialog box
 var InputDirPath; // Path of the input directory
 var ParentDir; // ParentDirectory of the selected input directory
@@ -169,12 +172,14 @@ function SelectInputDir(MinNbFile, FileExt){
     MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ndoes not contain at least "+MinNbFile+" "+FileExt+" File.";
     MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File.";
     ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File.";
-    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
-
+    UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+    UserResponseErrorDialog=ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File.";
       CleanExit(MessageQuit);
     } else {
+      // Select Another Folder
+      SelectInputDirPass=0;
     }
   } else { // if NbFileWithCorrectExt is above or equal MinNbFile Evaluate Filenames
     InputFileList=newArray(0);
@@ -184,30 +189,32 @@ function SelectInputDir(MinNbFile, FileExt){
         MessageError="Sorry but the "+FileExt+" File:\n\""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\" in its filename.";
         MessageFix=MacroName+" function does NOT allow filenames with more than one unique \".\" used for the file extension.";
         ErrorResponseArray=newArray("Select Another Folder", "Ignore This File", "Cancel and Close");
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
-        ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+        UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+        UserResponseErrorDialog=ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
         if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-          CleanExit(MessageQuit);
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\"\ncontains more than one \".\"\nMake sure filenames have no more than one unique \".\" for the File extension.";
+        CleanExit(MessageQuit);
         } else if (UserResponseErrorDialog=="Ignore This File"){
-
+          // Ignore this file
         } else if (UserResponseErrorDialog=="Select Another Folder") {
-          FileI=InputCorrectExtFileList.length;
+          FileI=InputCorrectExtFileList.length; // Stop the Loop
           SelectInputDirPass=0;
-          ErrorDialogPass=1;
+          ErrorDialogPass=1; // Switch Error Dialog Pass
         }
       }else { // If basename is good add it to the InputFileList
         InputFileList=Append(InputFileList, InputCorrectExtFileList[FileI]);
       }
     }
-    // Make sure InpuFileList is > MinNbFile
+    // Make sure InpuFileList is > MinNbFile if the ErrorDialog is
     NbFile=InputFileList.length;
     if(NbFile<MinNbFile && ErrorDialogPass!=1){ // If the Nb of File with correct extension is not at least equal to the MinNbFile Create Error Message.
       MessageError="Sorry but the Folder:\n\"" +InputDirName+"\"\ndoes not contain at least "+MinNbFile+" "+FileExt+" File with no more than one \".\" in its filename.";
       MessageFix=MacroName+" requires a Folder that contains at least "+MinNbFile+" "+FileExt+" File with one unique \".\" used for the file extension.";
       ErrorResponseArray=newArray("Select Another Folder", "Cancel and Close");
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
-      ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+      UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+      UserResponseErrorDialog=ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\ndid not contain at least "+MinNbFile+" "+FileExt+" File no more than one \".\" in its filename.";
         CleanExit(MessageQuit);
       } else {
         SelectInputDirPass=0;
@@ -218,9 +225,10 @@ function SelectInputDir(MinNbFile, FileExt){
       SelectInputDirPass=1; // InputDir Pass the criteria
     }
   }
-} // End of Function Select InputDir
+}
+////////// End of Function Select InputDir
 
-// Function to create a new output directory
+////////// Function to create Output directory
 var OutputDirPath; // The path of the output directory
 var OutputDirName; // The name of the output directory
 function CreateOutputDir(ParentDir, InputDirName, FolderSuffix){ // Folder suffix is a string appended to the input Directory
@@ -233,16 +241,23 @@ function CreateOutputDir(ParentDir, InputDirName, FolderSuffix){ // Folder suffi
   File.makeDirectory(OutputDirPath); // Create the outpudirectory
   OutputDirName=File.getName(OutputDirPath); // Get the Name of the output directory
 }
+////////// End Function Create Output Directory
 
-////// Close Function
-function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName){
-  beep();
+////////// Close and CleanUp Function
+function CloseAndCleanUp(UtilityWindowsToCloseArray){
+  // Close all Images
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
     selectWindow(ImageN);    run("Close");
   }
-  /////////////////////// Closing Dialog Box
+
+  // Close Utility Windows
+  CloseUtilityWindows(UtilityWindowsToCloseArray);
+
+  beep(); // Beep
+
+  //Closing Dialog Information
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(FileI+" of "+ NbFile+" "+ FileExt+ " Files in the folder:\n"+InputDirName+"\nhave been processed successfully.");
@@ -250,73 +265,71 @@ function CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, Outpu
   Dialog.addMessage("Files are saved in the following folder:\n"+OutputDirName+".");
   Dialog.setInsets(0, 0, 0);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
-  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
-}  ///////////////////////// End of Close Function
+}
+////////// End of Close and CleanUp Function
 
-////// CleanExit Function
-function CleanExit(MessageQuit){
-  beep();
-  if(isOpen("Threshold")){    selectWindow("Threshold");    run("Close");  }//end of if threshold is open
-  if(isOpen("Results")){    run("Clear Results");    selectWindow("Results");    run("Close");  }//end of if Results is open
-  if(isOpen("ROI Manager")){    roiManager("reset");    selectWindow("ROI Manager");    run("Close");  }//End of Close the ROI Manager
-  if(isOpen("B&C")){    selectWindow("B&C");    run("Close");  }//End of Close the Brightness window
-
+////////// CleanExit Function
+function CleanExit(MessageQuit, UtilityWindowsToCloseArray){
+ // Close Images
   ListImages=getList("image.titles");
   for(n=0; n<ListImages.length; n++){
     ImageN=ListImages[n];
     selectWindow(ImageN);    run("Close");
   }
+
+  CloseUtilityWindows(UtilityWindowsToCloseArray); // Close Utility windows
+  beep(); // Beep
+
+  // Dialog MessageQuit
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage(MessageQuit);
   Dialog.setInsets(0, 0, 0);
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
-  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
-  CloseUtilityWindows(ListUtilityWindows);
   Dialog.show();
   exit();
-}///////////////////////// End of CleanExit Function
+}
+////////// End of CleanExit Function
 
-//////////Close UtilityWindows
-function CloseUtilityWindows(ListUtilityWindows){
-  // Typically  ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
-  for(WindowI=0; WindowI<ListUtilityWindows.length; WindowI++){
-    UtilityWindowI=ListUtilityWindows[WindowI];
+////////// Close Utility Windows
+  // ListUtilityWindows is an array of utility windows to close   ListUtilityWindows=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  function CloseUtilityWindows(UtilityWindowsToCloseArray){
+  // Typically  UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+    for(WindowI=0; WindowI<UtilityWindowsToCloseArray.length; WindowI++){
+    UtilityWindowI=UtilityWindowsToCloseArray[WindowI];
     if(isOpen(UtilityWindowI)){
-      if(UtilityWindowI=="Results"){        run("Clear Results");       }
-      if(UtilityWindowI=="ROI Manager"){       roiManager("reset");      }
+      if(UtilityWindowI=="Results"){run("Clear Results");}
+      if(UtilityWindowI=="ROI Manager"){roiManager("reset");}
       selectWindow(UtilityWindowI); run("Close");
     }
   }
-}
-//////////End of Close UtilityWindows
-////////////////////End of General Functions
+  }
+  ////////// End of Close UtilityWindows
+////////////////////////////// End of General Functions
 
 
 
 
 
-/////////Specific Functions
+////////////////////////////// Specific Functions
 
-/// Prompt for Global or Individual Procesing Method
+////////// Prompt for Global or Individual Procesing Method
 var ProcessingMethodPass; // Switch for Processing Method
-var ProcessingMethod;
-function ProcessingMethodPrompt (){
+
+function ProcessingMethodPrompt (ProcessingMethodArray, ProcessingMethod){
   ProcessingMethodPass=0;
-  ProcessingMethod=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethod", "Global");
   Dialog.create(PluginName+" Information");
   Dialog.setInsets(0, 0, 0);
   Dialog.addMessage("Select the Processing Method:");
-  Dialog.addRadioButtonGroup("", newArray("Global","Individual"), 2, 1, ProcessingMethod)
+  Dialog.addRadioButtonGroup("", ProcessingMethodArray, ProcessingMethodArray.length, 1, ProcessingMethod)
   Dialog.setLocation(ToolbarPosX, ToolbarPosY+ToolbarSizeY+2*Spacer);
   Dialog.show();
   ProcessingMethod = Dialog.getRadioButton;
   ProcessingMethodPass=1;
-  call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ProcessingMethod", ProcessingMethod);
-} /////// End of Prompt Processing Method function
-
+return ProcessingMethod;
+}
+////////// End of Prompt Processing Method function
 
 ///////// Function to create subfolders within the newly create outputdirectory
 function CreateOutputSubDir(SubDirArray) { // SubDirArray is an array of the desired subfolders
@@ -443,10 +456,11 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
     // Display an error
     MessageFix=MacroName+" function requires a positive Number of Selected Channels comprised between "+MinChNb+" and "+MaxChNb+".";
     ErrorResponseArray=newArray("Modify the Channel Selection", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Number of Selected Channels was not comprised between "+MinChNb+" and "+MaxChNb+".";
-    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+    UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+    UserResponseErrorDialog=ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-      CleanExit(MessageQuit);
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Number of Selected Channels was not comprised between "+MinChNb+" and "+MaxChNb+".";
+    CleanExit(MessageQuit);
     } else {
       NbSelectedChPass=0;
       SelectChannelPass=0;
@@ -501,9 +515,10 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
       MessageError="Sorry but the Channel Names "+ChNameError+"is not unique or contains a comma \",\" or a dot \".\".";
       MessageFix=MacroName+" function does not allow commas \",\" nor dots \".\" in the Channel Names which must unique.";
       ErrorResponseArray=newArray("Modify the Channel Names", "Cancel and Close");
-      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channels Names weren't unique and/or contained commas \",\" or dots \".\"";
-      ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
+        UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+    UserResponseErrorDialog=  ErrorDialog(MessageError,MessageFix,ErrorResponseArray, UtilityWindowsToCloseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channels Names weren't unique and/or contained commas \",\" or dots \".\"";
         CleanExit(MessageQuit);
       } else {
         ChNamePass=0;
@@ -533,8 +548,8 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
 
 // Function to TransformSample
 var SampleTransformationPromptPass;
-var SampleTransformation;
-var NbIteration;
+//var SampleTransformation;
+//var NbIteration;
 
 function SampleTransformationPrompt (SampleTransformation, NbIteration){
   SampleTransformationPromptPass=0;
@@ -573,15 +588,18 @@ function SampleTransformationPrompt (SampleTransformation, NbIteration){
     // Display an error
     MessageFix=MacroName+" function requires a positive Number of Iteration  comprised between 1 and 50.";
     ErrorResponseArray=newArray("Modify the Number of Iteration", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Number of Iteration was not comprised between 1 and 50.";
-    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+    UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+
+UserResponseErrorDialog=ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+      MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Number of Iteration was not comprised between 1 and 50.";
       CleanExit(MessageQuit);
     } else {
       SampleTransformationPromptPass=0;
     }
   } else {
     SampleTransformationPromptPass=1;
+    return SampleTransformation+","+NbIteration;
     }
   } // End of function
 
@@ -598,22 +616,15 @@ run("Options...", "iterations=&NbIterationI count=1 do=&SampleTransformationI");
 
 
 function TransformSampleUnique (ImageName, SampleTransformation, NbIteration){
-setBatchMode(false);
 selectWindow(ImageName);
-print(SampleTransformation);
-print(NbIteration);
-waitForUser("BEFORE");
 run("Options...", "iterations=&NbIteration count=1 do=&SampleTransformation");
-waitForUser("After");
 }
 
 var TryAgainMovePromptPass;
 function TryAgainMovePrompt(ImageName){
   selectWindow(ImageName);
-  //setBatchMode("show");
   setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
   run("Scale to Fit");
-  run("View 100%");
   setTool("zoom");
   waitForUser(PluginName+" Information","Look at the Image.\nYou may Zoom for a better view.\nTry Again or Move to Next Options will appear when OK is pressed.");
 
@@ -685,8 +696,8 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
     MessageError="A "+SelectionTypeName+" selection was detected.";
     MessageFix="What would you like to do?";
     ErrorResponseArray=newArray("Keep the current "+SelectionTypeName+" selection", "Adjust the current "+SelectionTypeName+" selection", "Discard the current "+SelectionTypeName+" selection", "Cancel and Close");
-    MessageQuit="";
-    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+    UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+  UserResponseErrorDialog=  ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[0]){
       SelectionPromptPass=1;
     } else if(UserResponseErrorDialog==ErrorResponseArray[1]){
@@ -696,7 +707,8 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
       run("Select None");
       SelectionPromptPass=0; // Set the Switch to 0
     }else if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]) {
-      CleanExit(MessageQuit);
+      MessageQuit="Cancel and Close was Selected";
+        CleanExit(MessageQuit);
     }
 
   } else { // Else the current selection does not match the expected selection
@@ -743,7 +755,8 @@ function SelectionPrompt(SelectionTypeName, SelectionInfo){
         selectWindow("Results");        run("Close");
 
       }//end of if Results is open
-      ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
+      UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+UserResponseErrorDialog=ErrorDialog(MessageError,MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[0]){
         run("Select None");
         SelectionPromptPass=0;
@@ -824,7 +837,8 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
     MessageFix="What would you like to do?";
     ErrorResponseArray=newArray("Keep the current "+SelectionTypeName+" selection", "Adjust the current "+SelectionTypeName+" selection", "Discard the current "+SelectionTypeName+" selection", "Cancel and Close");
     MessageQuit="";
-    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+      UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+    UserResponseErrorDialog=ErrorDialog(MessageError, MessageFix, ErrorResponseArray,UtilityWindowsToCloseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[0]){
       SelectionPromptWithByPassPass=1;
     } else if(UserResponseErrorDialog==ErrorResponseArray[1]){
@@ -890,7 +904,9 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
         ErrorResponseArray=newArray("Proceed Without selecting any Cell", "Create a "+SelectionTypeName+" selection", "Cancel and Close");
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because no "+SelectionTypeName+" was detected.";
         if(isOpen("Results")){ run("Clear Results"); selectWindow("Results"); run("Close"); }// Close results windows if it is open
-        ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
+
+              UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+              UserResponseErrorDialog=ErrorDialog(MessageError,MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
         if(UserResponseErrorDialog==ErrorResponseArray[0]){
           SelectionPromptWithByPassPass=1;
           SelectionPromptWithByPassByPass=1;
@@ -907,7 +923,8 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the provided selection was not a "+SelectionTypeName+".";
         if(isOpen("Results")){ run("Clear Results"); selectWindow("Results"); run("Close"); }// Close results windows if it is open
         //setBatchMode("show");
-        ErrorDialog(MessageError,MessageFix, ErrorResponseArray);
+                      UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+        UserResponseErrorDialog=ErrorDialog(MessageError,MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
         if(UserResponseErrorDialog==ErrorResponseArray[0]){
           run("Select None");
           SelectionPromptWithByPassPass=0;
@@ -923,11 +940,6 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
     }// End of else Selection is good
   } // End of If selection does not pass prompt for a selection
 } // End of Function Get selection
-
-
-
-
-
 ////////////////////End of Functions
 
 ////////////////////End of Specific Functions
@@ -970,6 +982,8 @@ function SelectionPromptWithByPassWithByPass(SelectionTypeName, SelectionInfo){
 // ListChRemoveNoiseStatus=split(ListChRemoveNoiseStatusString,",");
 // ListChWatershedStatus=split(ListChWatershedStatusString,",");
 
+
+
 InitialMessage=""+MacroName+" will :"
 +"\n- Prompt to select a folder containing TIF images to be quantified"
 +"\n- Prompt for:"
@@ -983,13 +997,19 @@ InitialMessage=""+MacroName+" will :"
 +"\n- Process them with the defined parameters"
 +"\n- Save the results in a new folder";
 
-MessageDialog(InitialMessage);
+UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+MessageDialog(InitialMessage, UtilityWindowsToCloseArray); // Initial Dialog
 
-do{
+do{ // Select Input Directory
   SelectInputDir(MinNbFile,FileExt);
 }while(SelectInputDirPass!=1)
 
-ProcessingMethodPrompt();
+
+ProcessingMethod=call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".ProcessingMethod", "Global");
+ProcessingMethodArray=newArray("Global","Individual");
+ProcessingMethod=ProcessingMethodPrompt(ProcessingMethodArray,ProcessingMethod); // Select Processing Method
+call("ij.Prefs.set", "Default."+PluginName+"."+MacroName+".ProcessingMethod", ProcessingMethod);
+
 
 if(ProcessingMethod=="Global") { // Check InputDir has Files with consistent number of CHannels for Global processing
   do{
@@ -1009,7 +1029,9 @@ if(ProcessingMethod=="Global") { // Check InputDir has Files with consistent num
         MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Folder:\n\"" +InputDirName+"\"\n contained Files with more than 3 dimensions (X, Y and Channels) ("+MaxNbSlice+" Slices; "+MaxNbSFrames+" Frames).";
       }
       ErrorResponseArray=newArray("Select Another Folder", "Use Individual Processing Method", "Cancel and Close");
-      ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+
+            UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+            UserResponseErrorDialog=ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
         CleanExit(MessageQuit);
       } else if (UserResponseErrorDialog==ErrorResponseArray[0]){
@@ -1038,42 +1060,42 @@ OutputMeasurementPath=""+OutputDirPath+"Measurements"+File.separator;
 for (FileI = 0; FileI < InputFileList.length; FileI++){
   //setBatchMode(true);
   InputFileNameI=InputFileList[FileI];
-  BasenameArray=split(InputFileNameI,".");
-  InputFileNameINoExt=BasenameArray[0];
-  InputFilePathI = InputDirPath+InputFileNameI;
-  open(InputFilePathI);
-  // Save the Scale
-  getPixelSize(PixelUnit, PixelWidth, PixelHeight, PixelDepth);
-  ImageScale=1/PixelWidth;
-  // Remove the scale to have coordinates in pixels
-  run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
-  getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
-  if(ImageSlices>1 && ImageFrames>1){
+  BasenameArray=split(InputFileNameI,"."); // Array of Basename and File Extension
+  InputFileNameINoExt=BasenameArray[0]; // Filename without extension
+  InputFilePathI = InputDirPath+InputFileNameI; // Filepath
+  open(InputFilePathI); // Open the first image
+
+  getPixelSize(PixelUnit, PixelWidth, PixelHeight, PixelDepth);  // Get and Save the Scale
+  ImageScale=1/PixelWidth; // Save the Scale as an object
+
+  run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");   // Remove the scale to have coordinates in pixels since it is saved
+
+  getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames); // Get the dimension of the ImageSlices
+
+  if(ImageSlices>1 && ImageFrames>1){ // If the image has more than 1 slice or 1 frame
+//Create the Variables to be used by the errordialog
     MessageError="Sorry but the File:\n\"" +InputFileNameI+"\"\ has "+ImageSlices+" slices and "+ImageFrames+" frames.";
     MessageFix=MacroName+" can't process Files with more than 3 dimensions (X, Y and Channels).";
     "Process a specific Slice/Frame", "Process the Maximum Intensity Projection", "Cancel & Close"
     ErrorResponseArray=newArray("Process a specific Slice/Frame", "Process the Maximum Intensity Projection","Ignore this File", "Cancel and Close");
     MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File:\n\"" +InputFileNameI+"\"\nhad more than 3 dimensions (X, Y and Channels).";
+
     //setBatchMode("show");
     selectWindow(InputFileNameI);
     setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
-    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+                UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+    UserResponseErrorDialog=ErrorDialog(MessageError, MessageFix, ErrorResponseArray, UtilityWindowsToCloseArray); // Display the ErrorDialog
+    // Process user response to error
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
       CleanExit(MessageQuit);
     } else if (UserResponseErrorDialog=="Ignore this File") {
-      // Move to the Next File
+      // Move to the Next File to be implemented
     } else if (UserResponseErrorDialog=="Process the Maximum Intensity Projection"){
       //setBatchMode("hide");
       selectWindow(InputFileNameI);
-      if(ImageSlices>1 && ImageFrames>1){
-        run("Grouped Z Project...", "projection=[Max Intensity] all");
-      }else{
-        run("Z Project...", "projection=[Max Intensity]");
-      }
-      selectWindow(InputFileNameI);
-      close();
-      selectWindow("MAX_"+InputFileNameI);
-      rename(InputFileNameI);
+      run("Z Project...", "projection=[Max Intensity]");
+      selectWindow(InputFileNameI);      close(); // Close the previous Window
+      selectWindow("MAX_"+InputFileNameI);       rename(InputFileNameI); // Rename the MIP
     } else if (UserResponseErrorDialog=="Process a specific Slice/Frame"){
       //setBatchMode("show");
       selectWindow(InputFileNameI);
@@ -1083,23 +1105,21 @@ for (FileI = 0; FileI < InputFileList.length; FileI++){
       +"\nWhen done, press OK.");
       //setBatchMode("hide");
       selectWindow(InputFileNameI);
-      getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames);
-      Stack.getPosition(CurrentChannel, CurrentSlice, CurrentFrame);
-      SubStackString=""+"channels=1-"+ImageChannels+" slices="+CurrentSlice+" frames="+CurrentFrame;
-      run("Make Substack...", SubStackString);
-      selectWindow(InputFileNameI);
-      close();
-      selectWindow(InputFileNameINoExt+"-1.tif");
-      rename(InputFileNameI);
+      getDimensions(ImageWidth, ImageHeight, ImageChannels, ImageSlices, ImageFrames); // Refresh the Image dimension
+      Stack.getPosition(CurrentChannel, CurrentSlice, CurrentFrame); // Get the position
+      SubStackString=""+"channels=1-"+ImageChannels+" slices="+CurrentSlice+" frames="+CurrentFrame; // Make a substack keeping the channels but with 1 slice and 1 frame
+      run("Make Substack...", SubStackString); // Make the Substack
+      selectWindow(InputFileNameI);       close(); // Close the original file
+      selectWindow(InputFileNameINoExt+"-1.tif");       rename(InputFileNameI); // Rename the newly made Image
     }// end of process user response
   }// End of Check Input File dimensions
 
   // Select the Channels and indicate the Channel Names
   do{
-    if(ProcessingMethod=="Global" && FileI>0){
+    if(ProcessingMethod=="Global" && FileI>0){ // If Process is Global and if it is not the first file then bypass the SelectChannel Prompt
       SelectChannelPass=1;
       //setBatchMode("hide");
-    } else {
+    } else { // If Method is individual or if it is the first file prompt to select the channel
       //setBatchMode("show");
       selectWindow(InputFileNameI);
       setLocation(IJPosX, IJPosY+IJSizeY+Spacer, IJSizeX, screenHeight*0.75);
@@ -1204,9 +1224,18 @@ NbIteration=SampleTransformationNbIteration[1];
 
 
     do{
-    SampleTransformationPrompt (SampleTransformation, NbIteration);
-    SampleTransformationNbIteration=SampleTransformation+","+NbIteration;
-    SampleTransformationArray=Append(SampleTransformationArray,SampleTransformationNbIteration);
+      SampleTransformationString = call("ij.Prefs.get", "Default."+PluginName+"."+MacroName+".SampleTransformationString", "None,1");
+SampleTransformationArray=split(SampleTransformationString, "\t");
+SampleTransformationNbIteration=split(SampleTransformationArray[0],",");
+SampleTransformation=SampleTransformationNbIteration[0];
+NbIteration=SampleTransformationNbIteration[1];
+
+SampleTransformationString=    SampleTransformationPrompt(SampleTransformation, NbIteration);
+SampleTransformationArray=split(SampleTransformationString, "\t");
+SampleTransformationNbIteration=split(SampleTransformationArray[0],",");
+SampleTransformation=SampleTransformationNbIteration[0];
+NbIteration=SampleTransformationNbIteration[1];
+
     TransformSampleUnique("Sample", SampleTransformation, NbIteration);
     TryAgainMovePrompt("Sample");
     } while(TryAgainMovePromptPass!=1)
@@ -2021,4 +2050,5 @@ showProgress(FileI, InputFileList.length);
 
 
 } ///////////////////////// End for FileI loop
-CloseAndCleanUp(PluginName, FileI, NbFile, FileExt, InputDirName, OutputDirName);
+UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
+CloseAndCleanUp(UtilityWindowsToCloseArray);
