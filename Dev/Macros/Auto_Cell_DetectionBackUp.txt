@@ -159,6 +159,7 @@ function SelectInputDir(MinNbFile, FileExt){
 
 InputDirPath=getDirectory("Select a FOLDER containing at least "+MinNbFile+" "+FileExt+" Files to process.");
 InputList=getFileList(InputDirPath);
+InputList=Array.sort(InputList); // Sort the List of Item
 ParentDir=File.getParent(InputDirPath)+File.separator;
 InputDirName=File.getName(InputDirPath);
 
