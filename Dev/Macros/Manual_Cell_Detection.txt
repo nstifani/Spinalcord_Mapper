@@ -497,9 +497,9 @@ function IdentifyCounter (NbOfCounter){
     ListCounterName[CounterI]=Dialog.getString();
   }
 
-  // Make sure CounterNames do not contain , nor .
+  // Make sure CounterNames do not contain //ForbbidenCharacters="(){}[]$%^&*|:;,.?<>\/\\+=\"";
   for (CounterI = 0; CounterI < NbOfCounter; CounterI++){
-    if(matches(ListCounterName[CounterI],".*[,.].*")==1){
+    if(matches(ListCounterName[CounterI],".*[(){}\\[\\]$%^&*|:;,.?<\\\\>/+=\"].*")==1){
       IdentifyCounterPass= -1;
     }
   }
@@ -516,9 +516,9 @@ function IdentifyCounter (NbOfCounter){
   }
 
   if(IdentifyCounterPass<0){
-    MessageError="Sorry but the Counter Names must be unique and canno't contain any comma \",\" nor dot \".\".";
-    MessageFix=MacroName+" function does NOT allow commas \",\" nor dots \".\" in the Counter Names which must unique.";
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Counter Names weren't unique and/or contained commas \",\" or dots \".\"";
+    MessageError="Sorry but the Counter Names must be unique and canno't contain any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+=";
+    MessageFix=MacroName+" function does NOT allow NOT allow any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+= in the Counter Names which must unique.";
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Counter Names weren't unique and/or contained one of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+=";
     ErrorResponseArray=newArray("Re-Enter Counter Names", "Cancel and Close");
     ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[0]){

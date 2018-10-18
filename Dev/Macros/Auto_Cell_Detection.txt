@@ -487,9 +487,9 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
 
 
     // if Nb SelectedChannels is Valid Check ChannelNames are Valid
-    // Make sure ChNames do not contain , nor .
+    // Make sure ChNames do not contain //ForbbidenCharacters="(){}[]$%^&*|:;,.?<>\/\\+=\"";
     for (ChI = 0; ChI < ListChName.length; ChI++){
-      if(matches(ListChName[ChI],".*[,.].*")==1){
+      if(matches(ListChName[ChI],".*[(){}\\[\\]$%^&*|:;,.?<\\\\>/+=\"].*")==1){
         ChNamePass= -1;
         ChNameError=ListChName[ChI];
       }
@@ -513,13 +513,16 @@ function SelectChannel(InputFileNameI, MinChNb, MaxChNb){
 
     // Display an error dialog
     if(ChNamePass<0){
-      MessageError="Sorry but the Channel Names "+ChNameError+"is not unique or contains a comma \",\" or a dot \".\".";
-      MessageFix=MacroName+" function does not allow commas \",\" nor dots \".\" in the Channel Names which must unique.";
+      MessageError="Sorry but the Channel Identifiers and Channel Names must be unique and canno't contain any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+=";
+      MessageFix=MacroName+" function does NOT allow any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+= in the Channel Identifiers and Channel Names which must unique.";
+
+      MessageError="Sorry but the Channel Names "+ChNameError+"is not unique or contains  any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+=";
+      MessageFix=MacroName+" function does NOT allow any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+= in the Channel Names which must unique.";
       ErrorResponseArray=newArray("Modify the Channel Names", "Cancel and Close");
         UtilityWindowsToCloseArray=newArray("Threshold", "Results", "ROI Manager", "B&C");
     UserResponseErrorDialog=  ErrorDialog(MessageError,MessageFix,ErrorResponseArray, UtilityWindowsToCloseArray);
       if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
-        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channels Names weren't unique and/or contained commas \",\" or dots \".\"";
+        MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channels Names weren't unique and/or contained one of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+=";
         CleanExit(MessageQuit);
       } else {
         ChNamePass=0;

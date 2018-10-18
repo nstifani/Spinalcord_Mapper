@@ -190,9 +190,28 @@ function SelectInputDir(MinNbFile, FileExt){
           SelectInputDirPass=0;
           ErrorDialogPass=1;
         }
-      }else { // If basename is good add it to the InputFileList
+      }else { // If basenamelength check it does not contain forbbiden characters is good add it to the InputFileList
+        //ForbbidenCharacters="(){}[]$%^&*|:;,.?<>\/\\+=\"";
+  if(matches(BasenameFileIArray[0],".*[(){}\\[\\]$%^&*|:;,.?<\\\\>/+=\"].*")==1){
+    //Display an error
+    MessageError="Sorry but the "+FileExt+" File:\n\""+InputCorrectExtFileList[FileI]+"\"\ncontains a forbbiden character: (){}\[\]$%^&*|:;,.?<\\\>/+= in its filename.";
+    MessageFix=MacroName+" function does NOT allow filenames with any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+=.";
+    ErrorResponseArray=newArray("Select Another Folder", "Ignore This File", "Cancel and Close");
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the File \""+InputCorrectExtFileList[FileI]+"\"\n contained a forbbiden character: (){}\[\]$%^&*|:;,.?<\\\>/+= in its filename\nMake sure filenames have no more than one unique \".\" for the File extension.";
+    ErrorDialog(MessageError, MessageFix, ErrorResponseArray);
+    if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
+      CleanExit(MessageQuit);
+    } else if (UserResponseErrorDialog=="Ignore This File"){
+
+    } else if (UserResponseErrorDialog=="Select Another Folder") {
+      FileI=InputCorrectExtFileList.length;
+      SelectInputDirPass=0;
+      ErrorDialogPass=1;
+    }
+  } else{
         InputFileList=Append(InputFileList, InputCorrectExtFileList[FileI]);
       }
+    }
     }
     // Make sure InpuFileList is > MinNbFile
     NbFile=InputFileList.length;
@@ -378,9 +397,11 @@ function IdentifyCh (NbCh){
     ListChName[ChI]=Dialog.getString();
   }
 
-  // Make sure ChID and ChNames do not contain , nor .
+  // Make sure ChID and ChNames do not contain , nor . nor )
+
+//ForbbidenCharacters="(){}[]$%^&*|:;,.?<>\/\\+=\"";
   for (ChI = 0; ChI < NbCh; ChI++){
-    if(matches(ListChID[ChI],".*[,.].*")==1 || matches(ListChName[ChI],".*[,.].*")==1){
+    if(matches(ListChID[ChI],".*[(){}\\[\\]$%^&*|:;,.?<\\\\>/+=\"].*")==1 || matches(ListChName[ChI],".*[(){}\\[\\]$%^&*|:;,.?<\\\\>/+=\"].*")==1){
       IdentifyChPass= -1;
     }
   }
@@ -399,10 +420,10 @@ function IdentifyCh (NbCh){
   }
   // Display an error dialog
   if(IdentifyChPass<0){
-    MessageError="Sorry but the Channel Identifiers and Channel Names must be unique and canno't contain any comma \",\" nor dot \".\".";
-    MessageFix=MacroName+" function does NOT allow commas \",\" nor dots \".\" in the Channel Identifiers and Channel Names which must unique.";
+    MessageError="Sorry but the Channel Identifiers and Channel Names must be unique and canno't contain any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+=";
+    MessageFix=MacroName+" function does NOT allow any of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+= in the Channel Identifiers and Channel Names which must unique.";
     ErrorResponseArray=newArray("Modify Channel Identifiers and Channel Names", "Cancel and Close");
-    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channel Identifiers and Channels Names weren't unique and/or contained commas \",\" or dots \".\"";
+    MessageQuit=PluginName+ " Information:\nThe function "+ MacroName+" stopped because the Channel Identifiers and Channels Names weren't unique and/or contained one of those characters: (){}\[\]$%^&*|:;,.?<\\\>/+=";
     ErrorDialog(MessageError,MessageFix,ErrorResponseArray);
     if(UserResponseErrorDialog==ErrorResponseArray[ErrorResponseArray.length-1]){
       CleanExit(MessageQuit);
@@ -441,8 +462,8 @@ function InputDirMatchIdentifyCh(InputFileList, ListChID, NbCh){
   InputFileListNoExt=newArray(0); // Create a list of BasenameFileI
 
   // Remove File extension and add to the BaseName List
-  for(I=0; I<InputCorrectExtFileList.length; I++){ // Loop around the list of TIF file
-    BaseNameIArray=split(InputCorrectExtFileList[I],".");// This is the Array of FileName and FileExtension
+  for(I=0; I<InputFileList.length; I++){ // Loop around the list of TIF file
+    BaseNameIArray=split(InputFileList[I],".");// This is the Array of FileName and FileExtension
     InputFileListNoExt=Append(InputFileListNoExt,BaseNameIArray[0]);
   }
 
